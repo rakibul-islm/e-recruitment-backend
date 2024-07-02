@@ -1,0 +1,26 @@
+server:
+  servlet:
+    context-path: /
+    session:
+      persistent: true
+    
+  port: 8041
+  error:
+    whitelabel:
+      enabled: true
+
+spring:
+  spring:
+    application:
+      name: e-recruitment
+  profiles:
+    active: prod
+  jackson: 
+    serialization: 
+      fail-on-empty-beans: false
+      indent-output: true
+  servlet:
+    multipart:
+      max-file-size: 120MB
+      max-request-size: 120MB
+      enabled: true
