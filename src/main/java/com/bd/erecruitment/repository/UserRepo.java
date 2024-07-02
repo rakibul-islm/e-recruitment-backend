@@ -8,10 +8,6 @@ import java.util.List;
 
 @Repository
 public interface UserRepo extends ServiceRepository<User> {
-
 	public User findByUsername(String username);
-
 	public User findByEmail(String email);
-	
-	List<User> findAllBySystemadminAndDeleted(boolean systemadmin, boolean deleted, Sort sort);
 }

@@ -4,8 +4,8 @@ public enum UserRole {
 
 	ROLE_SUPER_ADMIN("Super Admin"),
 	ROLE_SYSTEM_ADMIN("System Admin"),
-	ROLE_SND_USER("SND User"),
-	ROLE_NORMAL_USER("Normal User");
+	ROLE_RECRUITER_USER("Recruiter User"),
+	ROLE_CANDIDATE_USER("Candidate User");
 
 	private String des;
 

@@ -28,14 +28,12 @@ public class UserResDTO extends BaseResponseDTO<User>{
 	private boolean active;
 	private boolean locked;
 	private Date expiryDate;
-	private Long admin_id;
-	private Long snd_id;
 	private String imageBase64;
 
-	private boolean superadmin;
-	private boolean systemadmin;
-	private boolean snduser;
-	private boolean normaluser;
+	private boolean superAdmin;
+	private boolean systemAdmin;
+	private boolean recruiterUser;
+	private boolean candidateUser;
 
 	private String roles;
 	

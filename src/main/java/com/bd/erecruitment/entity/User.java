@@ -27,28 +27,26 @@ public class User extends SequenceIdGenerator{
 	private boolean locked;
 	@Temporal(TemporalType.DATE)
 	private Date expiryDate;
-	private Long admin_id;
-	private Long snd_id;
 	@Lob
     @Column(name = "filedata")
     private byte[] fileData;
 	@Transient
 	private String imageBase64;
 
-	private boolean superadmin;
-	private boolean systemadmin;
-	private boolean snduser;
-	private boolean normaluser;
+	private boolean superAdmin;
+	private boolean systemAdmin;
+	private boolean recruiterUser;
+	private boolean candidateUser;
 
 	@Transient
 	private String roles;
 
 	public String getRoles() {
 		this.roles = "";
-		if(Boolean.TRUE.equals(superadmin)) roles += UserRole.ROLE_SUPER_ADMIN.name() + ',';
-		if(Boolean.TRUE.equals(systemadmin)) roles += UserRole.ROLE_SYSTEM_ADMIN.name() + ',';
-		if(Boolean.TRUE.equals(snduser)) roles += UserRole.ROLE_SND_USER.name() + ',';
-		if(Boolean.TRUE.equals(normaluser)) roles += UserRole.ROLE_NORMAL_USER.name() + ',';
+		if(Boolean.TRUE.equals(superAdmin)) roles += UserRole.ROLE_SUPER_ADMIN.name() + ',';
+		if(Boolean.TRUE.equals(systemAdmin)) roles += UserRole.ROLE_SYSTEM_ADMIN.name() + ',';
+		if(Boolean.TRUE.equals(recruiterUser)) roles += UserRole.ROLE_RECRUITER_USER.name() + ',';
+		if(Boolean.TRUE.equals(candidateUser)) roles += UserRole.ROLE_CANDIDATE_USER.name() + ',';
 
 		if(StringUtils.isBlank(roles)) return roles;
 

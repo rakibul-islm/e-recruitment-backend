@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:oracle:thin:@localhost:1521:xe
-    username: issue_track
-    password: issue_track
+    username: e_recruitment
+    password: e_recruitment
     driver-class-name: oracle.jdbc.OracleDriver
     tomcat:
       max-wait: 200000

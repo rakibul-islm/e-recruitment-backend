@@ -18,18 +18,16 @@ public class MyUserDetail implements UserDetails {
 	private static final long serialVersionUID = -8989844695157859881L;
 
 	private Long id;
-	private Long admin_id;
-	private Long snd_id;
 	private String username;
 	private String password;
 	private String email;
 	private String address;
 	private String phone;
 	private String mobile;
-	private boolean superadmin;
-	private boolean systemadmin;
-	private boolean snduser;
-	private boolean normaluser;
+	private boolean superAdmin;
+	private boolean systemAdmin;
+	private boolean recruiterUser;
+	private boolean candidateUser;
 	private String roles;
 	private List<GrantedAuthority> authorities;
 	private boolean enabled;
@@ -38,18 +36,16 @@ public class MyUserDetail implements UserDetails {
 
 	public MyUserDetail(User user){
 		this.id = user.getId();
-		this.admin_id = user.getAdmin_id();
-		this.snd_id = user.getSnd_id();
 		this.username = user.getUsername();
 		this.password = user.getPassword();
 		this.email = user.getEmail();
 		this.address = user.getAddress();
 		this.phone = user.getPhone();
 		this.mobile = user.getMobile();
-		this.superadmin = user.isSuperadmin();
-		this.systemadmin = user.isSystemadmin();
-		this.snduser = user.isSnduser();
-		this.normaluser = user.isNormaluser();
+		this.superAdmin = user.isSuperAdmin();
+		this.systemAdmin = user.isSystemAdmin();
+		this.recruiterUser = user.isRecruiterUser();
+		this.candidateUser = user.isCandidateUser();
 		this.roles = user.getRoles();
 		this.authorities = Arrays.stream(roles.split(","))
 									.map(SimpleGrantedAuthority::new)

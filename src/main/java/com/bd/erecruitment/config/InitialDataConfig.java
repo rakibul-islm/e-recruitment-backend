@@ -39,7 +39,7 @@ public class InitialDataConfig implements ApplicationRunner {
 			u.setEmail(SYSTEM_ADMIN_EMAIL);
 			u.setPassword(encoder.encode(SYSTEM_ADMIN_PASSWORD));
 			u.setActive(true);
-			u.setSuperadmin(true);
+			u.setSuperAdmin(true);
 			u.setLocked(false);
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.YEAR, 1);

@@ -14,14 +14,13 @@ public class LoggedInUserDetails {
 	private String address;
 	private String phone;
 	private String mobile;
-	private boolean superadmin;
-	private boolean systemadmin;
-	private boolean snduser;
-	private boolean normaluser;
+	private boolean superAdmin;
+	private boolean systemAdmin;
+	private boolean recruiterUser;
+	private boolean candidateUser;
 	private String roles;
 	private List<GrantedAuthority> authorities;
 	private boolean enabled;
 	private boolean locked;
 	private Date expiryDate;
-	private Long admin_id;
 }

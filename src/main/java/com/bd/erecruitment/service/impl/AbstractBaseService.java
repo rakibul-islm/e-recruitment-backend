@@ -85,14 +85,8 @@ public abstract class AbstractBaseService<E extends BaseEntity, R, P> extends Co
 		return null;
 	}
 
-
 	protected User getLoggedInUser() {
 		Optional<User> userOp = userRepo.findByIdAndDeleted(getLoggedInUserDetails().getId(), false);
-		return userOp.isPresent() ? userOp.get() : null;
-	}
-	
-	protected User getLoggedInSndBasedAdmin() {
-		Optional<User> userOp = userRepo.findByIdAndDeleted(getLoggedInUserDetails().getAdmin_id(), false);
 		return userOp.isPresent() ? userOp.get() : null;
 	}
 }

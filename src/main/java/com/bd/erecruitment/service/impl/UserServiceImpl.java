@@ -1,6 +1,7 @@
 package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.dto.req.UserReqDto;
+import com.bd.erecruitment.dto.req.UserSignupReqDto;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.model.MyUserDetail;
@@ -14,7 +15,6 @@ import org.apache.tomcat.util.codec.binary.Base64;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,8 +22,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -114,9 +114,9 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 		user.setExpiryDate(cal.getTime());
 		user.setActive(true);
 		user.setDeleted(false);
-		user.setNormaluser(true);
-		user.setSnduser(false);
-		user.setSystemadmin(false);
+		user.setCandidateUser(true);
+		user.setCandidateUser(false);
+		user.setSystemAdmin(false);
 
 		user = createNormalUser(user);
 		if(user == null) return getErrorResponse("Can't save user");
@@ -128,7 +128,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	@Override
 	public Response<UserResDTO> update(UserReqDto reqDto) throws ServiceException {
 		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && !getLoggedInUserDetails().getId().equals(reqDto.getId())) return getErrorResponse("Unauthorized Access!");
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && (reqDto.isSystemadmin() || reqDto.isSnduser() || reqDto.isSuperadmin())) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && (reqDto.isSystemAdmin() || reqDto.isRecruiterUser() || reqDto.isSuperAdmin())) return getErrorResponse("Unauthorized Access!");
 		if(reqDto.getId() == null) return getErrorResponse("User Id required");
 		User u1 = userRepo.findByUsername(reqDto.getUsername());
 		if(u1 != null &&  !u1.getId().equals(reqDto.getId())) return getErrorResponse("Username already exist! Try with different one");
@@ -177,7 +177,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 		Optional<User> o = userRepo.findByIdAndDeleted(z.getId(), false);
 		if(!o.isPresent()) return getErrorResponse("User not found in system");
 		exist = o.get();
-		if(exist.isSuperadmin()) return getErrorResponse("Can't delete super admin user");
+		if(exist.isSuperAdmin()) return getErrorResponse("Can't delete super admin user");
 		exist.setLocked(true);
 		try {
 			deleteEntity(exist);
@@ -196,7 +196,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 		Optional<User> o = userRepo.findByIdAndDeleted(id, false);
 		if(!o.isPresent()) return getErrorResponse("User not found in system");
 		exist = o.get();
-		if(exist.isSuperadmin()) return getErrorResponse("Can't delete super admin user");
+		if(exist.isSuperAdmin()) return getErrorResponse("Can't delete super admin user");
 		exist.setLocked(true);
 		
 		try {
