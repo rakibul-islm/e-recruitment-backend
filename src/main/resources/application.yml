@@ -24,3 +24,7 @@ spring:
       max-file-size: 120MB
       max-request-size: 120MB
       enabled: true
+
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
