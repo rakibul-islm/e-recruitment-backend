@@ -28,6 +28,4 @@ public interface CommonFunctions<R> {
 
 	Response<R> getErrorResponse(String code, String message, Response<R> response);
 
-	UserResDTO getSystemAdminUser();
-
 }

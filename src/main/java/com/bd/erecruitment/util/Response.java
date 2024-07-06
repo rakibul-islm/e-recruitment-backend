@@ -12,7 +12,6 @@ public class Response<R> {
 	private boolean success = true;
 	private boolean info = false;
 	private boolean warning = false;
-	private boolean valid = false;
 
 	private String code;
 	private String message;

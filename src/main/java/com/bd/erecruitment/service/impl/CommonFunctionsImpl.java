@@ -103,14 +103,4 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 		if(response.getPage() == null) response.setPage(null);
 		return response;
 	}
-
-	@Override
-	public UserResDTO getSystemAdminUser() {
-		UserResDTO responseDto = new UserResDTO();
-		User u = new User();
-
-		BeanUtils.copyProperties(u, responseDto);
-		return responseDto;
-	}
-
 }

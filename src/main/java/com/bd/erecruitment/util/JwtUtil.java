@@ -18,7 +18,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Service
 public class JwtUtil {
 
-	private static final String SECRET_KEY = "e-recruitment-404E635266556";
+	private static final String SECRET_KEY = "404E63526655664r54757hj585gh";
 
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);

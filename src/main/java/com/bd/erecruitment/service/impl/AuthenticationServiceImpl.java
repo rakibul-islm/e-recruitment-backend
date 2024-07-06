@@ -96,7 +96,6 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User, Authent
 		if(StringUtils.isBlank(username)) {
 			resDto.setValid(false);
 			Response<TokenValidationResDTO> res = new Response<TokenValidationResDTO>();
-			res.setValid(false);
 			res.setSuccess(false);
 			res.setMessage("Invalid token");
 			res.setObj(resDto);
@@ -107,7 +106,6 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User, Authent
 		if(!valid) {
 			resDto.setValid(false);
 			Response<TokenValidationResDTO> res = new Response<TokenValidationResDTO>();
-			res.setValid(false);
 			res.setSuccess(false);
 			res.setMessage("Invalid token");
 			res.setObj(resDto);
@@ -116,12 +114,10 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User, Authent
 
 		resDto.setValid(true);
 		Response<TokenValidationResDTO> res = new Response<TokenValidationResDTO>();
-		res.setValid(true);
 		res.setSuccess(true);
 		res.setMessage("Valid token");
 		res.setObj(resDto);
 		return res;
 	}
 
-	
 }

@@ -4,6 +4,7 @@ import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.req.UserSignupReqDto;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.enums.UserRole;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.UserService;
@@ -52,7 +53,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 
 	@Override
 	public Response<UserResDTO> find(Long id) throws ServiceException {
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && !getLoggedInUserDetails().getId().equals(id)) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name()) && !getLoggedInUserDetails().getId().equals(id)) return getErrorResponse("Unauthorized Access!");
 		if(id == null) return getErrorResponse("Id required");
 
 		Optional<User> o = userRepo.findByIdAndDeleted(id, false);
@@ -79,7 +80,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	@Override
 	public Response<UserResDTO> save(UserReqDto reqDto) throws ServiceException{
 		// validation
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER")) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name())) return getErrorResponse("Unauthorized Access!");
 		if(userRepo.findByUsername(reqDto.getUsername()) != null) return getErrorResponse("Username already exist! Try with different one");
 		if(userRepo.findByEmail(reqDto.getEmail()) != null) return getErrorResponse("Email address already exist! Try with different one");
 		if(StringUtils.isBlank(reqDto.getPassword())) return getErrorResponse("Password required");
@@ -89,7 +90,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 
 		if(reqDto.getExpiryDate() == null) {
 			Calendar cal = Calendar.getInstance();
-			cal.add(Calendar.YEAR, 1);
+			cal.add(Calendar.YEAR, 50);
 			user.setExpiryDate(cal.getTime());
 		}
 
@@ -115,7 +116,8 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 		user.setActive(true);
 		user.setDeleted(false);
 		user.setCandidateUser(true);
-		user.setCandidateUser(false);
+		user.setRecruiterUser(false);
+		user.setSuperAdmin(false);
 		user.setSystemAdmin(false);
 
 		user = createNormalUser(user);
@@ -127,8 +129,8 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	@Transactional
 	@Override
 	public Response<UserResDTO> update(UserReqDto reqDto) throws ServiceException {
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && !getLoggedInUserDetails().getId().equals(reqDto.getId())) return getErrorResponse("Unauthorized Access!");
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && (reqDto.isSystemAdmin() || reqDto.isRecruiterUser() || reqDto.isSuperAdmin())) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name()) && !getLoggedInUserDetails().getId().equals(reqDto.getId())) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name()) && (reqDto.isSystemAdmin() || reqDto.isRecruiterUser() || reqDto.isSuperAdmin())) return getErrorResponse("Unauthorized Access!");
 		if(reqDto.getId() == null) return getErrorResponse("User Id required");
 		User u1 = userRepo.findByUsername(reqDto.getUsername());
 		if(u1 != null &&  !u1.getId().equals(reqDto.getId())) return getErrorResponse("Username already exist! Try with different one");
@@ -161,7 +163,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 
 	@Override
 	public Response<UserResDTO> getAll() throws ServiceException {
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER")) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name())) return getErrorResponse("Unauthorized Access!");
 		List<User> list = userRepo.findAllByDeleted(false);
 		if(list == null || list.isEmpty()) return getErrorResponse("User list not found");
 		return getSuccessResponse("Found Users", list.stream().map(data -> new ModelMapper().map(data, UserResDTO.class)).collect(Collectors.toList()));
@@ -170,7 +172,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	@Transactional
 	@Override
 	public Response<UserResDTO> delete(UserReqDto reqDto) throws ServiceException {
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && !getLoggedInUserDetails().getId().equals(reqDto.getId())) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name()) && !getLoggedInUserDetails().getId().equals(reqDto.getId())) return getErrorResponse("Unauthorized Access!");
 		User z = reqDto.getBean();
 
 		User exist = null;
@@ -191,7 +193,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	@Transactional
 	@Override
 	public Response<UserResDTO> delete(Long id) throws ServiceException {
-		if(getLoggedInUser().getRoles().equalsIgnoreCase("ROLE_NORMAL_USER") && !getLoggedInUserDetails().getId().equals(id)) return getErrorResponse("Unauthorized Access!");
+		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name()) && !getLoggedInUserDetails().getId().equals(id)) return getErrorResponse("Unauthorized Access!");
 		User exist = null;
 		Optional<User> o = userRepo.findByIdAndDeleted(id, false);
 		if(!o.isPresent()) return getErrorResponse("User not found in system");
