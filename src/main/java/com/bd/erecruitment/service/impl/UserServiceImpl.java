@@ -17,6 +17,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -62,7 +64,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	
 	@Override
 	public Response<UserResDTO> userProfile() throws ServiceException{
-		Long id = getLoggedInUser().getId();
+		Long id = getLoggedInUserDetails().getId();
 		
 		Optional<User> o = userRepo.findByIdAndDeleted(id, false);
 		if(o.isPresent()) {
@@ -162,11 +164,26 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	}
 
 	@Override
-	public Response<UserResDTO> getAll() throws ServiceException {
+	public Response<UserResDTO> getAll(Pageable pageable, Boolean isPageable) throws ServiceException {
 		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name())) return getErrorResponse("Unauthorized Access!");
+
+		if(Boolean.TRUE.equals(isPageable)) {
+			Page<User> page = userRepo.findAllByDeleted(false, pageable);
+			if(!page.hasContent()) return getErrorResponse("User not found in this system");
+
+			return getSuccessResponsed(
+					"Found Users",
+					page.map(data -> new ModelMapper().map(data, UserResDTO.class))
+			);
+		}
 		List<User> list = userRepo.findAllByDeleted(false);
-		if(list == null || list.isEmpty()) return getErrorResponse("User list not found");
-		return getSuccessResponse("Found Users", list.stream().map(data -> new ModelMapper().map(data, UserResDTO.class)).collect(Collectors.toList()));
+		if(list == null || list.isEmpty()) return getErrorResponse("User not found in this system");
+
+		return getSuccessResponse(
+				"Found Users",
+				list.stream().map(data -> new ModelMapper().map(data, UserResDTO.class))
+						.collect(Collectors.toList())
+		);
 	}
 
 	@Transactional
@@ -192,17 +209,17 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 
 	@Transactional
 	@Override
-	public Response<UserResDTO> delete(Long id) throws ServiceException {
+	public Response<UserResDTO> remove(Long id) throws ServiceException {
 		if(getLoggedInUser().getRoles().equalsIgnoreCase(UserRole.ROLE_CANDIDATE_USER.name()) && !getLoggedInUserDetails().getId().equals(id)) return getErrorResponse("Unauthorized Access!");
 		User exist = null;
 		Optional<User> o = userRepo.findByIdAndDeleted(id, false);
 		if(!o.isPresent()) return getErrorResponse("User not found in system");
 		exist = o.get();
-		if(exist.isSuperAdmin()) return getErrorResponse("Can't delete super admin user");
+		if(exist.isSuperAdmin()) return getErrorResponse("Can't remove super admin user");
 		exist.setLocked(true);
 		
 		try {
-			deleteEntity(exist);
+			removeEntityById(exist);
 		} catch (Exception e) {
 			return getErrorResponse(e.getMessage());
 		}

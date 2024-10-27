@@ -11,6 +11,8 @@ import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Nullable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,9 +43,8 @@ public class AuthenticationController extends AbstractBaseController<User, Authe
 
 	@Hidden
 	@Override
-	public Response<AuthenticationResDTO> getAll() {
-		// TODO Auto-generated method stub
-		return super.getAll();
+	public Response<AuthenticationResDTO> getAll(@Nullable Pageable pageable, Boolean isPageable) {
+		return super.getAll(pageable, isPageable);
 	}
 
 	@Hidden
@@ -67,18 +68,18 @@ public class AuthenticationController extends AbstractBaseController<User, Authe
 		return super.find(id);
 	}
 
-//	@ApiIgnore
-//	@Override
-//	public Response<AuthenticationResDTO> delete(AuthenticationReqDTO e) {
-//		// TODO Auto-generated method stub
-//		return super.delete(e);
-//	}
+	@Hidden
+	@Override
+	public Response<AuthenticationResDTO> delete(AuthenticationReqDTO e) {
+		// TODO Auto-generated method stub
+		return super.delete(e);
+	}
 
 	@Hidden
 	@Override
-	public Response<AuthenticationResDTO> delete(Long id) {
+	public Response<AuthenticationResDTO> remove(Long id) {
 		// TODO Auto-generated method stub
-		return super.delete(id);
+		return super.remove(id);
 	}
 
 }

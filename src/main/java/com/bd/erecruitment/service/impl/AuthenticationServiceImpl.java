@@ -13,6 +13,7 @@ import com.bd.erecruitment.util.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -49,7 +50,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User, Authent
 	}
 
 	@Override
-	public Response<AuthenticationResDTO> getAll() {
+	public Response<AuthenticationResDTO> getAll(Pageable pageable, Boolean isPageable) throws ServiceException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -61,7 +62,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User, Authent
 	}
 
 	@Override
-	public Response<AuthenticationResDTO> delete(Long id) throws ServiceException {
+	public Response<AuthenticationResDTO> remove(Long id) throws ServiceException {
 		// TODO Auto-generated method stub
 		return null;
 	}

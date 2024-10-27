@@ -67,7 +67,11 @@ public abstract class AbstractBaseService<E extends BaseEntity, R, P> extends Co
 		return repository.save(entity);
 	}
 
-	protected E deleteEntity(E entity) {
+	protected void deleteEntity(E entity) {
+		repository.delete(entity);
+	}
+
+	protected E removeEntityById(E entity) {
 		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
 		entity.setUpdatedOn(new Date());
 		entity.setDeleted(true);

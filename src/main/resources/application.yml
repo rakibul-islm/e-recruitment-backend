@@ -14,7 +14,7 @@ spring:
     application:
       name: e-recruitment
   profiles:
-    active: prod
+    active: dev
   jackson: 
     serialization: 
       fail-on-empty-beans: false

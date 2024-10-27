@@ -1,10 +1,9 @@
 package com.bd.erecruitment.service.impl;
 
-import com.bd.erecruitment.dto.res.UserResDTO;
-import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.service.CommonFunctions;
 import com.bd.erecruitment.util.Response;
-import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -51,6 +50,15 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 		response.setCode(code);
 		response.setMessage(message);
 		response.setItems(list);
+		return response;
+	}
+
+	@Override
+	public Response<R> getSuccessResponsed(String message, Page<R> page) {
+		Response<R> response = new Response<R>();
+		response.setSuccess(true);
+		response.setMessage(message);
+		response.setPage(page);
 		return response;
 	}
 
