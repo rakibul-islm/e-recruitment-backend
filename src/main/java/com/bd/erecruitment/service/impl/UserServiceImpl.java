@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl extends AbstractBaseService<User, UserProfileResDTO, UserReqDto> implements UserDetailsService, UserService<UserResDTO, UserReqDto> {
+public class UserServiceImpl extends AbstractBaseService<User> implements UserDetailsService, UserService<UserResDTO, UserReqDto> {
 
 	private UserRepo userRepo;
 	@Autowired

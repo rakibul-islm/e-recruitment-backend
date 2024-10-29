@@ -21,7 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthenticationServiceImpl extends AbstractBaseService<User, AuthenticationResDTO, AuthenticationReqDTO> implements AuthenticationService<AuthenticationResDTO, AuthenticationReqDTO> {
+public class AuthenticationServiceImpl extends AbstractBaseService<User> implements AuthenticationService<AuthenticationResDTO, AuthenticationReqDTO> {
 
 	@Autowired private AuthenticationManager authenticationManager;
 	@Autowired private JwtUtil jwtUtil;

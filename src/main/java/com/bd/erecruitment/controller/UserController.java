@@ -19,8 +19,8 @@ import java.util.List;
 
 @RestApiController
 @RequestMapping("/e-recruitment/user")
-@Tag(name = "2.0 User", description = "API")
-public class UserController extends AbstractBaseController<User, UserResDTO, UserReqDto>{
+@Tag(name = "2.0 User Account", description = "API")
+public class UserController extends AbstractBaseController<UserResDTO, UserReqDto>{
 	
 	private UserService<UserResDTO, UserReqDto> userService;
 

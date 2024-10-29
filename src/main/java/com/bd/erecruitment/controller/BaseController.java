@@ -8,15 +8,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 public interface BaseController<R, E> {
 
-	public Response<R> getAll(@Nullable Pageable pageable, Boolean isPageable);
+	Response<R> getAll(@Nullable Pageable pageable, Boolean isPageable);
 
-	public Response<R> save(@RequestBody E e);
+	Response<R> save(@RequestBody E e);
 
-	public Response<R> update(@RequestBody E e);
+	Response<R> update(@RequestBody E e);
 
-	public Response<R> find(@PathVariable Long id);
+	Response<R> find(@PathVariable Long id);
 
-	public Response<R> delete(@RequestBody E e);
+	Response<R> delete(@RequestBody E e);
 
-	public Response<R> remove(@PathVariable Long id);
+	Response<R> remove(@PathVariable Long id);
 }
