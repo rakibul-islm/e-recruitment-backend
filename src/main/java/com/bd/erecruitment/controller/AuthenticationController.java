@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RestApiController
 @RequestMapping("/e-recruitment/authenticate")
 @Tag(name = "1.0 Authentication", description = "API")
-public class AuthenticationController extends AbstractBaseController<User, AuthenticationResDTO, AuthenticationReqDTO> {
+public class AuthenticationController extends AbstractBaseController<AuthenticationResDTO, AuthenticationReqDTO> {
 
 	private AuthenticationService<AuthenticationResDTO, AuthenticationReqDTO> authservice;
 
