@@ -28,7 +28,6 @@ public class UserResDTO extends BaseResponseDTO<User>{
 	private boolean active;
 	private boolean locked;
 	private Date expiryDate;
-	private String imageBase64;
 
 	private boolean superAdmin;
 	private boolean systemAdmin;

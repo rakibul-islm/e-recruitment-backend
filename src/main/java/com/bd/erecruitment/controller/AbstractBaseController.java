@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RequiredArgsConstructor
-public class AbstractBaseController<P, R, E> extends CommonFunctionsImpl<R> implements BaseController<R, E> {
+public class AbstractBaseController<P, R, E> extends CommonFunctionsImpl implements BaseController<R, E> {
 
 	protected final BaseService<R, E> service;
 

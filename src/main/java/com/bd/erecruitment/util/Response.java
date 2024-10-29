@@ -17,7 +17,7 @@ public class Response<R> {
 	private String message;
 
 	private Map<String, R> model;
-	private List<R> items;
+	private List<R> list;
 	private R obj;
 	private Page<R> page;
 }
