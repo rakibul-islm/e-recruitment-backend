@@ -49,7 +49,7 @@ public class CommonFunctionsImpl implements CommonFunctions {
 		response.setSuccess(true);
 		response.setCode(code);
 		response.setMessage(message);
-		response.setItems(list);
+		response.setList(list);
 		return response;
 	}
 
@@ -80,7 +80,7 @@ public class CommonFunctionsImpl implements CommonFunctions {
 		Response<R> response = new Response<>();
 		response.setSuccess(false);
 		response.setMessage(message);
-		response.setItems(Collections.emptyList());
+		response.setList(Collections.emptyList());
 		response.setObj(null);
 		response.setModel(Collections.emptyMap());
 		response.setPage(null);
@@ -93,7 +93,7 @@ public class CommonFunctionsImpl implements CommonFunctions {
 		response.setSuccess(false);
 		response.setCode(code);
 		response.setMessage(message);
-		response.setItems(Collections.emptyList());
+		response.setList(Collections.emptyList());
 		response.setObj(null);
 		response.setModel(Collections.emptyMap());
 		response.setPage(null);
@@ -105,7 +105,7 @@ public class CommonFunctionsImpl implements CommonFunctions {
 		response.setSuccess(false);
 		response.setCode(code);
 		response.setMessage(message);
-		if(response.getItems() == null || response.getItems().isEmpty()) response.setItems(Collections.emptyList());
+		if(response.getList() == null || response.getList().isEmpty()) response.setList(Collections.emptyList());
 		if(response.getObj() == null) response.setObj(null);
 		if(response.getModel() == null || response.getModel().isEmpty()) response.setModel(Collections.emptyMap());
 		if(response.getPage() == null) response.setPage(null);
