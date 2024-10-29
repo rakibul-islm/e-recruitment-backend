@@ -11,13 +11,19 @@ import org.modelmapper.ModelMapper;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInfoResDTO extends BaseResponseDTO<User>{
+public class UserProfileResDTO extends BaseResponseDTO<User>{
 
-	public UserInfoResDTO(User user){
+	public UserProfileResDTO(User user){
 		new ModelMapper().map(user, this);
 	}
 
 	private String fullName;
+	private String email;
+	private String address;
+	private String phone;
 	private String mobile;
+	private String imageBase64;
+
+	private String roles;
 	
 }

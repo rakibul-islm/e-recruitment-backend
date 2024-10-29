@@ -7,16 +7,16 @@ import org.springframework.data.domain.Page;
 import java.util.Collections;
 import java.util.List;
 
-public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
+public class CommonFunctionsImpl implements CommonFunctions {
 
 	@Override
-	public Response<R> getSuccessResponse(String message) {
+	public <R>Response<R> getSuccessResponse(String message) {
 		return getSuccessResponse(null, message);
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String code, String message) {
-		Response<R> response = new Response<R>();
+	public <R>Response<R> getSuccessResponse(String code, String message) {
+		Response<R> response = new Response<>();
 		response.setSuccess(true);
 		response.setCode(code);
 		response.setMessage(message);
@@ -24,13 +24,13 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String message, R r) {
+	public <R>Response<R> getSuccessResponse(String message, R r) {
 		return getSuccessResponse(null, message, r);
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String code, String message, R r) {
-		Response<R> response = new Response<R>();
+	public <R>Response<R> getSuccessResponse(String code, String message, R r) {
+		Response<R> response = new Response<>();
 		response.setSuccess(true);
 		response.setCode(code);
 		response.setMessage(message);
@@ -39,13 +39,13 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String message, List<R> list) {
+	public <R>Response<R> getSuccessResponse(String message, List<R> list) {
 		return getSuccessResponse(null, message, list);
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String code, String message, List<R> list) {
-		Response<R> response = new Response<R>();
+	public <R>Response<R> getSuccessResponse(String code, String message, List<R> list) {
+		Response<R> response = new Response<>();
 		response.setSuccess(true);
 		response.setCode(code);
 		response.setMessage(message);
@@ -54,8 +54,8 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getSuccessResponsed(String message, Page<R> page) {
-		Response<R> response = new Response<R>();
+	public <R>Response<R> getSuccessResponse(String message, Page<R> page) {
+		Response<R> response = new Response<>();
 		response.setSuccess(true);
 		response.setMessage(message);
 		response.setPage(page);
@@ -63,12 +63,12 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String message, Response<R> response) {
+	public <R>Response<R> getSuccessResponse(String message, Response<R> response) {
 		return getSuccessResponse(null, message, response);
 	}
 
 	@Override
-	public Response<R> getSuccessResponse(String code, String message, Response<R> response) {
+	public <R>Response<R> getSuccessResponse(String code, String message, Response<R> response) {
 		response.setSuccess(true);
 		response.setCode(code);
 		response.setMessage(message);
@@ -76,8 +76,8 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getErrorResponse(String message) {
-		Response<R> response = new Response<R>();
+	public <R>Response<R> getErrorResponse(String message) {
+		Response<R> response = new Response<>();
 		response.setSuccess(false);
 		response.setMessage(message);
 		response.setItems(Collections.emptyList());
@@ -88,8 +88,8 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getErrorResponse(String code, String message) {
-		Response<R> response = new Response<R>();
+	public <R>Response<R> getErrorResponse(String code, String message) {
+		Response<R> response = new Response<>();
 		response.setSuccess(false);
 		response.setCode(code);
 		response.setMessage(message);
@@ -101,7 +101,7 @@ public class CommonFunctionsImpl<R> implements CommonFunctions<R> {
 	}
 
 	@Override
-	public Response<R> getErrorResponse(String code, String message, Response<R> response) {
+	public <R>Response<R> getErrorResponse(String code, String message, Response<R> response) {
 		response.setSuccess(false);
 		response.setCode(code);
 		response.setMessage(message);

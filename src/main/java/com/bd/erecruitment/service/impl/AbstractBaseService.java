@@ -16,7 +16,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-public abstract class AbstractBaseService<E extends BaseEntity, R, P> extends CommonFunctionsImpl<R>{
+public abstract class AbstractBaseService<E extends BaseEntity, R, P> extends CommonFunctionsImpl{
 
 	protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 

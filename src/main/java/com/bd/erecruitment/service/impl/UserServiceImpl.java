@@ -2,6 +2,7 @@ package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.req.UserSignupReqDto;
+import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.enums.UserRole;
@@ -31,7 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserReqDto> implements UserDetailsService, UserService<UserResDTO, UserReqDto> {
+public class UserServiceImpl extends AbstractBaseService<User, UserProfileResDTO, UserReqDto> implements UserDetailsService, UserService<UserResDTO, UserReqDto> {
 
 	private UserRepo userRepo;
 	@Autowired
@@ -63,9 +64,9 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 	}
 	
 	@Override
-	public Response<UserResDTO> userProfile() throws ServiceException{
+	public Response<UserProfileResDTO> userProfile() throws ServiceException{
 		Long id = getLoggedInUserDetails().getId();
-		
+
 		Optional<User> o = userRepo.findByIdAndDeleted(id, false);
 		if(o.isPresent()) {
 			if(o.get().getFileData() == null ) {
@@ -75,7 +76,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 			}
 		}
 
-		return o.isPresent() ? getSuccessResponse("User found", new UserResDTO(o.get())) : getErrorResponse("User not found");
+		return o.isPresent() ? getSuccessResponse("User found", new UserProfileResDTO(o.get())) : getErrorResponse("User not found");
 	}
 
 	@Transactional
@@ -171,7 +172,7 @@ public class UserServiceImpl extends AbstractBaseService<User, UserResDTO, UserR
 			Page<User> page = userRepo.findAllByDeleted(false, pageable);
 			if(!page.hasContent()) return getErrorResponse("User not found in this system");
 
-			return getSuccessResponsed(
+			return getSuccessResponse(
 					"Found Users",
 					page.map(data -> new ModelMapper().map(data, UserResDTO.class))
 			);
