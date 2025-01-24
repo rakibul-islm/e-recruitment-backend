@@ -6,6 +6,7 @@ import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.repository.JobCircularRepo;
 import com.bd.erecruitment.service.JobCircularService;
 import com.bd.erecruitment.service.exception.ServiceException;
+import com.bd.erecruitment.specification.JobCircularSpecification;
 import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,7 +43,8 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 	@Transactional
 	@Override
 	public Response<JobCircularResDTO> save(JobCircularReqDto reqDto) throws ServiceException{
-		if(ValidateForm(reqDto) != null) return ValidateForm(reqDto);
+		Response<JobCircularResDTO> errorResponse = ValidateForm(reqDto);
+		if(errorResponse != null) return errorResponse;
 
 		JobCircular jobCircular = reqDto.getBean();
 		jobCircular = createEntity(jobCircular);
@@ -54,7 +57,9 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 	@Transactional
 	@Override
 	public Response<JobCircularResDTO> update(JobCircularReqDto reqDto) throws ServiceException {
-		if(ValidateForm(reqDto) != null) return ValidateForm(reqDto);
+		Response<JobCircularResDTO> errorResponse = ValidateForm(reqDto);
+		if(errorResponse != null) return errorResponse;
+
 
 		Optional<JobCircular> exOp = jobCircularRepo.findById(reqDto.getId());
 		if(exOp.isEmpty()) return getErrorResponse("Job Circular not Found");
@@ -125,7 +130,7 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 	public Response<JobCircularResDTO> ValidateForm(JobCircularReqDto reqDto) throws ServiceException {
 		// validation
 		if(StringUtils.isBlank(reqDto.getJobTitle())) return getErrorResponse("Job Title Required");
-		if(StringUtils.isBlank(reqDto.getCompanyName())) return getErrorResponse("JCompany Name Required");
+		if(StringUtils.isBlank(reqDto.getCompanyName())) return getErrorResponse("Company Name Required");
 		if(StringUtils.isBlank(reqDto.getCompanyPhone())) return getErrorResponse("Company Phone Required");
 		if(StringUtils.isBlank(reqDto.getCompanyEmail())) return getErrorResponse("Company Email Required");
 		if(StringUtils.isBlank(reqDto.getSalary())) return getErrorResponse("Salary Required");
@@ -135,5 +140,80 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 
 		return null;
 	}
-	
+
+	@Override
+	public Response<JobCircularResDTO> filter(
+			Pageable pageable,
+			Boolean isPageable,
+			String jobTitle,
+			String companyName,
+			String companyAddress,
+			String companyPhone,
+			String companyEmail,
+			String companyWebsite,
+			String companyBusiness,
+			Date applicationDeadLine,
+			Integer vacancy,
+			String experience,
+			String salary,
+			String jobLocation,
+			String jobRequirement,
+			String jobResponsibilities,
+			String otherBenefits,
+			String workPlace,
+			String employmentStatus) throws ServiceException {
+		if(Boolean.TRUE.equals(isPageable)) {
+			Page<JobCircular> page = jobCircularRepo.findAll(
+					JobCircularSpecification.findByCriteria(
+							jobTitle,
+							companyName,
+							companyAddress,
+							companyPhone,
+							companyEmail,
+							companyWebsite,
+							companyBusiness,
+							applicationDeadLine,
+							vacancy,
+							experience,
+							salary,
+							jobLocation,
+							jobRequirement,
+							jobResponsibilities,
+							otherBenefits,
+							workPlace,
+							employmentStatus), pageable);
+			if(!page.hasContent()) return getErrorResponse("Job Circular not Found");
+
+			return getSuccessResponse(
+					"Found Job Circulars",
+					page.map(data -> new ModelMapper().map(data, JobCircularResDTO.class))
+			);
+		}
+		List<JobCircular> list = jobCircularRepo.findAll(
+				JobCircularSpecification.findByCriteria(
+						jobTitle,
+						companyName,
+						companyAddress,
+						companyPhone,
+						companyEmail,
+						companyWebsite,
+						companyBusiness,
+						applicationDeadLine,
+						vacancy,
+						experience,
+						salary,
+						jobLocation,
+						jobRequirement,
+						jobResponsibilities,
+						otherBenefits,
+						workPlace,
+						employmentStatus));
+		if(list.isEmpty()) return getErrorResponse("Job Circular not Found");
+
+		return getSuccessResponse(
+				"Found Job Circulars",
+				list.stream().map(data -> new ModelMapper().map(data, JobCircularResDTO.class))
+						.collect(Collectors.toList())
+		);
+	}
 }

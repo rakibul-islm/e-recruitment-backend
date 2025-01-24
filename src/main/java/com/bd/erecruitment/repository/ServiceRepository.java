@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.Optional;
  */
 
 @NoRepositoryBean
-public interface ServiceRepository<E extends BaseEntity> extends JpaRepository<E, Long> {
+public interface ServiceRepository<E extends BaseEntity> extends JpaRepository<E, Long>, JpaSpecificationExecutor {
 
 	Optional<E> findByIdAndDeleted(Long id, boolean deleted);
 
