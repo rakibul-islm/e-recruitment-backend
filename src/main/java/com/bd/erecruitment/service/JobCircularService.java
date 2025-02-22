@@ -1,10 +1,7 @@
 package com.bd.erecruitment.service;
 
-import com.bd.erecruitment.dto.res.JobCircularResDTO;
 import com.bd.erecruitment.service.exception.ServiceException;
 import com.bd.erecruitment.util.Response;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Date;

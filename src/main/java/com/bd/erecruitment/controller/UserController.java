@@ -36,7 +36,7 @@ public class UserController extends AbstractBaseController<UserResDTO, UserReqDt
 	}
 
 	@Operation(summary = "User Profile")
-	@GetMapping("/user-profile")
+	@GetMapping("/profile")
 	public Response<UserProfileResDTO> userProfile() throws Exception {
 		return userService.userProfile();
 	}

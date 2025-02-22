@@ -10,10 +10,6 @@ import java.util.Map;
 public class Response<R> {
 
 	private boolean success = true;
-	private boolean info = false;
-	private boolean warning = false;
-
-	private String code;
 	private String message;
 
 	private Map<String, R> model;
