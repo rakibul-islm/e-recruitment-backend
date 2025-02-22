@@ -69,6 +69,9 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 
 	@Override
 	public Response<AuthenticationResDTO> generateToken(AuthenticationReqDTO reqDto) {
+		if(StringUtils.isBlank(reqDto.getUsername()) || StringUtils.isBlank(reqDto.getPassword())){
+			return getErrorResponse("Username or password can't be empty");
+		}
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(reqDto.getUsername(), reqDto.getPassword()));
 		} catch (BadCredentialsException e) {
