@@ -6,109 +6,43 @@ import org.springframework.data.domain.Page;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class CommonFunctionsImpl implements CommonFunctions {
 
-	@Override
-	public <R>Response<R> getSuccessResponse(String message) {
-		return getSuccessResponse(null, message);
-	}
-
-	@Override
-	public <R>Response<R> getSuccessResponse(String code, String message) {
+	private <R> Response<R> createResponse(boolean success, String message, R obj, List<R> list, Page<R> page, Map<String, R> model) {
 		Response<R> response = new Response<>();
-		response.setSuccess(true);
-		response.setCode(code);
+		response.setSuccess(success);
 		response.setMessage(message);
-		return response;
-	}
-
-	@Override
-	public <R>Response<R> getSuccessResponse(String message, R r) {
-		return getSuccessResponse(null, message, r);
-	}
-
-	@Override
-	public <R>Response<R> getSuccessResponse(String code, String message, R r) {
-		Response<R> response = new Response<>();
-		response.setSuccess(true);
-		response.setCode(code);
-		response.setMessage(message);
-		response.setObj(r);
-		return response;
-	}
-
-	@Override
-	public <R>Response<R> getSuccessResponse(String message, List<R> list) {
-		return getSuccessResponse(null, message, list);
-	}
-
-	@Override
-	public <R>Response<R> getSuccessResponse(String code, String message, List<R> list) {
-		Response<R> response = new Response<>();
-		response.setSuccess(true);
-		response.setCode(code);
-		response.setMessage(message);
-		response.setList(list);
-		return response;
-	}
-
-	@Override
-	public <R>Response<R> getSuccessResponse(String message, Page<R> page) {
-		Response<R> response = new Response<>();
-		response.setSuccess(true);
-		response.setMessage(message);
+		response.setObj(obj);
+		response.setList(list != null ? list : Collections.emptyList());
 		response.setPage(page);
+		response.setModel(model != null ? model : Collections.emptyMap());
 		return response;
 	}
 
 	@Override
-	public <R>Response<R> getSuccessResponse(String message, Response<R> response) {
-		return getSuccessResponse(null, message, response);
+	public <R> Response<R> getSuccessResponse(String message) {
+		return createResponse(true, message, null, null, null, null);
 	}
 
 	@Override
-	public <R>Response<R> getSuccessResponse(String code, String message, Response<R> response) {
-		response.setSuccess(true);
-		response.setCode(code);
-		response.setMessage(message);
-		return response;
+	public <R> Response<R> getSuccessResponse(String message, R obj) {
+		return createResponse(true, message, obj, null, null, null);
 	}
 
 	@Override
-	public <R>Response<R> getErrorResponse(String message) {
-		Response<R> response = new Response<>();
-		response.setSuccess(false);
-		response.setMessage(message);
-		response.setList(Collections.emptyList());
-		response.setObj(null);
-		response.setModel(Collections.emptyMap());
-		response.setPage(null);
-		return response;
+	public <R> Response<R> getSuccessResponse(String message, List<R> list) {
+		return createResponse(true, message, null, list, null, null);
 	}
 
 	@Override
-	public <R>Response<R> getErrorResponse(String code, String message) {
-		Response<R> response = new Response<>();
-		response.setSuccess(false);
-		response.setCode(code);
-		response.setMessage(message);
-		response.setList(Collections.emptyList());
-		response.setObj(null);
-		response.setModel(Collections.emptyMap());
-		response.setPage(null);
-		return response;
+	public <R> Response<R> getSuccessResponse(String message, Page<R> page) {
+		return createResponse(true, message, null, null, page, null);
 	}
 
 	@Override
-	public <R>Response<R> getErrorResponse(String code, String message, Response<R> response) {
-		response.setSuccess(false);
-		response.setCode(code);
-		response.setMessage(message);
-		if(response.getList() == null || response.getList().isEmpty()) response.setList(Collections.emptyList());
-		if(response.getObj() == null) response.setObj(null);
-		if(response.getModel() == null || response.getModel().isEmpty()) response.setModel(Collections.emptyMap());
-		if(response.getPage() == null) response.setPage(null);
-		return response;
+	public <R> Response<R> getErrorResponse(String message) {
+		return createResponse(false, message, null, null, null, null);
 	}
 }

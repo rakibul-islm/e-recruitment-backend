@@ -72,53 +72,30 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(reqDto.getUsername(), reqDto.getPassword()));
 		} catch (BadCredentialsException e) {
-			Response<AuthenticationResDTO> resDto = new Response<AuthenticationResDTO>();
-			resDto.setSuccess(false);
-			resDto.setMessage(e.getMessage());
-			return resDto;
+			return getErrorResponse("Invalid username or password");
 		}
 
-		// if authentication success then generate token
+		// If authentication is successful, generate token
 		final UserDetails userDetails = userService.loadUserByUsername(reqDto.getUsername());
 		final String jwt = jwtUtil.generateToken(userDetails);
-	
-		Response<AuthenticationResDTO> response = new Response<AuthenticationResDTO>();
-		response.setSuccess(true);
-		response.setMessage("Token generated successfully");
+
 		AuthenticationResDTO resDto = new AuthenticationResDTO(jwt);
-		response.setObj(resDto);
-		return response;
+		return getSuccessResponse("Token generated successfully", resDto);
 	}
 
 	@Override
 	public Response<TokenValidationResDTO> validateToken(TokenValidationReqDTO reqDto) {
-		TokenValidationResDTO resDto = new TokenValidationResDTO();
 		String username = jwtUtil.extractUsername(reqDto.getToken());
 		if(StringUtils.isBlank(username)) {
-			resDto.setValid(false);
-			Response<TokenValidationResDTO> res = new Response<TokenValidationResDTO>();
-			res.setSuccess(false);
-			res.setMessage("Invalid token");
-			res.setObj(resDto);
-			return res;
+			return getErrorResponse("Invalid token");
 		}
 		final UserDetails userDetails = userService.loadUserByUsername(username);
 		boolean valid = jwtUtil.validateToken(reqDto.getToken(), userDetails);
 		if(!valid) {
-			resDto.setValid(false);
-			Response<TokenValidationResDTO> res = new Response<TokenValidationResDTO>();
-			res.setSuccess(false);
-			res.setMessage("Invalid token");
-			res.setObj(resDto);
-			return res;
+			return getErrorResponse("Invalid token");
 		}
 
-		resDto.setValid(true);
-		Response<TokenValidationResDTO> res = new Response<TokenValidationResDTO>();
-		res.setSuccess(true);
-		res.setMessage("Valid token");
-		res.setObj(resDto);
-		return res;
+		return getSuccessResponse("Valid token", new TokenValidationResDTO());
 	}
 
 }

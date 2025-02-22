@@ -28,3 +28,7 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
+
+springdoc:
+    swagger-ui:
+      tags-sorter: alpha
