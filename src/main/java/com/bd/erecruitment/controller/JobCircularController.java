@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Date;
 
 @RestApiController
-@RequestMapping("/e-recruitment/job-circular")
+@RequestMapping("/job-circular")
 @Tag(name = "3.0 Job Circular", description = "API")
 public class JobCircularController extends AbstractBaseController<JobCircularResDTO, JobCircularReqDto>{
 	private JobCircularService<JobCircularResDTO, JobCircularReqDto> jobCircularService;
