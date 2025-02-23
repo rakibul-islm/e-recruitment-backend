@@ -5,7 +5,6 @@ import com.bd.erecruitment.dto.req.AuthenticationReqDTO;
 import com.bd.erecruitment.dto.req.TokenValidationReqDTO;
 import com.bd.erecruitment.dto.res.AuthenticationResDTO;
 import com.bd.erecruitment.dto.res.TokenValidationResDTO;
-import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.service.AuthenticationService;
 import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestApiController
-@RequestMapping("/e-recruitment/authenticate")
+@RequestMapping("/authenticate")
 @Tag(name = "1.0 Authentication", description = "API")
 public class AuthenticationController extends AbstractBaseController<AuthenticationResDTO, AuthenticationReqDTO> {
 

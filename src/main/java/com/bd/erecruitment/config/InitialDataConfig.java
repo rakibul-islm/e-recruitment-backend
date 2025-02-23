@@ -18,8 +18,9 @@ import java.util.Date;
 public class InitialDataConfig implements ApplicationRunner {
 
 	private static final String SYSTEM_ADMIN_USERNAME = "admin";
+	private static final String SYSTEM_ADMIN_FULL_NAME = "System Admin";
 	private static final String SYSTEM_ADMIN_EMAIL = "admin@e-recruitment.com";
-	private static final String SYSTEM_ADMIN_PASSWORD = "admin@2024";
+	private static final String SYSTEM_ADMIN_PASSWORD = "admin@2025";
 
 	@Autowired private UserRepo userRepo;
 	@Autowired private BCryptPasswordEncoder encoder;
@@ -36,6 +37,7 @@ public class InitialDataConfig implements ApplicationRunner {
 			log.info("===========> Creating System Admin ===========");
 			User u = new User();
 			u.setUsername(SYSTEM_ADMIN_USERNAME);
+			u.setFullName(SYSTEM_ADMIN_FULL_NAME);
 			u.setEmail(SYSTEM_ADMIN_EMAIL);
 			u.setPassword(encoder.encode(SYSTEM_ADMIN_PASSWORD));
 			u.setActive(true);

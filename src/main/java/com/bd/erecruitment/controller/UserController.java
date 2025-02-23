@@ -5,7 +5,6 @@ import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.req.UserSignupReqDto;
 import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
-import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.service.UserService;
 import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,10 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
 
 @RestApiController
-@RequestMapping("/e-recruitment/user")
+@RequestMapping("/user")
 @Tag(name = "2.0 User Account", description = "API")
 public class UserController extends AbstractBaseController<UserResDTO, UserReqDto>{
 	
