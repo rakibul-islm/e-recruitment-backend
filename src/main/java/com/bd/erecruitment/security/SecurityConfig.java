@@ -39,8 +39,9 @@ public class SecurityConfig {
 				.csrf().disable()
 				.authorizeHttpRequests()
 				.requestMatchers(
-						"/e-recruitment/authenticate/**",
-						"/e-recruitment/user/signup")
+						"/authenticate/**",
+						"/user/signup",
+						"/job-circular/filter")
 				.permitAll()
 				.requestMatchers(
 						"/actuator/**",
