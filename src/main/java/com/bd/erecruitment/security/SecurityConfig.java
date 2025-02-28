@@ -1,9 +1,7 @@
 package com.bd.erecruitment.security;
 
 import com.bd.erecruitment.filter.JwtAutenticationFilter;
-import com.bd.erecruitment.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -24,38 +23,34 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-	@Autowired
 	private final JwtAutenticationFilter jwtRequestFilter;
-	@Autowired
-	private final UserServiceImpl userService;
-	@Autowired
-	private BCryptPasswordEncoder passwordEncoder;
+	private final UserDetailsService userService;
+	private final BCryptPasswordEncoder passwordEncoder;
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				.cors()
-				.and()
-				.csrf().disable()
-				.authorizeHttpRequests()
-				.requestMatchers(
-						"/authenticate/**",
-						"/user/signup",
-						"/job-circular/filter")
-				.permitAll()
-				.requestMatchers(
-						"/actuator/**",
-						"**/actuator/**")
-				.permitAll()
-				.requestMatchers(AUTH_WHITELIST)
-				.permitAll()
-				.anyRequest().authenticated()
-				.and()
-				.sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-				.and()
+				.cors(cors -> cors.configure(http)) // Enable CORS
+				.csrf(csrf -> csrf.disable()) // Disable CSRF
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(
+								"/authenticate/**",
+								"/user/signup",
+								"/job-circular/filter"
+						).permitAll()
+						.requestMatchers(
+								"/actuator/**",
+								"**/actuator/**"
+						).permitAll()
+						.requestMatchers(AUTH_WHITELIST).permitAll()
+						.anyRequest().authenticated()
+				)
+				.sessionManagement(session -> session
+						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				)
 				.authenticationProvider(authenticationProvider())
 				.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
 		return http.build();
 	}
 
@@ -76,7 +71,7 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public AuthenticationManager manager(AuthenticationConfiguration configuration) throws Exception {
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 		return configuration.getAuthenticationManager();
 	}
 }
