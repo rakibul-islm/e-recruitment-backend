@@ -32,11 +32,13 @@ public class SecurityConfig {
 		http
 				.cors(cors -> cors.configure(http)) // Enable CORS
 				.csrf(csrf -> csrf.disable()) // Disable CSRF
+				.headers(headers -> headers.frameOptions().disable()) // for H2 console
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(
 								"/authenticate/**",
 								"/user/signup",
-								"/job-circular/filter"
+								"/job-circular/filter",
+								"/h2-console/**"
 						).permitAll()
 						.requestMatchers(
 								"/actuator/**",
