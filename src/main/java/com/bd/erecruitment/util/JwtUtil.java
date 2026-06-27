@@ -1,22 +1,23 @@
 package com.bd.erecruitment.util;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
-import javax.crypto.SecretKey;
-
 import com.bd.erecruitment.model.LoggedInUserDetails;
 import com.bd.erecruitment.model.MyUserDetail;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtUtil {
@@ -51,10 +52,17 @@ public class JwtUtil {
 	}
 
 	public String generateToken(UserDetails userDetails) {
-		Map<String, Object> claims = new HashMap<>();
 		MyUserDetail mud = (MyUserDetail) userDetails;
+
+		List<String> authorityList = mud.getAuthorities().stream()
+			.map(GrantedAuthority::getAuthority)
+			.collect(Collectors.toList());
+
 		LoggedInUserDetails liud = new LoggedInUserDetails();
 		BeanUtils.copyProperties(mud, liud);
+		liud.setAuthorities(authorityList); // set as plain strings for JSON
+
+		Map<String, Object> claims = new HashMap<>();
 		claims.put("userDetails", liud);
 		return createToken(claims, userDetails.getUsername());
 	}
@@ -73,5 +81,4 @@ public class JwtUtil {
 		final String username = extractUsername(token);
 		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
 	}
-
 }

@@ -12,16 +12,19 @@ import java.util.Map;
 
 public class GenericSpecification {
 
-    private static final String SUFFIX_GT   = "_gt";
-    private static final String SUFFIX_GTE  = "_gte";
-    private static final String SUFFIX_LT   = "_lt";
-    private static final String SUFFIX_LTE  = "_lte";
-    private static final String SUFFIX_IN   = "_in";
-    private static final String SUFFIX_LIKE = "_like";
-    private static final String SUFFIX_EQ   = "_eq";
+    private static final String SUFFIX_GT      = "_gt";
+    private static final String SUFFIX_GTE     = "_gte";
+    private static final String SUFFIX_LT      = "_lt";
+    private static final String SUFFIX_LTE     = "_lte";
+    private static final String SUFFIX_IN      = "_in";
+    private static final String SUFFIX_LIKE    = "_like";
+    private static final String SUFFIX_EQ      = "_eq";
+    private static final String SUFFIX_NOTNULL = "_notnull";
+    private static final String SUFFIX_NULL    = "_null";
 
     private static final List<String> SUFFIXES = List.of(
-            SUFFIX_GTE, SUFFIX_LTE, SUFFIX_GT, SUFFIX_LT, SUFFIX_IN, SUFFIX_LIKE, SUFFIX_EQ
+            SUFFIX_GTE, SUFFIX_LTE, SUFFIX_GT, SUFFIX_LT, SUFFIX_IN, SUFFIX_LIKE, SUFFIX_EQ,
+            SUFFIX_NOTNULL, SUFFIX_NULL
     );
 
     public static <E> Specification<E> build(Map<String, String> filters) {
@@ -32,14 +35,24 @@ public class GenericSpecification {
                 String key   = entry.getKey();
                 String value = entry.getValue();
 
-                if (value == null || value.isBlank()) continue;
-
                 try {
                     String operator = resolveOperator(key);
                     String fieldName = operator.isEmpty() ? key : key.substring(0, key.length() - operator.length());
 
                     Field field = findField(root.getJavaType(), fieldName);
                     if (field == null) continue;
+
+                    // null-check operators don't need a value
+                    if (SUFFIX_NOTNULL.equals(operator)) {
+                        predicate = cb.and(predicate, cb.isNotNull(root.get(fieldName)));
+                        continue;
+                    }
+                    if (SUFFIX_NULL.equals(operator)) {
+                        predicate = cb.and(predicate, cb.isNull(root.get(fieldName)));
+                        continue;
+                    }
+
+                    if (value == null || value.isBlank()) continue;
 
                     Class<?> type = field.getType();
 

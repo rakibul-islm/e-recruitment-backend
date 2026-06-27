@@ -19,7 +19,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthenticationServiceImpl extends AbstractBaseService<User> implements AuthenticationService<AuthenticationResDTO, AuthenticationReqDTO> {
@@ -90,18 +94,13 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 				user.setFullName(fullName);
 				user.setUsername(email);
 				user.setActive(true);
-				user.setCandidateUser(true);
-				user.setRecruiterUser(false);
-				user.setSuperAdmin(false);
-				user.setSystemAdmin(false);
 				user.setExpiryDate(getDefaultExpiryDate());
 				user = createNormalUser(user);
 			}
 		}
 
 		UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
-		String jwt = jwtUtil.generateToken(userDetails);
-		return getSuccessResponse("Login successful", new AuthenticationResDTO(jwt));
+		return getSuccessResponse("Login successful", buildAuthResponse(userDetails));
 	}
 
 	@Override
@@ -112,11 +111,17 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		} catch (BadCredentialsException e) {
 			returnUnauthorizedException("Invalid username or password");
 		}
+		return getSuccessResponse("Token generated successfully", buildAuthResponse(userService.loadUserByUsername(reqDto.getUsername())));
+	}
 
-		final UserDetails userDetails = userService.loadUserByUsername(reqDto.getUsername());
-		final String jwt = jwtUtil.generateToken(userDetails);
-
-		return getSuccessResponse("Token generated successfully", new AuthenticationResDTO(jwt));
+	private AuthenticationResDTO buildAuthResponse(UserDetails userDetails) {
+		List<String> authorities = userDetails.getAuthorities().stream()
+			.map(GrantedAuthority::getAuthority)
+			.collect(Collectors.toList());
+		return AuthenticationResDTO.builder()
+			.token(jwtUtil.generateToken(userDetails))
+			.authorities(authorities)
+			.build();
 	}
 
 }

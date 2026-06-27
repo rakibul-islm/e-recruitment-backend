@@ -6,10 +6,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 public class MyUserDetail implements UserDetails {
@@ -23,17 +25,12 @@ public class MyUserDetail implements UserDetails {
 	private String address;
 	private String phone;
 	private String mobile;
-	private boolean superAdmin;
-	private boolean systemAdmin;
-	private boolean recruiterUser;
-	private boolean candidateUser;
-	private String roles;
-	private List<GrantedAuthority> authorities;
 	private boolean enabled;
 	private boolean locked;
 	private Date expiryDate;
+	private List<GrantedAuthority> authorities;
 
-	public MyUserDetail(User user){
+	public MyUserDetail(User user) {
 		this.id = user.getId();
 		this.username = user.getUsername();
 		this.password = user.getPassword();
@@ -41,17 +38,28 @@ public class MyUserDetail implements UserDetails {
 		this.address = user.getAddress();
 		this.phone = user.getPhone();
 		this.mobile = user.getMobile();
-		this.superAdmin = user.isSuperAdmin();
-		this.systemAdmin = user.isSystemAdmin();
-		this.recruiterUser = user.isRecruiterUser();
-		this.candidateUser = user.isCandidateUser();
-		this.roles = user.getRoles();
-		this.authorities = Arrays.stream(roles.split(","))
-									.<GrantedAuthority>map(SimpleGrantedAuthority::new)
-									.toList();
 		this.enabled = user.isActive();
 		this.locked = user.isLocked();
 		this.expiryDate = user.getExpiryDate();
+
+		Set<GrantedAuthority> auths = new HashSet<>();
+
+		// Direct role → permission authorities
+		if (user.getRoles() != null)
+			user.getRoles().stream()
+				.flatMap(r -> r.getPermissions().stream())
+				.map(p -> new SimpleGrantedAuthority(p.getAuthority()))
+				.forEach(auths::add);
+
+		// UserGroup → role → permission authorities
+		if (user.getUserGroups() != null)
+			user.getUserGroups().stream()
+				.flatMap(g -> g.getRoles().stream())
+				.flatMap(r -> r.getPermissions().stream())
+				.map(p -> new SimpleGrantedAuthority(p.getAuthority()))
+				.forEach(auths::add);
+
+		this.authorities = new ArrayList<>(auths);
 	}
 
 	@Override
@@ -92,5 +100,4 @@ public class MyUserDetail implements UserDetails {
 	public boolean isEnabled() {
 		return this.enabled;
 	}
-
 }

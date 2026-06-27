@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 import org.modelmapper.ModelMapper;
 
 import java.util.Date;
+import java.util.Set;
 
 @Data
 @SuperBuilder
@@ -28,10 +29,8 @@ public class UserReqDto extends BaseRequestDTO<User> {
 	private Date expiryDate;
 	private String imageBase64;
 
-	private boolean superAdmin;
-	private boolean systemAdmin;
-	private boolean recruiterUser;
-	private boolean candidateUser;
+	private Set<Long> roleIds;
+	private Set<Long> userGroupIds;
 
 	@JsonIgnore
 	@Override
@@ -40,5 +39,4 @@ public class UserReqDto extends BaseRequestDTO<User> {
 		new ModelMapper().map(this, u);
 		return u;
 	}
-
 }

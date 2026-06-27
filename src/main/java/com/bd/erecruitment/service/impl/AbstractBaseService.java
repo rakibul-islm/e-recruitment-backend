@@ -1,6 +1,5 @@
 package com.bd.erecruitment.service.impl;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Optional;
 
 import com.bd.erecruitment.entity.BaseEntity;
 import com.bd.erecruitment.entity.User;
-import com.bd.erecruitment.enums.UserRole;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.ServiceRepository;
 import com.bd.erecruitment.repository.UserRepo;
@@ -41,10 +39,10 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return cal.getTime();
 	}
 
-	protected boolean isRole(UserRole role) {
+	protected boolean hasAuthority(String authority) {
 		MyUserDetail user = getLoggedInUserDetails();
 		if (user == null) return false;
-		return Arrays.asList(user.getRoles().split(",")).contains(role.name());
+		return user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(authority));
 	}
 
 	protected E findByIdOrThrow(Long id, String notFoundMessage) {

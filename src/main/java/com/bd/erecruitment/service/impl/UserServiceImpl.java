@@ -5,8 +5,9 @@ import com.bd.erecruitment.dto.req.UserSignupReqDto;
 import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.User;
-import com.bd.erecruitment.enums.UserRole;
 import com.bd.erecruitment.model.MyUserDetail;
+import com.bd.erecruitment.repository.RoleRepo;
+import com.bd.erecruitment.repository.UserGroupRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.UserService;
 import com.bd.erecruitment.util.ImageUtils;
@@ -20,7 +21,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.Map;
 
 @Service
@@ -28,26 +31,32 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 
 	private final UserRepo userRepo;
 	private final BCryptPasswordEncoder encoder;
+	private final RoleRepo roleRepo;
+	private final UserGroupRepo userGroupRepo;
 
-	public UserServiceImpl(UserRepo userRepo, BCryptPasswordEncoder encoder) {
+	public UserServiceImpl(UserRepo userRepo, BCryptPasswordEncoder encoder, RoleRepo roleRepo, UserGroupRepo userGroupRepo) {
 		super(userRepo);
 		this.userRepo = userRepo;
 		this.encoder = encoder;
+		this.roleRepo = roleRepo;
+		this.userGroupRepo = userGroupRepo;
+		// Prevent ModelMapper from triggering lazy load of roles in filter list response
+		modelMapper.typeMap(User.class, UserResDTO.class)
+			.addMappings(m -> m.skip(UserResDTO::setRoles));
 	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		if (StringUtils.isBlank(username)) return null;
-		User user = userRepo.findByUsername(username);
-		if (user == null) user = userRepo.findByEmail(username);
-		if (user == null) throw new UsernameNotFoundException("No user found");
+		User user = userRepo.findByLoginWithPermissions(username)
+			.orElseThrow(() -> new UsernameNotFoundException("No user found"));
 		return new MyUserDetail(user);
 	}
 
+	@Transactional
 	@Override
 	public Response<UserResDTO> find(Long id) {
 		if (id == null) returnErrorException("Id required");
-		checkSelfOrAdminAccess(id);
 		return getSuccessResponse("User found", new UserResDTO(findByIdOrThrow(id, "User not found")));
 	}
 
@@ -63,12 +72,11 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	@Transactional
 	@Override
 	public Response<UserResDTO> save(UserReqDto reqDto) {
-		if (isRole(UserRole.ROLE_CANDIDATE_USER)) returnForbiddenException("Unauthorized access");
 		validateForSave(reqDto.getUsername(), reqDto.getEmail(), reqDto.getPassword());
-
 		User user = reqDto.getBean();
 		user.setPassword(encoder.encode(user.getPassword()));
 		if (reqDto.getExpiryDate() == null) user.setExpiryDate(getDefaultExpiryDate());
+		resolveRolesAndGroups(user, reqDto);
 		return getCreatedResponse("User saved successfully", new UserResDTO(createEntity(user)));
 	}
 
@@ -76,15 +84,10 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	@Override
 	public Response<UserResDTO> saveNormalUser(UserSignupReqDto reqDto) {
 		validateForSave(reqDto.getUsername(), reqDto.getEmail(), reqDto.getPassword());
-
 		User user = reqDto.getBean();
 		user.setPassword(encoder.encode(reqDto.getPassword()))
 			.setExpiryDate(getDefaultExpiryDate())
-			.setActive(true)
-			.setCandidateUser(true)
-			.setRecruiterUser(false)
-			.setSuperAdmin(false)
-			.setSystemAdmin(false);
+			.setActive(true);
 		return getCreatedResponse("User saved successfully", new UserResDTO(createNormalUser(user)));
 	}
 
@@ -96,20 +99,21 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		reqDto.setPassword(StringUtils.isBlank(reqDto.getPassword()) ? exUser.getPassword() : encoder.encode(reqDto.getPassword()));
 		modelMapper.map(reqDto, exUser);
 		exUser.setFileData(StringUtils.isBlank(reqDto.getImageBase64()) ? exUser.getFileData() : Base64.getDecoder().decode(reqDto.getImageBase64()));
+		resolveRolesAndGroups(exUser, reqDto);
 		return getSuccessResponse("User updated successfully", new UserResDTO(updateEntity(exUser)));
 	}
 
 	@Transactional
 	@Override
 	public Response<UserResDTO> delete(Long id) {
-		deleteEntity(resolveUserForOperation(id, "delete"));
+		deleteEntity(findByIdOrThrow(id, "User not found"));
 		return getSuccessResponse("Deleted successfully");
 	}
 
 	@Transactional
 	@Override
 	public Response<UserResDTO> remove(Long id) {
-		removeEntity(resolveUserForOperation(id, "remove"));
+		removeEntity(findByIdOrThrow(id, "User not found"));
 		return getSuccessResponse("Removed successfully");
 	}
 
@@ -126,25 +130,16 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 
 	private void validateForUpdate(UserReqDto reqDto) {
 		if (reqDto.getId() == null) returnErrorException("User Id required");
-		checkSelfOrAdminAccess(reqDto.getId());
-		if (isRole(UserRole.ROLE_CANDIDATE_USER) && (reqDto.isSystemAdmin() || reqDto.isRecruiterUser() || reqDto.isSuperAdmin()))
-			returnForbiddenException("Unauthorized access");
 		User byUsername = userRepo.findByUsername(reqDto.getUsername());
 		if (byUsername != null && !byUsername.getId().equals(reqDto.getId())) returnErrorException("Username already exists");
 		User byEmail = userRepo.findByEmail(reqDto.getEmail());
 		if (byEmail != null && !byEmail.getId().equals(reqDto.getId())) returnErrorException("Email address already exists");
 	}
 
-	private void checkSelfOrAdminAccess(Long id) {
-		if (isRole(UserRole.ROLE_CANDIDATE_USER) && !getLoggedInUserDetails().getId().equals(id))
-			returnForbiddenException("Unauthorized access");
-	}
-
-	private User resolveUserForOperation(Long id, String action) {
-		checkSelfOrAdminAccess(id);
-		User user = findByIdOrThrow(id, "User not found");
-		if (user.isSuperAdmin()) returnForbiddenException("Can't " + action + " super admin user");
-		user.setLocked(true);
-		return user;
+	private void resolveRolesAndGroups(User user, UserReqDto reqDto) {
+		if (reqDto.getRoleIds() != null && !reqDto.getRoleIds().isEmpty())
+			user.setRoles(new HashSet<>(roleRepo.findAllByIdInAndDeleted(new ArrayList<>(reqDto.getRoleIds()), false)));
+		if (reqDto.getUserGroupIds() != null && !reqDto.getUserGroupIds().isEmpty())
+			user.setUserGroups(new HashSet<>(userGroupRepo.findAllByIdInAndDeleted(new ArrayList<>(reqDto.getUserGroupIds()), false)));
 	}
 }
