@@ -1,48 +1,66 @@
 package com.bd.erecruitment.service.impl;
 
-import com.bd.erecruitment.service.CommonFunctions;
+import com.bd.erecruitment.exception.BadRequestException;
+import com.bd.erecruitment.exception.ForbiddenException;
+import com.bd.erecruitment.exception.NotFoundException;
+import com.bd.erecruitment.exception.UnauthorizedException;
 import com.bd.erecruitment.util.Response;
 import org.springframework.data.domain.Page;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-public class CommonFunctionsImpl implements CommonFunctions {
+public class CommonFunctionsImpl {
 
-	private <R> Response<R> createResponse(boolean success, String message, R obj, List<R> list, Page<R> page, Map<String, R> model) {
-		Response<R> response = new Response<>();
-		response.setSuccess(success);
-		response.setMessage(message);
-		response.setObj(obj);
-		response.setList(list != null ? list : Collections.emptyList());
-		response.setPage(page);
-		response.setModel(model != null ? model : Collections.emptyMap());
-		return response;
+	// ── success responses (return a value) ──────────────────────────────────
+
+	protected <R> Response<R> getSuccessResponse(String message) {
+		return build(200, true, message, null, null, null);
 	}
 
-	@Override
-	public <R> Response<R> getSuccessResponse(String message) {
-		return createResponse(true, message, null, null, null, null);
+	protected <R> Response<R> getSuccessResponse(String message, R obj) {
+		return build(200, true, message, obj, null, null);
 	}
 
-	@Override
-	public <R> Response<R> getSuccessResponse(String message, R obj) {
-		return createResponse(true, message, obj, null, null, null);
+	protected <R> Response<R> getSuccessResponse(String message, List<R> list) {
+		return build(200, true, message, null, list, null);
 	}
 
-	@Override
-	public <R> Response<R> getSuccessResponse(String message, List<R> list) {
-		return createResponse(true, message, null, list, null, null);
+	protected <R> Response<R> getSuccessResponse(String message, Page<R> page) {
+		return build(200, true, message, null, null, page);
 	}
 
-	@Override
-	public <R> Response<R> getSuccessResponse(String message, Page<R> page) {
-		return createResponse(true, message, null, null, page, null);
+	protected <R> Response<R> getCreatedResponse(String message, R obj) {
+		return build(201, true, message, obj, null, null);
 	}
 
-	@Override
-	public <R> Response<R> getErrorResponse(String message) {
-		return createResponse(false, message, null, null, null, null);
+	// ── error helpers (throw, no return needed) ─────────────────────────────
+
+	protected void returnErrorException(String message) {
+		throw new BadRequestException(message);
+	}
+
+	protected void returnUnauthorizedException(String message) {
+		throw new UnauthorizedException(message);
+	}
+
+	protected void returnForbiddenException(String message) {
+		throw new ForbiddenException(message);
+	}
+
+	protected void returnNotFoundException(String message) {
+		throw new NotFoundException(message);
+	}
+
+	// ── internal builder ────────────────────────────────────────────────────
+
+	private <R> Response<R> build(int code, boolean success, String message, R obj, List<R> list, Page<R> page) {
+		Response<R> res = new Response<>();
+		res.setCode(code);
+		res.setSuccess(success);
+		res.setMessage(message);
+		res.setObj(obj);
+		res.setList(list);
+		res.setPage(page);
+		return res;
 	}
 }

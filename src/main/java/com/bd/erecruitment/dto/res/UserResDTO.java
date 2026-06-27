@@ -1,18 +1,18 @@
 package com.bd.erecruitment.dto.res;
 
 import com.bd.erecruitment.entity.User;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
+@SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class UserResDTO extends BaseResponseDTO<User>{
 
 	public UserResDTO(User user){

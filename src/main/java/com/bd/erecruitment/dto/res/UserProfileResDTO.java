@@ -1,14 +1,16 @@
 package com.bd.erecruitment.dto.res;
 
 import com.bd.erecruitment.entity.User;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserProfileResDTO{
 
 	public UserProfileResDTO(User user){

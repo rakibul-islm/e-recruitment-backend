@@ -3,11 +3,17 @@ package com.bd.erecruitment.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Date;
 
 @Data
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@Accessors(chain = true)
 @Table(name = "JOB_CIRCULAR")
 @EqualsAndHashCode(callSuper = true)
 public class JobCircular extends SequenceIdGenerator{

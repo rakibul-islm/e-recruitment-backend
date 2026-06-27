@@ -16,7 +16,7 @@ import java.util.Optional;
  */
 
 @NoRepositoryBean
-public interface ServiceRepository<E extends BaseEntity> extends JpaRepository<E, Long>, JpaSpecificationExecutor {
+public interface ServiceRepository<E extends BaseEntity> extends JpaRepository<E, Long>, JpaSpecificationExecutor<E> {
 
 	Optional<E> findByIdAndDeleted(Long id, boolean deleted);
 

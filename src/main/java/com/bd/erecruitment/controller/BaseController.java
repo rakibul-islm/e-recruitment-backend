@@ -1,22 +1,25 @@
 package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.util.Response;
-import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
 
 public interface BaseController<R, E> {
 
-	Response<R> getAll(@Nullable Pageable pageable, Boolean isPageable);
+	ResponseEntity<Response<R>> filter(@RequestParam Map<String, String> filters, Pageable pageable, Boolean isPageable);
 
-	Response<R> save(@RequestBody E e);
+	ResponseEntity<Response<R>> save(@RequestBody E e);
 
-	Response<R> update(@RequestBody E e);
+	ResponseEntity<Response<R>> update(@RequestBody E e);
 
-	Response<R> find(@PathVariable Long id);
+	ResponseEntity<Response<R>> find(@PathVariable Long id);
 
-	Response<R> delete(@RequestBody E e);
+	ResponseEntity<Response<R>> delete(@PathVariable Long id);
 
-	Response<R> remove(@PathVariable Long id);
+	ResponseEntity<Response<R>> remove(@PathVariable Long id);
 }

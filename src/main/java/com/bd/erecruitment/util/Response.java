@@ -1,19 +1,19 @@
 package com.bd.erecruitment.util;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.Map;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Response<R> {
 
-	private boolean success = true;
+	private int code;
+	private boolean success;
 	private String message;
-
-	private Map<String, R> model;
-	private List<R> list;
 	private R obj;
+	private List<R> list;
 	private Page<R> page;
 }

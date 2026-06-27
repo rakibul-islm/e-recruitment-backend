@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Tag(name = "2.0 User Account", description = "API")
 public class UserController extends AbstractBaseController<UserResDTO, UserReqDto>{
 	
-	private UserService<UserResDTO, UserReqDto> userService;
+	private final UserService<UserResDTO, UserReqDto> userService;
 
 	public UserController(UserService<UserResDTO, UserReqDto> userService) {
 		super(userService);

@@ -10,4 +10,5 @@ import java.util.List;
 public interface UserRepo extends ServiceRepository<User> {
 	public User findByUsername(String username);
 	public User findByEmail(String email);
+	public User findByGoogleId(String googleId);
 }

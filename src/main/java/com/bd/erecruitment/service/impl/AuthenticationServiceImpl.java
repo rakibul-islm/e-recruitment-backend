@@ -1,24 +1,25 @@
 package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.dto.req.AuthenticationReqDTO;
-import com.bd.erecruitment.dto.req.TokenValidationReqDTO;
+import com.bd.erecruitment.dto.req.GoogleAuthReqDTO;
 import com.bd.erecruitment.dto.res.AuthenticationResDTO;
-import com.bd.erecruitment.dto.res.TokenValidationResDTO;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.AuthenticationService;
-import com.bd.erecruitment.service.exception.ServiceException;
 import com.bd.erecruitment.util.JwtUtil;
 import com.bd.erecruitment.util.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Service
 public class AuthenticationServiceImpl extends AbstractBaseService<User> implements AuthenticationService<AuthenticationResDTO, AuthenticationReqDTO> {
@@ -27,78 +28,95 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	@Autowired private JwtUtil jwtUtil;
 	@Autowired private UserServiceImpl userService;
 
+	@Value("${google.client-id}")
+	private String googleClientId;
+
+	private final UserRepo userRepo;
+	private final RestTemplate restTemplate = new RestTemplate();
+
 	AuthenticationServiceImpl(UserRepo userRepo){
 		super(userRepo);
+		this.userRepo = userRepo;
 	}
 
 	@Override
-	public Response<AuthenticationResDTO> find(Long id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Response<AuthenticationResDTO> find(Long id) { return null; }
 
 	@Override
-	public Response<AuthenticationResDTO> save(AuthenticationReqDTO reqDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Response<AuthenticationResDTO> save(AuthenticationReqDTO reqDto) { return null; }
 
 	@Override
-	public Response<AuthenticationResDTO> update(AuthenticationReqDTO reqDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Response<AuthenticationResDTO> update(AuthenticationReqDTO reqDto) { return null; }
 
 	@Override
-	public Response<AuthenticationResDTO> getAll(Pageable pageable, Boolean isPageable) throws ServiceException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Response<AuthenticationResDTO> delete(Long id) { return null; }
 
 	@Override
-	public Response<AuthenticationResDTO> delete(AuthenticationReqDTO reqDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Response<AuthenticationResDTO> remove(Long id) { return null; }
 
 	@Override
-	public Response<AuthenticationResDTO> remove(Long id) throws ServiceException {
-		// TODO Auto-generated method stub
-		return null;
+	@SuppressWarnings("unchecked")
+	public Response<AuthenticationResDTO> loginWithGoogle(GoogleAuthReqDTO reqDto) {
+		if (StringUtils.isBlank(reqDto.getIdToken())) returnUnauthorizedException("Google ID token is required");
+
+		Map<String, Object> tokenInfo;
+		try {
+			ResponseEntity<Map> response = restTemplate.getForEntity(
+					"https://oauth2.googleapis.com/tokeninfo?id_token=" + reqDto.getIdToken(), Map.class);
+			if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) returnUnauthorizedException("Invalid Google token");
+			tokenInfo = response.getBody();
+		} catch (Exception e) {
+			returnUnauthorizedException("Invalid Google token");
+			return null; // unreachable, satisfies compiler
+		}
+
+		if (!googleClientId.equals(tokenInfo.get("aud"))) returnUnauthorizedException("Invalid Google token audience");
+		if (!"true".equals(String.valueOf(tokenInfo.get("email_verified")))) returnUnauthorizedException("Google email not verified");
+
+		String googleId = (String) tokenInfo.get("sub");
+		String email    = (String) tokenInfo.get("email");
+		String fullName = (String) tokenInfo.get("name");
+
+		User user = userRepo.findByGoogleId(googleId);
+		if (user == null) {
+			user = userRepo.findByEmail(email);
+			if (user != null) {
+				user.setGoogleId(googleId);
+				userRepo.save(user);
+			} else {
+				user = new User();
+				user.setGoogleId(googleId);
+				user.setEmail(email);
+				user.setFullName(fullName);
+				user.setUsername(email);
+				user.setActive(true);
+				user.setCandidateUser(true);
+				user.setRecruiterUser(false);
+				user.setSuperAdmin(false);
+				user.setSystemAdmin(false);
+				user.setExpiryDate(getDefaultExpiryDate());
+				user = createNormalUser(user);
+			}
+		}
+
+		UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+		String jwt = jwtUtil.generateToken(userDetails);
+		return getSuccessResponse("Login successful", new AuthenticationResDTO(jwt));
 	}
 
 	@Override
 	public Response<AuthenticationResDTO> generateToken(AuthenticationReqDTO reqDto) {
-		if(StringUtils.isBlank(reqDto.getUsername()) || StringUtils.isBlank(reqDto.getPassword())){
-			return getErrorResponse("Username or password can't be empty");
-		}
+		if (StringUtils.isBlank(reqDto.getUsername()) || StringUtils.isBlank(reqDto.getPassword())) returnErrorException("Username or password can't be empty");
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(reqDto.getUsername(), reqDto.getPassword()));
 		} catch (BadCredentialsException e) {
-			return getErrorResponse("Invalid username or password");
+			returnUnauthorizedException("Invalid username or password");
 		}
 
-		// If authentication is successful, generate token
 		final UserDetails userDetails = userService.loadUserByUsername(reqDto.getUsername());
 		final String jwt = jwtUtil.generateToken(userDetails);
 
-		AuthenticationResDTO resDto = new AuthenticationResDTO(jwt);
-		return getSuccessResponse("Token generated successfully", resDto);
-	}
-
-	@Override
-	public Response<TokenValidationResDTO> validateToken(TokenValidationReqDTO reqDto) {
-		String username = jwtUtil.extractUsername(reqDto.getToken());
-		if(StringUtils.isBlank(username)) {
-			return getErrorResponse("Invalid token");
-		}
-		final UserDetails userDetails = userService.loadUserByUsername(username);
-		boolean valid = jwtUtil.validateToken(reqDto.getToken(), userDetails);
-		if(!valid) {
-			return getErrorResponse("Invalid token");
-		}
-
-		return getSuccessResponse("Valid token", new TokenValidationResDTO());
+		return getSuccessResponse("Token generated successfully", new AuthenticationResDTO(jwt));
 	}
 
 }

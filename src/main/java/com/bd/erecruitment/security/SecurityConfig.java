@@ -40,10 +40,7 @@ public class SecurityConfig {
 								"/job-circular/filter",
 								"/h2-console/**"
 						).permitAll()
-						.requestMatchers(
-								"/actuator/**",
-								"**/actuator/**"
-						).permitAll()
+						.requestMatchers("/actuator/**").permitAll()
 						.requestMatchers(AUTH_WHITELIST).permitAll()
 						.anyRequest().authenticated()
 				)

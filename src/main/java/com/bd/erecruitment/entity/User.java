@@ -5,11 +5,17 @@ import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 import java.util.Date;
 
 @Data
 @Entity
+@SuperBuilder
+@NoArgsConstructor
+@Accessors(chain = true)
 @Table(name = "USER_ACCOUNT")
 @EqualsAndHashCode(callSuper = true)
 public class User extends SequenceIdGenerator{
@@ -32,6 +38,9 @@ public class User extends SequenceIdGenerator{
     private byte[] fileData;
 	@Transient
 	private String imageBase64;
+
+	@Column(name = "google_id", unique = true)
+	private String googleId;
 
 	private boolean superAdmin;
 	private boolean systemAdmin;

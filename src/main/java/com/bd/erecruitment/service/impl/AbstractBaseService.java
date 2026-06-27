@@ -1,29 +1,33 @@
 package com.bd.erecruitment.service.impl;
 
-import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.bd.erecruitment.entity.BaseEntity;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.enums.UserRole;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.ServiceRepository;
 import com.bd.erecruitment.repository.UserRepo;
+import com.bd.erecruitment.specification.GenericSpecification;
+import com.bd.erecruitment.util.Response;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFunctionsImpl{
+public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFunctionsImpl {
 
-	protected static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-	@Autowired protected ApplicationContext appContext;
 	@Autowired private UserRepo userRepo;
-	private final ServiceRepository<E> repository;
-	private ModelMapper modelMapper;
+	protected final ServiceRepository<E> repository;
+	protected ModelMapper modelMapper;
 
 	protected AbstractBaseService(ServiceRepository<E> repository) {
 		this.repository = repository;
@@ -31,31 +35,64 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		modelMapper.getConfiguration().setAmbiguityIgnored(true);
 	}
 
+	protected Date getDefaultExpiryDate() {
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.YEAR, 50);
+		return cal.getTime();
+	}
+
+	protected boolean isRole(UserRole role) {
+		MyUserDetail user = getLoggedInUserDetails();
+		if (user == null) return false;
+		return Arrays.asList(user.getRoles().split(",")).contains(role.name());
+	}
+
+	protected E findByIdOrThrow(Long id, String notFoundMessage) {
+		return repository.findByIdAndDeleted(id, false)
+				.orElseThrow(() -> new com.bd.erecruitment.exception.NotFoundException(notFoundMessage));
+	}
+
+	protected <R> Response<R> genericFilter(Map<String, String> filters, Pageable pageable, Boolean isPageable, Class<R> responseClass) {
+		Specification<E> spec = GenericSpecification.build(filters);
+		if (Boolean.TRUE.equals(isPageable)) {
+			Page<E> page = repository.findAll(spec, pageable);
+			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(e -> modelMapper.map(e, responseClass)));
+		}
+		List<E> list = repository.findAll(spec);
+		List<R> result = list.stream().map(e -> modelMapper.map(e, responseClass)).toList();
+		return getSuccessResponse(result.isEmpty() ? "No data found" : "Found", result);
+	}
+
 	protected List<E> createAllEntity(List<E> entities) {
-		for(E entity : entities) {
-			entity.setCreatedBy(getLoggedInUserDetails().getUsername());
-			entity.setCreatedOn(new Date());
-			entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
-			entity.setUpdatedOn(new Date());
+		String actor = getLoggedInUserDetails().getUsername();
+		Date now = new Date();
+		for (E entity : entities) {
+			entity.setCreatedBy(actor);
+			entity.setCreatedOn(now);
+			entity.setUpdatedBy(actor);
+			entity.setUpdatedOn(now);
 			entity.setDeleted(false);
 		}
 		return repository.saveAll(entities);
 	}
 
 	protected E createEntity(E entity) {
-		entity.setCreatedBy(getLoggedInUserDetails().getUsername());
-		entity.setCreatedOn(new Date());
-		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
-		entity.setUpdatedOn(new Date());
+		String actor = getLoggedInUserDetails().getUsername();
+		Date now = new Date();
+		entity.setCreatedBy(actor);
+		entity.setCreatedOn(now);
+		entity.setUpdatedBy(actor);
+		entity.setUpdatedOn(now);
 		entity.setDeleted(false);
 		return repository.save(entity);
 	}
-	
+
 	protected E createNormalUser(E entity) {
+		Date now = new Date();
 		entity.setCreatedBy("signup");
-		entity.setCreatedOn(new Date());
+		entity.setCreatedOn(now);
 		entity.setUpdatedBy("signup");
-		entity.setUpdatedOn(new Date());
+		entity.setUpdatedOn(now);
 		entity.setDeleted(false);
 		return repository.save(entity);
 	}
@@ -71,26 +108,22 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		repository.delete(entity);
 	}
 
-	protected E removeEntityById(E entity) {
+	protected void removeEntity(E entity) {
 		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
 		entity.setUpdatedOn(new Date());
 		entity.setDeleted(true);
-		return repository.save(entity);
+		repository.save(entity);
 	}
 
 	protected MyUserDetail getLoggedInUserDetails() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		if(auth == null || !auth.isAuthenticated()) return null;
-
+		if (auth == null || !auth.isAuthenticated()) return null;
 		Object principal = auth.getPrincipal();
-		if (principal instanceof MyUserDetail mud) {
-			return mud;
-		}
-		return null;
+		return principal instanceof MyUserDetail mud ? mud : null;
 	}
 
 	protected User getLoggedInUser() {
 		Optional<User> userOp = userRepo.findByIdAndDeleted(getLoggedInUserDetails().getId(), false);
-		return userOp.isPresent() ? userOp.get() : null;
+		return userOp.orElse(null);
 	}
 }

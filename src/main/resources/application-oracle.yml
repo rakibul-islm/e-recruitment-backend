@@ -1,5 +1,5 @@
 spring:
-  datasource: 
+  datasource:
     url: jdbc:oracle:thin:@localhost:1521:mypdb
     username: e_recruitment
     password: e_recruitment
@@ -12,13 +12,11 @@ spring:
   main:
     allow-circular-references: true
   jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
     show-sql: true
     generate-ddl: true
-    hibernate: 
-      ddl-auto: update 
-    properties: 
-      hibernate: 
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.OracleDialect
-        id: 
-          new_generator_mappings: false

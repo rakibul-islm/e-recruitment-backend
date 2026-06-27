@@ -1,20 +1,21 @@
 package com.bd.erecruitment.service;
 
-import com.bd.erecruitment.service.exception.ServiceException;
 import com.bd.erecruitment.util.Response;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
+
 public interface BaseService<R, E> {
 
-	public Response<R> find(Long id) throws ServiceException;
+	Response<R> find(Long id);
 
-	public Response<R> save(E reqDto) throws ServiceException;
+	Response<R> save(E reqDto);
 
-	public Response<R> update(E reqDto) throws ServiceException;
+	Response<R> update(E reqDto);
 
-	public Response<R> getAll(Pageable pageable, Boolean isPageable) throws ServiceException;
+	Response<R> delete(Long id);
 
-	public Response<R> delete(E reqDto) throws ServiceException;
+	Response<R> remove(Long id);
 
-	public Response<R> remove(Long id) throws ServiceException;
+	default Response<R> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) { return null; }
 }

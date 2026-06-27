@@ -4,11 +4,15 @@ import com.bd.erecruitment.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.beans.BeanUtils;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class UserReqDto extends BaseRequestDTO<User> {
 
@@ -33,7 +37,7 @@ public class UserReqDto extends BaseRequestDTO<User> {
 	@Override
 	public User getBean() {
 		User u = new User();
-		BeanUtils.copyProperties(this, u);
+		new ModelMapper().map(this, u);
 		return u;
 	}
 

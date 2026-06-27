@@ -6,11 +6,15 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.beans.BeanUtils;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class JobCircularReqDto extends BaseRequestDTO<JobCircular> {
 
@@ -37,7 +41,7 @@ public class JobCircularReqDto extends BaseRequestDTO<JobCircular> {
 	@Override
 	public JobCircular getBean() {
 		JobCircular u = new JobCircular();
-		BeanUtils.copyProperties(this, u);
+		new ModelMapper().map(this, u);
 		return u;
 	}
 

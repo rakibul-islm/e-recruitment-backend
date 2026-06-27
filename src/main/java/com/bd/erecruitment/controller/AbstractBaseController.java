@@ -6,89 +6,73 @@ import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 @RequiredArgsConstructor
 public class AbstractBaseController<R, E> extends CommonFunctionsImpl implements BaseController<R, E> {
 
 	protected final BaseService<R, E> service;
 
-	@GetMapping
-	@Operation(summary = "Get All")
+	private static final Set<String> RESERVED_PARAMS = Set.of("page", "size", "sort", "isPageable");
+
+	@GetMapping("/filter")
+	@Operation(summary = "Filter")
 	@Override
-	public Response<R> getAll(
+	public ResponseEntity<Response<R>> filter(
+			@RequestParam Map<String, String> filters,
 			@Nullable Pageable pageable,
 			@RequestParam(required = false) Boolean isPageable
 	) {
-		try {
-			return service.getAll(pageable, isPageable);
-		} catch (Exception e) {
-			log.error("Error is {}, {}", e.getMessage(), e);
-			return getErrorResponse(e.getMessage());
-		}
+		Map<String, String> cleanFilters = new HashMap<>(filters);
+		RESERVED_PARAMS.forEach(cleanFilters::remove);
+		Response<R> result = service.filter(cleanFilters, pageable, isPageable);
+		if (result == null) returnNotFoundException("Filter not supported");
+		return ResponseEntity.status(result.getCode()).body(result);
 	}
 
 	@PostMapping
-	@Operation(summary  = "Save")
+	@Operation(summary = "Save")
 	@Override
-	public Response<R> save(@RequestBody E e) {
-		try {
-			return service.save(e);
-		} catch (Exception e1) {
-			log.error("Error is {}, {}", e1.getMessage(), e1);
-			return getErrorResponse(e1.getMessage());
-		}
+	public ResponseEntity<Response<R>> save(@RequestBody E e) {
+		Response<R> result = service.save(e);
+		return ResponseEntity.status(result.getCode()).body(result);
 	}
 
 	@PutMapping
 	@Operation(summary = "Update")
 	@Override
-	public Response<R> update(@RequestBody E e) {
-		try {
-			return service.update(e);
-		} catch (Exception e1) {
-			log.error("Error is {}, {}", e1.getMessage(), e1);
-			return getErrorResponse(e1.getMessage());
-		}
+	public ResponseEntity<Response<R>> update(@RequestBody E e) {
+		Response<R> result = service.update(e);
+		return ResponseEntity.status(result.getCode()).body(result);
 	}
 
 	@GetMapping("/{id}")
 	@Operation(summary = "Find by Id")
 	@Override
-	public Response<R> find(@PathVariable Long id) {
-		try {
-			return service.find(id);
-		} catch (Exception e) {
-			log.error("Error is {}, {}", e.getMessage(), e);
-			return getErrorResponse(e.getMessage());
-		}
+	public ResponseEntity<Response<R>> find(@PathVariable Long id) {
+		Response<R> result = service.find(id);
+		return ResponseEntity.status(result.getCode()).body(result);
 	}
 
-	@DeleteMapping
-	@Operation(summary = "Delete")
+	@DeleteMapping("/delete/{id}")
+	@Operation(summary = "Delete permanently")
 	@Override
-	public Response<R> delete(@RequestBody E e) {
-		try {
-			return service.delete(e);
-		} catch (Exception e1) {
-			log.error("Error is {}, {}", e1.getMessage(), e1);
-			return getErrorResponse(e1.getMessage());
-		}
+	public ResponseEntity<Response<R>> delete(@PathVariable Long id) {
+		Response<R> result = service.delete(id);
+		return ResponseEntity.status(result.getCode()).body(result);
 	}
 
 	@DeleteMapping("/{id}")
-	@Operation(summary = "Remove by Id")
+	@Operation(summary = "Remove from list")
 	@Override
-	public Response<R> remove(@PathVariable Long id) {
-		try {
-			return service.remove(id);
-		} catch (Exception e1) {
-			log.error("Error is {}, {}", e1.getMessage(), e1);
-			return getErrorResponse(e1.getMessage());
-		}
+	public ResponseEntity<Response<R>> remove(@PathVariable Long id) {
+		Response<R> result = service.remove(id);
+		return ResponseEntity.status(result.getCode()).body(result);
 	}
-
 }
