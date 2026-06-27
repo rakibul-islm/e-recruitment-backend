@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> implements JobCircularService<JobCircularResDTO, JobCircularReqDto> {
@@ -90,7 +89,7 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		return getSuccessResponse(
 				"Found Job Circulars",
 				list.stream().map(data -> new ModelMapper().map(data, JobCircularResDTO.class))
-						.collect(Collectors.toList())
+						.toList()
 		);
 	}
 
@@ -213,7 +212,7 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		return getSuccessResponse(
 				"Found Job Circulars",
 				list.stream().map(data -> new ModelMapper().map(data, JobCircularResDTO.class))
-						.collect(Collectors.toList())
+						.toList()
 		);
 	}
 }

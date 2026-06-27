@@ -1,24 +1,29 @@
 package com.bd.erecruitment.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import javax.crypto.SecretKey;
+
 import com.bd.erecruitment.model.LoggedInUserDetails;
 import com.bd.erecruitment.model.MyUserDetail;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 
 @Service
 public class JwtUtil {
 
-	private static final String SECRET_KEY = "404E63526655664r54757hj585gh";
+	// Must be at least 32 bytes (256 bits) for HS256
+	private static final String SECRET_STRING = "404E63526655664r54757hj585gh9012";
+	private static final SecretKey SECRET = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
 
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
@@ -34,10 +39,14 @@ public class JwtUtil {
 	}
 
 	private Claims extractAllClaims(String token) {
-		return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+		return Jwts.parser()
+				.verifyWith(SECRET)
+				.build()
+				.parseSignedClaims(token)
+				.getPayload();
 	}
 
-	private Boolean isTokenExpired(String token) {
+	private boolean isTokenExpired(String token) {
 		return extractExpiration(token).before(new Date());
 	}
 
@@ -51,14 +60,18 @@ public class JwtUtil {
 	}
 
 	private String createToken(Map<String, Object> claims, String subject) {
-		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 100 * 60 * 60 * 100))
-				.signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
+		return Jwts.builder()
+				.claims(claims)
+				.subject(subject)
+				.issuedAt(new Date(System.currentTimeMillis()))
+				.expiration(new Date(System.currentTimeMillis() + 100L * 60 * 60 * 100))
+				.signWith(SECRET)
+				.compact();
 	}
 
-	public Boolean validateToken(String token, UserDetails userDetails) {
+	public boolean validateToken(String token, UserDetails userDetails) {
 		final String username = extractUsername(token);
-		return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+		return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
 	}
 
 }

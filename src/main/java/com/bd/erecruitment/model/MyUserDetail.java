@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 public class MyUserDetail implements UserDetails {
@@ -48,8 +47,8 @@ public class MyUserDetail implements UserDetails {
 		this.candidateUser = user.isCandidateUser();
 		this.roles = user.getRoles();
 		this.authorities = Arrays.stream(roles.split(","))
-									.map(SimpleGrantedAuthority::new)
-									.collect(Collectors.toList());
+									.<GrantedAuthority>map(SimpleGrantedAuthority::new)
+									.toList();
 		this.enabled = user.isActive();
 		this.locked = user.isLocked();
 		this.expiryDate = user.getExpiryDate();

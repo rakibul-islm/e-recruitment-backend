@@ -83,8 +83,8 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		if(auth == null || !auth.isAuthenticated()) return null;
 
 		Object principal = auth.getPrincipal();
-		if(principal instanceof MyUserDetail) {
-			return (MyUserDetail) principal;
+		if (principal instanceof MyUserDetail mud) {
+			return mud;
 		}
 		return null;
 	}

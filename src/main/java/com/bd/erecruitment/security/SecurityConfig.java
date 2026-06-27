@@ -32,7 +32,7 @@ public class SecurityConfig {
 		http
 				.cors(cors -> cors.configure(http)) // Enable CORS
 				.csrf(csrf -> csrf.disable()) // Disable CSRF
-				.headers(headers -> headers.frameOptions().disable()) // for H2 console
+				.headers(headers -> headers.frameOptions(fo -> fo.disable())) // for H2 console
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(
 								"/authenticate/**",
