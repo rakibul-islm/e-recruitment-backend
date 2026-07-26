@@ -9,7 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepo extends ServiceRepository<User> {
-	User findByUsername(String username);
 	User findByEmail(String email);
 	User findByGoogleId(String googleId);
 
@@ -17,6 +16,6 @@ public interface UserRepo extends ServiceRepository<User> {
 	@Query("SELECT DISTINCT u FROM User u " +
 		   "LEFT JOIN FETCH u.roles ur LEFT JOIN FETCH ur.permissions " +
 		   "LEFT JOIN FETCH u.userGroups g LEFT JOIN FETCH g.roles gr LEFT JOIN FETCH gr.permissions " +
-		   "WHERE (u.username = :login OR u.email = :login) AND u.deleted = false")
+		   "WHERE u.email = :login AND u.deleted = false")
 	Optional<User> findByLoginWithPermissions(@Param("login") String login);
 }

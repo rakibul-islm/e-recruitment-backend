@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 public class UserResDTO extends BaseResponseDTO<User> {
 
 	private String fullName;
-	private String username;
 	private String email;
 	private String address;
 	private String phone;
@@ -26,13 +25,13 @@ public class UserResDTO extends BaseResponseDTO<User> {
 	private boolean active;
 	private boolean locked;
 	private Date expiryDate;
-	private Set<RoleResDTO> roles;
+	private Set<UserRoleResDTO> roles;
 
 	public UserResDTO(User user) {
 		new ModelMapper().map(user, this);
 		if (user.getRoles() != null)
 			this.roles = user.getRoles().stream()
-				.map(RoleResDTO::new)
+				.map(UserRoleResDTO::new)
 				.collect(Collectors.toSet());
 	}
 }

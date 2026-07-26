@@ -51,7 +51,7 @@ public class AuthenticationController extends AbstractBaseController<Authenticat
 	@PostMapping(value = "/oauth2/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public Map<String, String> generateTokenOAuth2(@RequestParam String username, @RequestParam String password) {
 		AuthenticationReqDTO req = new AuthenticationReqDTO();
-		req.setUsername(username);
+		req.setEmail(username);
 		req.setPassword(password);
 		Response<AuthenticationResDTO> response = authService.generateToken(req);
 		if (!response.isSuccess()) {

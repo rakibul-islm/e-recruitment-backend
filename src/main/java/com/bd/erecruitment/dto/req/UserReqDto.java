@@ -18,7 +18,6 @@ import java.util.Set;
 public class UserReqDto extends BaseRequestDTO<User> {
 
 	private String fullName;
-	private String username;
 	private String password;
 	private String email;
 	private String address;

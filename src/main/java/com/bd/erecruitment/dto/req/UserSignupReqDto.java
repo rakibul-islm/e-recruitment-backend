@@ -15,10 +15,8 @@ import org.modelmapper.ModelMapper;
 public class UserSignupReqDto extends BaseRequestDTO<User> {
 
 	private String fullName;
-	private String username;
 	private String password;
 	private String email;
-	private String address;
 	private String mobile;
 
 	@JsonIgnore

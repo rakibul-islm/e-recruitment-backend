@@ -24,9 +24,6 @@ public class User extends SequenceIdGenerator {
 
 	private String fullName;
 
-	@Column(name = "username", unique = true)
-	private String username;
-
 	private String password;
 
 	@Column(name = "email", unique = true)

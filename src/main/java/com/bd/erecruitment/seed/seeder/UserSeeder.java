@@ -39,7 +39,7 @@ public class UserSeeder implements DataSeeder {
 		int count = 0;
 
 		for (UserData.UserDef def : UserData.get()) {
-			if (userRepo.findByUsername(def.username()) != null) continue;
+			if (userRepo.findByEmail(def.email()) != null) continue;
 
 			Set<Role> roles = def.roleCodes().stream()
 				.map(roleRepo::findByCode)
@@ -53,7 +53,6 @@ public class UserSeeder implements DataSeeder {
 
 			User user = new User();
 			user.setFullName(def.fullName())
-				.setUsername(def.username())
 				.setEmail(def.email())
 				.setPassword(encoder.encode(def.password()))
 				.setActive(true)
@@ -66,7 +65,7 @@ public class UserSeeder implements DataSeeder {
 				.setDeleted(false);
 
 			userRepo.save(user);
-			log.info("[UserSeeder] created user '{}'", def.username());
+			log.info("[UserSeeder] created user '{}'", def.email());
 			count++;
 		}
 

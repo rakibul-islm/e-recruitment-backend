@@ -72,7 +72,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	@Transactional
 	@Override
 	public Response<UserResDTO> save(UserReqDto reqDto) {
-		validateForSave(reqDto.getUsername(), reqDto.getEmail(), reqDto.getPassword());
+		validateForSave(reqDto.getEmail(), reqDto.getPassword());
 		User user = reqDto.getBean();
 		user.setPassword(encoder.encode(user.getPassword()));
 		if (reqDto.getExpiryDate() == null) user.setExpiryDate(getDefaultExpiryDate());
@@ -83,7 +83,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	@Transactional
 	@Override
 	public Response<UserResDTO> saveNormalUser(UserSignupReqDto reqDto) {
-		validateForSave(reqDto.getUsername(), reqDto.getEmail(), reqDto.getPassword());
+		validateForSave(reqDto.getEmail(), reqDto.getPassword());
 		User user = reqDto.getBean();
 		user.setPassword(encoder.encode(reqDto.getPassword()))
 			.setExpiryDate(getDefaultExpiryDate())
@@ -122,16 +122,13 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return genericFilter(filters, pageable, isPageable, UserResDTO.class);
 	}
 
-	private void validateForSave(String username, String email, String password) {
+	private void validateForSave(String email, String password) {
 		if (StringUtils.isBlank(password)) returnErrorException("Password required");
-		if (userRepo.findByUsername(username) != null) returnErrorException("Username already exists");
 		if (userRepo.findByEmail(email) != null) returnErrorException("Email address already exists");
 	}
 
 	private void validateForUpdate(UserReqDto reqDto) {
 		if (reqDto.getId() == null) returnErrorException("User Id required");
-		User byUsername = userRepo.findByUsername(reqDto.getUsername());
-		if (byUsername != null && !byUsername.getId().equals(reqDto.getId())) returnErrorException("Username already exists");
 		User byEmail = userRepo.findByEmail(reqDto.getEmail());
 		if (byEmail != null && !byEmail.getId().equals(reqDto.getId())) returnErrorException("Email address already exists");
 	}

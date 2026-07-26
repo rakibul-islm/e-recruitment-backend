@@ -29,7 +29,7 @@ public class SwaggerConfig {
 						.addSecuritySchemes("oauth2Password", new SecurityScheme()
 								.name("oauth2Password")
 								.type(SecurityScheme.Type.OAUTH2)
-								.description("Login with username and password")
+								.description("Login with email and password")
 								.flows(new OAuthFlows()
 										.password(new OAuthFlow()
 												.tokenUrl("/e-recruitment/authenticate/oauth2/token")

@@ -19,7 +19,6 @@ public class MyUserDetail implements UserDetails {
 	private static final long serialVersionUID = -8989844695157859881L;
 
 	private Long id;
-	private String username;
 	private String password;
 	private String email;
 	private String address;
@@ -32,7 +31,6 @@ public class MyUserDetail implements UserDetails {
 
 	public MyUserDetail(User user) {
 		this.id = user.getId();
-		this.username = user.getUsername();
 		this.password = user.getPassword();
 		this.email = user.getEmail();
 		this.address = user.getAddress();
@@ -74,10 +72,6 @@ public class MyUserDetail implements UserDetails {
 
 	@Override
 	public String getUsername() {
-		return this.username;
-	}
-
-	public String getEmail() {
 		return this.email;
 	}
 

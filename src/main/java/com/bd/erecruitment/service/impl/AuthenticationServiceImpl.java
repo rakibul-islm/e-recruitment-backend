@@ -92,26 +92,25 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 				user.setGoogleId(googleId);
 				user.setEmail(email);
 				user.setFullName(fullName);
-				user.setUsername(email);
 				user.setActive(true);
 				user.setExpiryDate(getDefaultExpiryDate());
 				user = createNormalUser(user);
 			}
 		}
 
-		UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+		UserDetails userDetails = userService.loadUserByUsername(user.getEmail());
 		return getSuccessResponse("Login successful", buildAuthResponse(userDetails));
 	}
 
 	@Override
 	public Response<AuthenticationResDTO> generateToken(AuthenticationReqDTO reqDto) {
-		if (StringUtils.isBlank(reqDto.getUsername()) || StringUtils.isBlank(reqDto.getPassword())) returnErrorException("Username or password can't be empty");
+		if (StringUtils.isBlank(reqDto.getEmail()) || StringUtils.isBlank(reqDto.getPassword())) returnErrorException("Email or password can't be empty");
 		try {
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(reqDto.getUsername(), reqDto.getPassword()));
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(reqDto.getEmail(), reqDto.getPassword()));
 		} catch (BadCredentialsException e) {
-			returnUnauthorizedException("Invalid username or password");
+			returnUnauthorizedException("Invalid email or password");
 		}
-		return getSuccessResponse("Token generated successfully", buildAuthResponse(userService.loadUserByUsername(reqDto.getUsername())));
+		return getSuccessResponse("Token generated successfully", buildAuthResponse(userService.loadUserByUsername(reqDto.getEmail())));
 	}
 
 	private AuthenticationResDTO buildAuthResponse(UserDetails userDetails) {
