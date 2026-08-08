@@ -12,6 +12,7 @@ import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.ServiceRepository;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.specification.GenericSpecification;
+import com.bd.erecruitment.util.RequestUtils;
 import com.bd.erecruitment.util.Response;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,12 +64,15 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 
 	protected List<E> createAllEntity(List<E> entities) {
 		String actor = getLoggedInUserDetails().getUsername();
+		String terminal = RequestUtils.getClientTerminal();
 		Date now = new Date();
 		for (E entity : entities) {
 			entity.setCreatedBy(actor);
 			entity.setCreatedOn(now);
+			entity.setCreatedTerminal(terminal);
 			entity.setUpdatedBy(actor);
 			entity.setUpdatedOn(now);
+			entity.setUpdatedTerminal(terminal);
 			entity.setDeleted(false);
 		}
 		return repository.saveAll(entities);
@@ -76,21 +80,27 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 
 	protected E createEntity(E entity) {
 		String actor = getLoggedInUserDetails().getUsername();
+		String terminal = RequestUtils.getClientTerminal();
 		Date now = new Date();
 		entity.setCreatedBy(actor);
 		entity.setCreatedOn(now);
+		entity.setCreatedTerminal(terminal);
 		entity.setUpdatedBy(actor);
 		entity.setUpdatedOn(now);
+		entity.setUpdatedTerminal(terminal);
 		entity.setDeleted(false);
 		return repository.save(entity);
 	}
 
 	protected E createNormalUser(E entity) {
+		String terminal = RequestUtils.getClientTerminal();
 		Date now = new Date();
 		entity.setCreatedBy("signup");
 		entity.setCreatedOn(now);
+		entity.setCreatedTerminal(terminal);
 		entity.setUpdatedBy("signup");
 		entity.setUpdatedOn(now);
+		entity.setUpdatedTerminal(terminal);
 		entity.setDeleted(false);
 		return repository.save(entity);
 	}
@@ -98,6 +108,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	protected E updateEntity(E entity) {
 		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
 		entity.setUpdatedOn(new Date());
+		entity.setUpdatedTerminal(RequestUtils.getClientTerminal());
 		entity.setDeleted(false);
 		return repository.save(entity);
 	}
@@ -109,6 +120,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	protected void removeEntity(E entity) {
 		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
 		entity.setUpdatedOn(new Date());
+		entity.setUpdatedTerminal(RequestUtils.getClientTerminal());
 		entity.setDeleted(true);
 		repository.save(entity);
 	}

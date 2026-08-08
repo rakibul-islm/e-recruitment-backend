@@ -15,38 +15,64 @@ public class RoleData {
 				List.of("SUPER_ADMIN")
 			),
 			new RoleDef(
-				"Normal User",
-				"NORMAL_USER",
-				"Read-only access across all modules",
+				"Registered User",
+				"REGISTERED_USER",
+				"Default role for self-registered/Google sign-in users: own profile + job browsing only, no administration access",
+				List.of(
+					"profile:read",
+					"profile:write",
+					"job-circular:read"
+				)
+			),
+			new RoleDef(
+				"Viewer",
+				"VIEWER",
+				"Read-only access across all modules; no create/update/delete permissions anywhere",
 				List.of(
 					"user:read",
 					"permission:read",
 					"role:read",
 					"user-group:read",
-					"job-circular:read"
+					"job-circular:read",
+					"system-config:read"
 				)
 			),
 			new RoleDef(
-				"Normal User Write",
-				"NORMAL_USER_WRITE",
-				"Write access across all modules",
+				"Editor",
+				"EDITOR",
+				"Read and write access across all modules; no delete permissions anywhere",
 				List.of(
+					"user:read",
 					"user:write",
+					"permission:read",
 					"permission:write",
+					"role:read",
 					"role:write",
+					"user-group:read",
 					"user-group:write",
+					"job-circular:read",
 					"job-circular:write"
 				)
 			),
 			new RoleDef(
-				"Normal User Delete",
-				"NORMAL_USER_DELETE",
-				"Delete access across all modules",
+				"Manager",
+				"MANAGER",
+				"Read, write and delete access across all modules; full non-admin control standalone",
 				List.of(
+					"user:read",
+					"user:write",
 					"user:delete",
+					"permission:read",
+					"permission:write",
 					"permission:delete",
+					"role:read",
+					"role:write",
 					"role:delete",
+					"user-group:read",
+					"user-group:write",
 					"user-group:delete",
+					"job-circular:read",
+					"job-circular:write",
 					"job-circular:delete"
 				)
 			)

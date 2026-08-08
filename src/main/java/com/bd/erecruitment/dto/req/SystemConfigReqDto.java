@@ -1,28 +1,27 @@
 package com.bd.erecruitment.dto.req;
 
-import com.bd.erecruitment.entity.UserGroup;
+import com.bd.erecruitment.entity.SystemConfig;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.modelmapper.ModelMapper;
 
-import java.util.Set;
-
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UserGroupReqDto extends BaseRequestDTO<UserGroup> {
+public class SystemConfigReqDto extends BaseRequestDTO<SystemConfig> {
 
-	private String name;
+	private String configKey;
+	private String configValue;
 	private String description;
-	private Set<Long> roleIds;
+	private String expectedValues;
 
 	@JsonIgnore
 	@Override
-	public UserGroup getBean() {
-		UserGroup g = new UserGroup();
-		new ModelMapper().map(this, g);
-		return g;
+	public SystemConfig getBean() {
+		SystemConfig c = new SystemConfig();
+		new ModelMapper().map(this, c);
+		return c;
 	}
 }

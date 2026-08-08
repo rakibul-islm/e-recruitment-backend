@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 	private final JwtAutenticationFilter jwtRequestFilter;
+	private final JwtAuthenticationEntryPoint authenticationEntryPoint;
 	private final UserDetailsService userService;
 	private final BCryptPasswordEncoder passwordEncoder;
 
@@ -44,6 +45,7 @@ public class SecurityConfig {
 						.requestMatchers(AUTH_WHITELIST).permitAll()
 						.anyRequest().authenticated()
 				)
+				.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
 				.sessionManagement(session -> session
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				)

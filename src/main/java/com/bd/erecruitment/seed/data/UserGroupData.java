@@ -9,9 +9,9 @@ public class UserGroupData {
 	public static List<UserGroupDef> get() {
 		return List.of(
 			new UserGroupDef(
-				"Normal User",
+				"Viewers",
 				"Standard read-only access across all modules",
-				List.of("NORMAL_USER")
+				List.of("VIEWER")
 			)
 		);
 	}

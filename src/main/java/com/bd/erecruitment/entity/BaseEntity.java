@@ -20,7 +20,7 @@ public class BaseEntity {
 	private boolean deleted;
 
 	@NotNull
-	@Column(name = "created_by", nullable = false, length = 20)
+	@Column(name = "created_by", nullable = false, length = 50)
 	private String createdBy;
 
 	@NotNull
@@ -28,10 +28,16 @@ public class BaseEntity {
 	private Date createdOn;
 
 	@NotNull
-	@Column(name = "updated_by", nullable = false, length = 20)
+	@Column(name = "updated_by", nullable = false, length = 50)
 	private String updatedBy;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date updatedOn;
+
+	@Column(name = "created_terminal", length = 100)
+	private String createdTerminal;
+
+	@Column(name = "updated_terminal", length = 100)
+	private String updatedTerminal;
 
 }

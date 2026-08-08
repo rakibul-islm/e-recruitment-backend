@@ -26,4 +26,4 @@ springdoc:
     tags-sorter: alpha
 
 google:
-  client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+  client-id: ${GOOGLE_CLIENT_ID:79115464279-kffbqr7i3voeuhd10t550q209ai1omeb.apps.googleusercontent.com}

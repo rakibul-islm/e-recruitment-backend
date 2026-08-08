@@ -50,9 +50,8 @@ public class MyUserDetail implements UserDetails {
 				.forEach(auths::add);
 
 		// UserGroup → role → permission authorities
-		if (user.getUserGroups() != null)
-			user.getUserGroups().stream()
-				.flatMap(g -> g.getRoles().stream())
+		if (user.getUserGroup() != null)
+			user.getUserGroup().getRoles().stream()
 				.flatMap(r -> r.getPermissions().stream())
 				.map(p -> new SimpleGrantedAuthority(p.getAuthority()))
 				.forEach(auths::add);

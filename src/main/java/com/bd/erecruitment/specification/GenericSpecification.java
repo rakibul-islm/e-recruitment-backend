@@ -57,14 +57,22 @@ public class GenericSpecification {
                     Class<?> type = field.getType();
 
                     switch (operator) {
-                        case SUFFIX_GT ->
-                            predicate = cb.and(predicate, cb.gt(root.get(fieldName), (Number) parseNumber(value, type)));
-                        case SUFFIX_GTE ->
-                            predicate = cb.and(predicate, cb.ge(root.get(fieldName), (Number) parseNumber(value, type)));
-                        case SUFFIX_LT ->
-                            predicate = cb.and(predicate, cb.lt(root.get(fieldName), (Number) parseNumber(value, type)));
-                        case SUFFIX_LTE ->
-                            predicate = cb.and(predicate, cb.le(root.get(fieldName), (Number) parseNumber(value, type)));
+                        case SUFFIX_GT -> predicate = cb.and(predicate,
+                                Date.class.isAssignableFrom(type)
+                                        ? cb.greaterThan(root.<Date>get(fieldName), parseDate(value))
+                                        : cb.gt(root.get(fieldName), (Number) parseNumber(value, type)));
+                        case SUFFIX_GTE -> predicate = cb.and(predicate,
+                                Date.class.isAssignableFrom(type)
+                                        ? cb.greaterThanOrEqualTo(root.<Date>get(fieldName), parseDate(value))
+                                        : cb.ge(root.get(fieldName), (Number) parseNumber(value, type)));
+                        case SUFFIX_LT -> predicate = cb.and(predicate,
+                                Date.class.isAssignableFrom(type)
+                                        ? cb.lessThan(root.<Date>get(fieldName), parseDate(value))
+                                        : cb.lt(root.get(fieldName), (Number) parseNumber(value, type)));
+                        case SUFFIX_LTE -> predicate = cb.and(predicate,
+                                Date.class.isAssignableFrom(type)
+                                        ? cb.lessThanOrEqualTo(root.<Date>get(fieldName), parseDate(value))
+                                        : cb.le(root.get(fieldName), (Number) parseNumber(value, type)));
                         case SUFFIX_IN -> {
                             List<Object> values = Arrays.stream(value.split(","))
                                     .map(v -> isNumeric(type) ? parseNumber(v.trim(), type) : v.trim())

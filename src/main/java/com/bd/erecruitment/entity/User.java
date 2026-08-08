@@ -19,7 +19,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Accessors(chain = true)
 @Table(name = "USER_ACCOUNT")
-@EqualsAndHashCode(callSuper = true, exclude = {"roles", "userGroups"})
+@EqualsAndHashCode(callSuper = true, exclude = {"roles", "userGroup"})
 public class User extends SequenceIdGenerator {
 
 	private String fullName;
@@ -58,13 +58,8 @@ public class User extends SequenceIdGenerator {
 	)
 	private Set<Role> roles = new HashSet<>();
 
-	@Builder.Default
 	@ToString.Exclude
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(
-		name = "USER_USER_GROUP",
-		joinColumns = @JoinColumn(name = "user_id"),
-		inverseJoinColumns = @JoinColumn(name = "group_id")
-	)
-	private Set<UserGroup> userGroups = new HashSet<>();
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "group_id")
+	private UserGroup userGroup;
 }

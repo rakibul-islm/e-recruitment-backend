@@ -94,6 +94,17 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 				user.setFullName(fullName);
 				user.setActive(true);
 				user.setExpiryDate(getDefaultExpiryDate());
+				userService.assignRegisteredUserRole(user);
+
+				String pictureUrl = (String) tokenInfo.get("picture");
+				if (StringUtils.isNotBlank(pictureUrl)) {
+					try {
+						user.setFileData(restTemplate.getForObject(pictureUrl, byte[].class));
+					} catch (Exception e) {
+						// Non-fatal: proceed with account creation even if the avatar fetch fails.
+					}
+				}
+
 				user = createNormalUser(user);
 			}
 		}

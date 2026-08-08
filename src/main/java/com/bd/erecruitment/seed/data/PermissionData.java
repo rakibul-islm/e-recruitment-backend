@@ -16,6 +16,11 @@ public class PermissionData {
 			new PermissionDef("Manage Users",           "user:write",           "USER_MANAGEMENT",  null),
 			new PermissionDef("Delete Users",           "user:delete",          "USER_MANAGEMENT",  null),
 
+			// Profile (self-service; every user has this regardless of role, routeName left
+			// null since profile access is unconditional in the account menu, not admin-menu-gated)
+			new PermissionDef("View My Profile",        "profile:read",         "PROFILE",          null),
+			new PermissionDef("Update My Profile",      "profile:write",        "PROFILE",          null),
+
 			// Access Control
 			new PermissionDef("View Permissions",       "permission:read",      "ACCESS_CONTROL",   "permission-list"),
 			new PermissionDef("Manage Permissions",     "permission:write",     "ACCESS_CONTROL",   null),
@@ -32,7 +37,12 @@ public class PermissionData {
 			// Job Management
 			new PermissionDef("View Job Circulars",     "job-circular:read",    "JOB_MANAGEMENT",   "job-circular-list"),
 			new PermissionDef("Manage Job Circulars",   "job-circular:write",   "JOB_MANAGEMENT",   null),
-			new PermissionDef("Delete Job Circulars",   "job-circular:delete",  "JOB_MANAGEMENT",   null)
+			new PermissionDef("Delete Job Circulars",   "job-circular:delete",  "JOB_MANAGEMENT",   null),
+
+			// System Config
+			new PermissionDef("View System Config",     "system-config:read",   "SYSTEM_CONFIG",    "system-config-list"),
+			new PermissionDef("Manage System Config",   "system-config:write",  "SYSTEM_CONFIG",    null),
+			new PermissionDef("Delete System Config",   "system-config:delete", "SYSTEM_CONFIG",    null)
 		);
 	}
 }

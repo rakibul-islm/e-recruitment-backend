@@ -28,6 +28,11 @@ public class PermissionInterceptor implements HandlerInterceptor {
 	);
 
 	private static final String SUPER_ADMIN = "SUPER_ADMIN";
+	private static final String PERMISSION_READ = "permission:read";
+
+	// Every authenticated account can manage its own profile regardless of role — this must
+	// never depend on a role explicitly listing "profile:read"/"profile:write".
+	private static final Set<String> ALWAYS_ALLOWED = Set.of(PERMISSION_READ, "profile:read", "profile:write");
 
 	private final PermissionRepo permissionRepo;
 
@@ -50,6 +55,8 @@ public class PermissionInterceptor implements HandlerInterceptor {
 
 		String action = METHOD_ACTION.getOrDefault(request.getMethod().toUpperCase(), "read");
 		String required = resource + ":" + action;
+
+		if (ALWAYS_ALLOWED.contains(required)) return true;
 
 		// If the authority is not registered in the Permission table, bypass enforcement.
 		if (!isRegistered(required)) return true;

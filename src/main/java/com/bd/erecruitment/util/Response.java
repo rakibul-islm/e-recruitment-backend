@@ -13,6 +13,7 @@ public class Response<R> {
 	private int code;
 	private boolean success;
 	private String message;
+	private String traceId;
 	private R obj;
 	private List<R> list;
 	private Page<R> page;

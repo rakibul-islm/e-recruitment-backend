@@ -4,6 +4,7 @@ import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.req.UserSignupReqDto;
 import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
+import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.RoleRepo;
@@ -14,6 +15,7 @@ import com.bd.erecruitment.util.ImageUtils;
 import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
+import org.modelmapper.PropertyMap;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -40,9 +42,17 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		this.encoder = encoder;
 		this.roleRepo = roleRepo;
 		this.userGroupRepo = userGroupRepo;
-		// Prevent ModelMapper from triggering lazy load of roles in filter list response
-		modelMapper.typeMap(User.class, UserResDTO.class)
-			.addMappings(m -> m.skip(UserResDTO::setRoles));
+		// Prevent ModelMapper from triggering lazy load of roles/userGroup in filter list response.
+		// PropertyMap.skip() (not the addMappings lambda form) is required here: userGroup is a
+		// nested object ModelMapper implicit-matches deeply, and a post-hoc lambda skip() fails
+		// with "already nested properties are mapped".
+		modelMapper.addMappings(new PropertyMap<User, UserResDTO>() {
+			@Override
+			protected void configure() {
+				skip(destination.getRoles());
+				skip(destination.getUserGroup());
+			}
+		});
 	}
 
 	@Override
@@ -69,6 +79,23 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("User found", new UserProfileResDTO(user));
 	}
 
+	// Self-service profile update: always targets the logged-in user's own record (id/roles/
+	// userGroup are never taken from the request) so a "profile:write" authority alone can never
+	// be used to edit another account or escalate roles the way the admin "user:write" update can.
+	@Transactional
+	@Override
+	public Response<UserResDTO> updateProfile(UserReqDto reqDto) {
+		User exUser = findByIdOrThrow(getLoggedInUserDetails().getId(), "User not found");
+		User byEmail = userRepo.findByEmail(reqDto.getEmail());
+		if (byEmail != null && !byEmail.getId().equals(exUser.getId())) returnErrorException("Email address already exists");
+
+		reqDto.setId(exUser.getId());
+		reqDto.setPassword(StringUtils.isBlank(reqDto.getPassword()) ? exUser.getPassword() : encoder.encode(reqDto.getPassword()));
+		modelMapper.map(reqDto, exUser);
+		exUser.setFileData(StringUtils.isBlank(reqDto.getImageBase64()) ? exUser.getFileData() : Base64.getDecoder().decode(reqDto.getImageBase64()));
+		return getSuccessResponse("Profile updated successfully", new UserResDTO(updateEntity(exUser)));
+	}
+
 	@Transactional
 	@Override
 	public Response<UserResDTO> save(UserReqDto reqDto) {
@@ -88,7 +115,15 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		user.setPassword(encoder.encode(reqDto.getPassword()))
 			.setExpiryDate(getDefaultExpiryDate())
 			.setActive(true);
+		assignRegisteredUserRole(user);
 		return getCreatedResponse("User saved successfully", new UserResDTO(createNormalUser(user)));
+	}
+
+	public void assignRegisteredUserRole(User user) {
+		Role registeredUserRole = roleRepo.findByCode("REGISTERED_USER");
+		if (registeredUserRole != null) {
+			user.getRoles().add(registeredUserRole);
+		}
 	}
 
 	@Transactional
@@ -136,7 +171,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	private void resolveRolesAndGroups(User user, UserReqDto reqDto) {
 		if (reqDto.getRoleIds() != null && !reqDto.getRoleIds().isEmpty())
 			user.setRoles(new HashSet<>(roleRepo.findAllByIdInAndDeleted(new ArrayList<>(reqDto.getRoleIds()), false)));
-		if (reqDto.getUserGroupIds() != null && !reqDto.getUserGroupIds().isEmpty())
-			user.setUserGroups(new HashSet<>(userGroupRepo.findAllByIdInAndDeleted(new ArrayList<>(reqDto.getUserGroupIds()), false)));
+		if (reqDto.getUserGroupId() != null)
+			user.setUserGroup(userGroupRepo.findByIdAndDeleted(reqDto.getUserGroupId(), false).orElse(null));
 	}
 }

@@ -4,14 +4,12 @@ import com.bd.erecruitment.entity.Role;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 import org.modelmapper.ModelMapper;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
-@SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class RoleResDTO extends BaseResponseDTO<Role> {

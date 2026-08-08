@@ -15,7 +15,7 @@ public interface UserRepo extends ServiceRepository<User> {
 	// Loads user with all permission data for Spring Security authority building
 	@Query("SELECT DISTINCT u FROM User u " +
 		   "LEFT JOIN FETCH u.roles ur LEFT JOIN FETCH ur.permissions " +
-		   "LEFT JOIN FETCH u.userGroups g LEFT JOIN FETCH g.roles gr LEFT JOIN FETCH gr.permissions " +
+		   "LEFT JOIN FETCH u.userGroup g LEFT JOIN FETCH g.roles gr LEFT JOIN FETCH gr.permissions " +
 		   "WHERE u.email = :login AND u.deleted = false")
 	Optional<User> findByLoginWithPermissions(@Param("login") String login);
 }

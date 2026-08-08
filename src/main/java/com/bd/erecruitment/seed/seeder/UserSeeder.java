@@ -46,10 +46,9 @@ public class UserSeeder implements DataSeeder {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toSet());
 
-			Set<UserGroup> groups = def.groupNames().stream()
-				.map(name -> userGroupRepo.findByNameAndDeletedFalse(name).orElse(null))
-				.filter(Objects::nonNull)
-				.collect(Collectors.toSet());
+			UserGroup group = def.groupName() == null
+				? null
+				: userGroupRepo.findByNameAndDeletedFalse(def.groupName()).orElse(null);
 
 			User user = new User();
 			user.setFullName(def.fullName())
@@ -59,7 +58,7 @@ public class UserSeeder implements DataSeeder {
 				.setLocked(false)
 				.setExpiryDate(yearFromNow(50))
 				.setRoles(roles)
-				.setUserGroups(groups)
+				.setUserGroup(group)
 				.setCreatedBy("system").setCreatedOn(now)
 				.setUpdatedBy("system").setUpdatedOn(now)
 				.setDeleted(false);

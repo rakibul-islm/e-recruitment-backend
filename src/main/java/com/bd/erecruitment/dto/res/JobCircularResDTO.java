@@ -6,13 +6,11 @@ import jakarta.persistence.TemporalType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
 @Data
-@SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class JobCircularResDTO extends BaseResponseDTO<JobCircular>{
