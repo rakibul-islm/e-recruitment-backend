@@ -30,14 +30,12 @@ public class PermissionInterceptor implements HandlerInterceptor {
 	private static final String SUPER_ADMIN = "SUPER_ADMIN";
 	private static final String PERMISSION_READ = "permission:read";
 
-	// Every authenticated account can manage its own profile regardless of role — this must
-	// never depend on a role explicitly listing "profile:read"/"profile:write".
-	private static final Set<String> ALWAYS_ALLOWED = Set.of(PERMISSION_READ, "profile:read", "profile:write");
+	// Every authenticated account always has profile and password-policy-read access, regardless of role.
+	private static final Set<String> ALWAYS_ALLOWED = Set.of(PERMISSION_READ, "profile:read", "profile:write", "password-policy:read");
 
 	private final PermissionRepo permissionRepo;
 
-	// Cache of known authorities to avoid a DB hit on every request.
-	// Cleared on write/delete so new permissions are picked up immediately.
+	// Cached authorities avoid a DB hit per request; cleared on write/delete.
 	private final Set<String> authorityCache = ConcurrentHashMap.newKeySet();
 	private volatile boolean cacheFilled = false;
 

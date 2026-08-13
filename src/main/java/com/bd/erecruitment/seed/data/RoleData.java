@@ -34,7 +34,8 @@ public class RoleData {
 					"role:read",
 					"user-group:read",
 					"job-circular:read",
-					"system-config:read"
+					"system-config:read",
+					"password-policy:read"
 				)
 			),
 			new RoleDef(
@@ -51,7 +52,9 @@ public class RoleData {
 					"user-group:read",
 					"user-group:write",
 					"job-circular:read",
-					"job-circular:write"
+					"job-circular:write",
+					"password-policy:read",
+					"password-policy:write"
 				)
 			),
 			new RoleDef(
@@ -73,7 +76,10 @@ public class RoleData {
 					"user-group:delete",
 					"job-circular:read",
 					"job-circular:write",
-					"job-circular:delete"
+					"job-circular:delete",
+					"password-policy:read",
+					"password-policy:write",
+					"password-policy:delete"
 				)
 			)
 		);

@@ -22,11 +22,11 @@ public class Permission extends SequenceIdGenerator {
 	private String name;
 
 	@Column(unique = true, nullable = false)
-	private String authority; // e.g. "user:read", "job:write" — used by Spring Security + Angular AccessGuard
+	private String authority; // used by Spring Security + Angular AccessGuard
 
-	private String routeName; // Angular route name — AccessGuard matches this to current route
+	private String routeName; // matched by Angular AccessGuard to the current route
 
 	private String description;
 
-	private String module; // grouping e.g. "USER_MANAGEMENT"
+	private String module;
 }

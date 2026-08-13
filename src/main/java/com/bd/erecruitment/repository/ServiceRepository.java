@@ -11,10 +11,6 @@ import org.springframework.data.repository.NoRepositoryBean;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * @author Md Rakibul Islam
- */
-
 @NoRepositoryBean
 public interface ServiceRepository<E extends BaseEntity> extends JpaRepository<E, Long>, JpaSpecificationExecutor<E> {
 

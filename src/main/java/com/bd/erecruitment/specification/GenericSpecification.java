@@ -42,7 +42,6 @@ public class GenericSpecification {
                     Field field = findField(root.getJavaType(), fieldName);
                     if (field == null) continue;
 
-                    // null-check operators don't need a value
                     if (SUFFIX_NOTNULL.equals(operator)) {
                         predicate = cb.and(predicate, cb.isNotNull(root.get(fieldName)));
                         continue;

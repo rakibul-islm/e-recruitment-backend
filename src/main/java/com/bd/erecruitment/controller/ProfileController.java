@@ -1,7 +1,10 @@
 package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
+import com.bd.erecruitment.dto.req.ChangePasswordReqDto;
+import com.bd.erecruitment.dto.req.RequestChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.req.UserReqDto;
+import com.bd.erecruitment.dto.req.VerifyChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.service.UserService;
@@ -9,13 +12,12 @@ import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-// Deliberately kept off the "/user" resource prefix: PermissionInterceptor derives the
-// required authority from the first path segment, so nesting this under /user would make
-// self-service profile access require the admin-only "user:read"/"user:write" authorities.
+// Off the "/user" prefix so self-service profile access doesn't require admin "user:*" authorities.
 @RestApiController
 @RequestMapping("/profile")
 @Tag(name = "2.1 My Profile", description = "Self-service access to the logged-in user's own profile")
@@ -37,5 +39,23 @@ public class ProfileController {
 	@PutMapping
 	public Response<UserResDTO> updateProfile(@RequestBody UserReqDto reqDto) {
 		return userService.updateProfile(reqDto);
+	}
+
+	@Operation(summary = "Request an OTP to confirm a password change")
+	@PostMapping("/change-password/request-otp")
+	public Response<Object> requestChangePasswordOtp(@RequestBody RequestChangePasswordOtpReqDto reqDto) {
+		return userService.requestChangePasswordOtp(reqDto);
+	}
+
+	@Operation(summary = "Verify the OTP for a password change")
+	@PostMapping("/change-password/verify-otp")
+	public Response<Object> verifyChangePasswordOtp(@RequestBody VerifyChangePasswordOtpReqDto reqDto) {
+		return userService.verifyChangePasswordOtp(reqDto);
+	}
+
+	@Operation(summary = "Change my password")
+	@PutMapping("/change-password")
+	public Response<Object> changePassword(@RequestBody ChangePasswordReqDto reqDto) {
+		return userService.changePassword(reqDto);
 	}
 }

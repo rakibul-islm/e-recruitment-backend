@@ -42,14 +42,12 @@ public class MyUserDetail implements UserDetails {
 
 		Set<GrantedAuthority> auths = new HashSet<>();
 
-		// Direct role → permission authorities
 		if (user.getRoles() != null)
 			user.getRoles().stream()
 				.flatMap(r -> r.getPermissions().stream())
 				.map(p -> new SimpleGrantedAuthority(p.getAuthority()))
 				.forEach(auths::add);
 
-		// UserGroup → role → permission authorities
 		if (user.getUserGroup() != null)
 			user.getUserGroup().getRoles().stream()
 				.flatMap(r -> r.getPermissions().stream())

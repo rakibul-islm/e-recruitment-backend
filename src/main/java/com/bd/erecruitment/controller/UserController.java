@@ -1,8 +1,10 @@
 package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
+import com.bd.erecruitment.dto.req.ResendSignupOtpReqDto;
 import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.req.UserSignupReqDto;
+import com.bd.erecruitment.dto.req.VerifySignupOtpReqDto;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.service.UserService;
 import com.bd.erecruitment.util.Response;
@@ -29,5 +31,17 @@ public class UserController extends AbstractBaseController<UserResDTO, UserReqDt
 	@PostMapping("/signup")
 	public Response<UserResDTO> signup(@RequestBody UserSignupReqDto reqDto) throws Exception {
 		return userService.saveNormalUser(reqDto);
+	}
+
+	@Operation(summary = "Verify a sign-up OTP to activate the account")
+	@PostMapping("/verify-signup-otp")
+	public Response<Object> verifySignupOtp(@RequestBody VerifySignupOtpReqDto reqDto) {
+		return userService.verifySignupOtp(reqDto);
+	}
+
+	@Operation(summary = "Resend a sign-up OTP for a pending, unverified account")
+	@PostMapping("/resend-signup-otp")
+	public Response<Object> resendSignupOtp(@RequestBody ResendSignupOtpReqDto reqDto) {
+		return userService.resendSignupOtp(reqDto);
 	}
 }

@@ -11,8 +11,6 @@ import java.util.List;
 
 public class CommonFunctionsImpl {
 
-	// ── success responses (return a value) ──────────────────────────────────
-
 	protected <R> Response<R> getSuccessResponse(String message) {
 		return build(200, true, message, null, null, null);
 	}
@@ -33,8 +31,6 @@ public class CommonFunctionsImpl {
 		return build(201, true, message, obj, null, null);
 	}
 
-	// ── error helpers (throw, no return needed) ─────────────────────────────
-
 	protected void returnErrorException(String message) {
 		throw new BadRequestException(message);
 	}
@@ -50,8 +46,6 @@ public class CommonFunctionsImpl {
 	protected void returnNotFoundException(String message) {
 		throw new NotFoundException(message);
 	}
-
-	// ── internal builder ────────────────────────────────────────────────────
 
 	private <R> Response<R> build(int code, boolean success, String message, R obj, List<R> list, Page<R> page) {
 		Response<R> res = new Response<>();

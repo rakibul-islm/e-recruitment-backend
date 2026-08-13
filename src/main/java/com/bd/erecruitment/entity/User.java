@@ -23,7 +23,6 @@ import java.util.Set;
 public class User extends SequenceIdGenerator {
 
 	private String fullName;
-
 	private String password;
 
 	@Column(name = "email", unique = true)
@@ -47,6 +46,16 @@ public class User extends SequenceIdGenerator {
 
 	@Column(name = "google_id", unique = true)
 	private String googleId;
+
+	private String otpCode;
+
+	private Date otpExpiry;
+
+	private int otpAttempts;
+
+	private String activationToken;
+
+	private Date activationTokenExpiry;
 
 	@Builder.Default
 	@ToString.Exclude

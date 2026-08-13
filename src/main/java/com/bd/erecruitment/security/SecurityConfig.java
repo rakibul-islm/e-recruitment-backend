@@ -4,6 +4,7 @@ import com.bd.erecruitment.filter.JwtAutenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -31,17 +32,21 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-				.cors(cors -> cors.configure(http)) // Enable CORS
-				.csrf(csrf -> csrf.disable()) // Disable CSRF
+				.cors(cors -> cors.configure(http))
+				.csrf(csrf -> csrf.disable())
 				.headers(headers -> headers.frameOptions(fo -> fo.disable())) // for H2 console
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(
 								"/authenticate/**",
 								"/user/signup",
+								"/user/verify-signup-otp",
+								"/user/resend-signup-otp",
 								"/job-circular/filter",
 								"/h2-console/**"
 						).permitAll()
 						.requestMatchers("/actuator/**").permitAll()
+						// Needed by unauthenticated flows (account setup, password reset) for the requirements checklist.
+						.requestMatchers(HttpMethod.GET, "/password-policy").permitAll()
 						.requestMatchers(AUTH_WHITELIST).permitAll()
 						.anyRequest().authenticated()
 				)

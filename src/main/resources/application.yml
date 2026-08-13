@@ -20,10 +20,32 @@ spring:
       max-file-size: 120MB
       max-request-size: 120MB
       enabled: true
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 springdoc:
   swagger-ui:
     tags-sorter: alpha
 
 google:
-  client-id: ${GOOGLE_CLIENT_ID:79115464279-kffbqr7i3voeuhd10t550q209ai1omeb.apps.googleusercontent.com}
+  client-id: ${GOOGLE_CLIENT_ID}
+
+app:
+  mail:
+    from: ${MAIL_FROM}
+  otp:
+    expiry-minutes: 10
+    max-attempts: 5
+  frontend:
+    base-url: ${FRONTEND_BASE_URL}
+  account-setup:
+    expiry-hours: 48

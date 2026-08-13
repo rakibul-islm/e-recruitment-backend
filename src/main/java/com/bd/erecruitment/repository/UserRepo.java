@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface UserRepo extends ServiceRepository<User> {
 	User findByEmail(String email);
 	User findByGoogleId(String googleId);
+	User findByActivationToken(String activationToken);
 
 	// Loads user with all permission data for Spring Security authority building
 	@Query("SELECT DISTINCT u FROM User u " +
