@@ -51,6 +51,22 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return getSuccessResponse(result.isEmpty() ? "No data found" : "Found", result);
 	}
 
+	protected List<E> createAllEntity(List<E> entities) {
+		String actor = getLoggedInUserDetails().getUsername();
+		String terminal = RequestUtils.getClientTerminal();
+		Date now = new Date();
+		for (E entity : entities) {
+			entity.setCreatedBy(actor);
+			entity.setCreatedOn(now);
+			entity.setCreatedTerminal(terminal);
+			entity.setUpdatedBy(actor);
+			entity.setUpdatedOn(now);
+			entity.setUpdatedTerminal(terminal);
+			entity.setDeleted(false);
+		}
+		return repository.saveAll(entities);
+	}
+
 	protected E createEntity(E entity) {
 		String actor = getLoggedInUserDetails().getUsername();
 		String terminal = RequestUtils.getClientTerminal();
