@@ -99,12 +99,13 @@ public class GlobalExceptionHandler {
 
 	private ResponseEntity<Response<Object>> respondWithTrace(int code, String fallbackMessage, Exception ex, HttpServletRequest request) {
 		String traceId = UUID.randomUUID().toString();
+		String userMessage = rootMessage(ex, fallbackMessage);
 		log.error("[{}] {}: {}", traceId, ex.getClass().getSimpleName(), ex.getMessage(), ex);
-		persistIfEnabled(traceId, code, ex, request);
+		persistIfEnabled(traceId, code, userMessage, ex, request);
 		Response<Object> res = new Response<>();
 		res.setCode(code);
 		res.setSuccess(false);
-		res.setMessage(rootMessage(ex, fallbackMessage));
+		res.setMessage(userMessage);
 		res.setTraceId(traceId);
 		return ResponseEntity.status(code).body(res);
 	}
@@ -122,7 +123,7 @@ public class GlobalExceptionHandler {
 		return SQL_STATEMENT_SUFFIX.matcher(message).replaceAll("").trim();
 	}
 
-	private void persistIfEnabled(String traceId, int statusCode, Exception ex, HttpServletRequest request) {
+	private void persistIfEnabled(String traceId, int statusCode, String userMessage, Exception ex, HttpServletRequest request) {
 		try {
 			boolean enabled = systemConfigRepo.findByConfigKeyAndDeleted(EXCEPTION_LOG_CONFIG_KEY, false)
 					.map(c -> "Y".equalsIgnoreCase(c.getConfigValue()))
@@ -139,7 +140,7 @@ public class GlobalExceptionHandler {
 					.setExceptionClass(ex.getClass().getName())
 					.setStatusCode(statusCode)
 					.setRequestUri(request.getRequestURI())
-					.setMessage(ex.getMessage())
+					.setMessage(userMessage)
 					.setStackTrace(sw.toString())
 					.setCreatedBy("system").setCreatedOn(now).setCreatedTerminal(terminal)
 					.setUpdatedBy("system").setUpdatedOn(now).setUpdatedTerminal(terminal)

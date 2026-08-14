@@ -4,18 +4,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.bd.erecruitment.entity.BaseEntity;
-import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.ServiceRepository;
-import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.specification.GenericSpecification;
 import com.bd.erecruitment.util.RequestUtils;
 import com.bd.erecruitment.util.Response;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -24,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFunctionsImpl {
 
-	@Autowired private UserRepo userRepo;
 	protected final ServiceRepository<E> repository;
 	protected ModelMapper modelMapper;
 
@@ -38,12 +33,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.YEAR, 50);
 		return cal.getTime();
-	}
-
-	protected boolean hasAuthority(String authority) {
-		MyUserDetail user = getLoggedInUserDetails();
-		if (user == null) return false;
-		return user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(authority));
 	}
 
 	protected E findByIdOrThrow(Long id, String notFoundMessage) {
@@ -130,10 +119,5 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		if (auth == null || !auth.isAuthenticated()) return null;
 		Object principal = auth.getPrincipal();
 		return principal instanceof MyUserDetail mud ? mud : null;
-	}
-
-	protected User getLoggedInUser() {
-		Optional<User> userOp = userRepo.findByIdAndDeleted(getLoggedInUserDetails().getId(), false);
-		return userOp.orElse(null);
 	}
 }
