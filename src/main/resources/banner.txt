@@ -1,0 +1,12 @@
+${AnsiColor.BRIGHT_BLUE}    ______   ____  ________________  __  ______________  __________   ________
+${AnsiColor.BRIGHT_BLUE}   / ____/  / __ \/ ____/ ____/ __ \/ / / /  _/_  __/  |/  / ____/ | / /_  __/
+${AnsiColor.BRIGHT_CYAN}  / __/    / /_/ / __/ / /   / /_/ / / / // /  / / / /|_/ / __/ /  |/ / / /
+${AnsiColor.BRIGHT_CYAN} / /___   / _, _/ /___/ /___/ _, _/ /_/ // /  / / / /  / / /___/ /|  / / /
+${AnsiColor.BRIGHT_MAGENTA}/_____/  /_/ |_/_____/\____/_/ |_|\____/___/ /_/ /_/  /_/_____/_/ |_/ /_/
+${AnsiStyle.NORMAL}
+${AnsiColor.BRIGHT_BLACK}================================================================================${AnsiColor.DEFAULT}
+  ${AnsiStyle.BOLD}${AnsiColor.BRIGHT_WHITE}Platform:${AnsiColor.DEFAULT}  E-Recruitment Management Suite
+  ${AnsiStyle.BOLD}${AnsiColor.BRIGHT_WHITE}Framework:${AnsiColor.DEFAULT} Spring Boot ${spring-boot.version}
+  ${AnsiStyle.BOLD}${AnsiColor.BRIGHT_WHITE}Author:${AnsiColor.DEFAULT}    Md Rakibul Islam
+${AnsiColor.BRIGHT_BLACK}================================================================================${AnsiColor.DEFAULT}
+
