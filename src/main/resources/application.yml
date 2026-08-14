@@ -32,17 +32,6 @@ spring:
       max-file-size: 120MB
       max-request-size: 120MB
       enabled: true
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
 
 springdoc:
   swagger-ui:
@@ -54,6 +43,10 @@ google:
 app:
   mail:
     from: ${MAIL_FROM}
+    gmail:
+      client-id: ${GMAIL_CLIENT_ID}
+      client-secret: ${GMAIL_CLIENT_SECRET}
+      refresh-token: ${GMAIL_REFRESH_TOKEN}
   otp:
     expiry-minutes: 10
     max-attempts: 5

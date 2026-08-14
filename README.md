@@ -70,11 +70,10 @@ Configuration is externalized via environment variables, read in `application.ym
 | Variable            | Required | Description |
 |-----------------------|----------|-------------|
 | `PORT`                 | No       | HTTP port (default `8041`) |
-| `MAIL_HOST`            | Yes      | SMTP host used for OTP / account-setup emails |
-| `MAIL_PORT`            | Yes      | SMTP port |
-| `MAIL_USERNAME`        | Yes      | SMTP auth username |
-| `MAIL_PASSWORD`        | Yes      | SMTP auth password |
-| `MAIL_FROM`            | Yes      | "From" address on outgoing emails |
+| `MAIL_FROM`            | Yes      | "From" address on outgoing emails — must be the Gmail account the OAuth credentials below authorize |
+| `GMAIL_CLIENT_ID`      | Yes      | OAuth 2.0 client ID for the Gmail API (SMTP is blocked on Render, so email goes through the Gmail API instead) |
+| `GMAIL_CLIENT_SECRET`  | Yes      | OAuth 2.0 client secret paired with `GMAIL_CLIENT_ID` |
+| `GMAIL_REFRESH_TOKEN`  | Yes      | Long-lived refresh token authorizing `gmail.send` for the `MAIL_FROM` account |
 | `GOOGLE_CLIENT_ID`     | Yes      | Google OAuth 2.0 client ID, validated against Google Sign-In tokens |
 | `FRONTEND_BASE_URL`    | Yes      | Base URL of the Angular client, used to build links in emails (e.g. account setup, password reset) |
 | `DB_URL`               | Prod/Oracle only | JDBC URL — see [Database Profiles](#database-profiles) for defaults |
