@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -37,8 +39,8 @@ public class User extends SequenceIdGenerator {
 	@Temporal(TemporalType.DATE)
 	private Date expiryDate;
 
-	@Lob
-	@Column(name = "filedata")
+	@JdbcTypeCode(SqlTypes.VARBINARY)
+	@Column(name = "filedata", length = 5_000_000)
 	private byte[] fileData;
 
 	@Transient

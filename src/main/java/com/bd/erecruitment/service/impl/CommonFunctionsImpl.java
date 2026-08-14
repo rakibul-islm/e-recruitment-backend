@@ -1,7 +1,6 @@
 package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.exception.BadRequestException;
-import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.exception.UnauthorizedException;
 import com.bd.erecruitment.util.Response;
@@ -37,10 +36,6 @@ public class CommonFunctionsImpl {
 
 	protected void returnUnauthorizedException(String message) {
 		throw new UnauthorizedException(message);
-	}
-
-	protected void returnForbiddenException(String message) {
-		throw new ForbiddenException(message);
 	}
 
 	protected void returnNotFoundException(String message) {

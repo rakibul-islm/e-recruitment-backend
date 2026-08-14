@@ -1,9 +1,6 @@
 package com.bd.erecruitment.repository;
 
 import com.bd.erecruitment.entity.BaseEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
@@ -15,14 +12,6 @@ import java.util.Optional;
 public interface ServiceRepository<E extends BaseEntity> extends JpaRepository<E, Long>, JpaSpecificationExecutor<E> {
 
 	Optional<E> findByIdAndDeleted(Long id, boolean deleted);
-
-	List<E> findAllByDeleted(boolean deleted);
-	
-	List<E> findAllByDeleted(boolean deleted, Sort sort);
-
-	Page<E> findAllByDeleted(boolean deleted, Pageable pageable);
-
-	Page<E> findAllByDeletedOrderByIdDesc(boolean deleted, Pageable pageable);
 
 	List<E> findAllByIdInAndDeleted(List<Long> ids, boolean deleted);
 }

@@ -1,7 +1,7 @@
 server:
   servlet:
     context-path: /e-recruitment
-  port: 8041
+  port: ${PORT:8041}
 
 spring:
   application:
@@ -15,6 +15,18 @@ spring:
     serialization:
       fail-on-empty-beans: false
       indent-output: true
+    time-zone: UTC
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        id:
+          optimizer:
+            pooled:
+              preferred: none
+          sequence:
+            increment_size_mismatch_strategy: fix
   servlet:
     multipart:
       max-file-size: 120MB
