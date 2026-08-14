@@ -40,43 +40,37 @@ public class AuthenticationController extends AbstractBaseController<Authenticat
 	@Operation(summary = "Generate access token")
 	@PostMapping("/token")
 	public ResponseEntity<Response<AuthenticationResDTO>> generateToken(@RequestBody AuthenticationReqDTO reqDto) {
-		Response<AuthenticationResDTO> result = authService.generateToken(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(authService.generateToken(reqDto));
 	}
 
 	@Operation(summary = "Login with Google")
 	@PostMapping("/google")
 	public ResponseEntity<Response<AuthenticationResDTO>> loginWithGoogle(@RequestBody GoogleAuthReqDTO reqDto) {
-		Response<AuthenticationResDTO> result = authService.loginWithGoogle(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(authService.loginWithGoogle(reqDto));
 	}
 
 	@Operation(summary = "Request a password reset OTP by email")
 	@PostMapping("/forgot-password")
 	public ResponseEntity<Response<Object>> forgotPassword(@RequestBody ForgotPasswordReqDto reqDto) {
-		Response<Object> result = authService.forgotPassword(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(authService.forgotPassword(reqDto));
 	}
 
 	@Operation(summary = "Verify a password reset OTP")
 	@PostMapping("/verify-otp")
 	public ResponseEntity<Response<Object>> verifyOtp(@RequestBody VerifyOtpReqDto reqDto) {
-		Response<Object> result = authService.verifyOtp(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(authService.verifyOtp(reqDto));
 	}
 
 	@Operation(summary = "Reset password using an OTP")
 	@PostMapping("/reset-password")
 	public ResponseEntity<Response<Object>> resetPassword(@RequestBody ResetPasswordReqDto reqDto) {
-		Response<Object> result = authService.resetPassword(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(authService.resetPassword(reqDto));
 	}
 
 	@Operation(summary = "Set the initial password for an admin-created account using the emailed activation link")
 	@PostMapping("/set-password")
 	public ResponseEntity<Response<Object>> setPassword(@RequestBody SetPasswordReqDto reqDto) {
-		Response<Object> result = authService.setPassword(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(authService.setPassword(reqDto));
 	}
 
 	@Hidden

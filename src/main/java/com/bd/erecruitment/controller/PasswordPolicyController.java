@@ -18,21 +18,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/password-policy")
 @Tag(name = "Password Policy")
 @RequiredArgsConstructor
-public class PasswordPolicyController {
+public class PasswordPolicyController implements ResponseWrapper {
 
 	private final PasswordPolicyService service;
 
 	@GetMapping
 	@Operation(summary = "Get current password policy")
 	public ResponseEntity<Response<PasswordPolicyResDTO>> find() {
-		Response<PasswordPolicyResDTO> result = service.find();
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(service.find());
 	}
 
 	@PutMapping
 	@Operation(summary = "Update password policy")
 	public ResponseEntity<Response<PasswordPolicyResDTO>> update(@RequestBody PasswordPolicyReqDto reqDto) {
-		Response<PasswordPolicyResDTO> result = service.update(reqDto);
-		return ResponseEntity.status(result.getCode()).body(result);
+		return respond(service.update(reqDto));
 	}
 }
