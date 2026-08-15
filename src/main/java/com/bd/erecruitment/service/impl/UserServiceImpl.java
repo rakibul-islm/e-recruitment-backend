@@ -208,8 +208,10 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 			if (existing.isActive()) returnErrorException("Email address already exists");
 			// Pending, unverified signup — refresh details and resend a fresh OTP instead of erroring.
 			existing.setFullName(reqDto.getFullName())
-				.setMobile(reqDto.getMobile())
-				.setPassword(encoder.encode(reqDto.getPassword()));
+					.setMobile(reqDto.getMobile())
+					.setExpiryDate(getDefaultExpiryDate())
+					.setPassword(encoder.encode(reqDto.getPassword()));
+			assignRegisteredUserRole(existing);
 			user = userRepo.save(existing);
 		} else {
 			User newUser = reqDto.getBean();
@@ -292,10 +294,15 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("Deleted successfully");
 	}
 
+	// Soft delete keeps the row, so email/googleId (both unique) must be freed here or the
 	@Transactional
 	@Override
 	public Response<UserResDTO> remove(Long id) {
-		removeEntity(findByIdOrThrow(id, "User not found"));
+		User user = findByIdOrThrow(id, "User not found");
+		String suffix = "removed+" + System.currentTimeMillis() + "+";
+		user.setEmail(suffix + user.getEmail());
+		if (StringUtils.isNotBlank(user.getGoogleId())) user.setGoogleId(suffix + user.getGoogleId());
+		removeEntity(user);
 		return getSuccessResponse("Removed successfully");
 	}
 
