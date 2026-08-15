@@ -8,6 +8,7 @@ import com.bd.erecruitment.dto.req.SetPasswordReqDto;
 import com.bd.erecruitment.dto.req.VerifyOtpReqDto;
 import com.bd.erecruitment.dto.res.AuthenticationResDTO;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.AuthenticationService;
 import com.bd.erecruitment.service.MailService;
@@ -47,6 +48,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	@Autowired private MailService mailService;
 	@Autowired private OtpService otpService;
 	@Autowired private BCryptPasswordEncoder encoder;
+	@Autowired private ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${google.client-id}")
 	private String googleClientId;
@@ -89,6 +91,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) returnUnauthorizedException("Invalid Google token");
 			tokenInfo = response.getBody();
 		} catch (Exception e) {
+			exceptionLogWriter.log(e, 401, "Invalid Google token", "loginWithGoogle");
 			returnUnauthorizedException("Invalid Google token");
 			return null; // unreachable, satisfies compiler
 		}
@@ -121,6 +124,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 						user.setFileData(restTemplate.getForObject(pictureUrl, byte[].class));
 					} catch (Exception e) {
 						// Non-fatal: proceed even if the avatar fetch fails.
+						exceptionLogWriter.log(e, 0, e.getMessage(), "loginWithGoogle:avatarFetch");
 					}
 				}
 
@@ -140,6 +144,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		} catch (BadCredentialsException e) {
 			returnUnauthorizedException("Invalid email or password");
 		} catch (DisabledException e) {
+			exceptionLogWriter.log(e, 401, e.getMessage(), "generateToken");
 			returnUnauthorizedException("Your account isn't active yet. Please complete the verification/setup link sent to your email before signing in");
 		}
 		return getSuccessResponse("Token generated successfully", buildAuthResponse(userService.loadUserByUsername(reqDto.getEmail())));
