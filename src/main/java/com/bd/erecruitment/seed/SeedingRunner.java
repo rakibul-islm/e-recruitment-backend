@@ -1,5 +1,6 @@
 package com.bd.erecruitment.seed;
 
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -15,6 +16,7 @@ import java.util.List;
 public class SeedingRunner implements ApplicationRunner {
 
 	private final List<DataSeeder> seeders;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Override
 	public void run(ApplicationArguments args) {
@@ -26,7 +28,7 @@ public class SeedingRunner implements ApplicationRunner {
 			try {
 				seeder.seed();
 			} catch (Exception e) {
-				log.error("[{}] failed: {}", seeder.getClass().getSimpleName(), e.getMessage(), e);
+				exceptionLogWriter.log(e, 0, e.getMessage(), "seed:" + seeder.getClass().getSimpleName());
 			}
 		});
 		log.info("========== Data seeding complete ==========");
