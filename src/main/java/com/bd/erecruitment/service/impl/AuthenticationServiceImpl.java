@@ -30,12 +30,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import org.springframework.security.core.GrantedAuthority;
-
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -234,12 +230,8 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	}
 
 	private AuthenticationResDTO buildAuthResponse(UserDetails userDetails) {
-		List<String> authorities = userDetails.getAuthorities().stream()
-			.map(GrantedAuthority::getAuthority)
-			.collect(Collectors.toList());
 		return AuthenticationResDTO.builder()
 			.token(jwtUtil.generateToken(userDetails))
-			.authorities(authorities)
 			.build();
 	}
 
