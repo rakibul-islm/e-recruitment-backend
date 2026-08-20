@@ -19,6 +19,9 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 
 	private final PasswordPolicyRepo passwordPolicyRepo;
 
+	// Lazily filled, kept in sync by update() so validatePassword() avoids a DB hit each call.
+	private volatile PasswordPolicy cachedPolicy;
+
 	PasswordPolicyServiceImpl(PasswordPolicyRepo passwordPolicyRepo) {
 		super(passwordPolicyRepo);
 		this.passwordPolicyRepo = passwordPolicyRepo;
@@ -42,7 +45,9 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 			.setRequireDigit(reqDto.isRequireDigit())
 			.setRequireSpecialChar(reqDto.isRequireSpecialChar())
 			.setDisallowUserInfoInPassword(reqDto.isDisallowUserInfoInPassword());
-		return getSuccessResponse("Updated successfully", new PasswordPolicyResDTO(updateEntity(existing)));
+		PasswordPolicy updated = updateEntity(existing);
+		cachedPolicy = updated;
+		return getSuccessResponse("Updated successfully", new PasswordPolicyResDTO(updated));
 	}
 
 	@Transactional
@@ -98,7 +103,11 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 	}
 
 	private PasswordPolicy getActivePolicy() {
-		return passwordPolicyRepo.findFirstByDeletedFalseOrderByIdAsc().orElseGet(this::defaultPolicy);
+		PasswordPolicy cached = cachedPolicy;
+		if (cached != null) return cached;
+		PasswordPolicy loaded = passwordPolicyRepo.findFirstByDeletedFalseOrderByIdAsc().orElseGet(this::defaultPolicy);
+		cachedPolicy = loaded;
+		return loaded;
 	}
 
 	private PasswordPolicy defaultPolicy() {

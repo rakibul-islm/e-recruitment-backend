@@ -1,8 +1,9 @@
 package com.bd.erecruitment.exception;
 
 import com.bd.erecruitment.entity.ExceptionLog;
+import com.bd.erecruitment.entity.SystemConfig;
 import com.bd.erecruitment.repository.ExceptionLogRepo;
-import com.bd.erecruitment.repository.SystemConfigRepo;
+import com.bd.erecruitment.service.impl.SystemConfigServiceImpl;
 import com.bd.erecruitment.util.RequestUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class ExceptionLogWriter {
 
 	private static final String EXCEPTION_LOG_CONFIG_KEY = "EXCEPTION_LOG_TO_DB";
 
-	private final SystemConfigRepo systemConfigRepo;
+	private final SystemConfigServiceImpl systemConfigService;
 	private final ExceptionLogRepo exceptionLogRepo;
 
 	/**
@@ -39,9 +40,8 @@ public class ExceptionLogWriter {
 		String traceId = UUID.randomUUID().toString();
 		log.error("[{}] {}: {} ({})", traceId, ex.getClass().getSimpleName(), message, context, ex);
 		try {
-			boolean enabled = systemConfigRepo.findByConfigKeyAndDeleted(EXCEPTION_LOG_CONFIG_KEY, false)
-					.map(c -> "Y".equalsIgnoreCase(c.getConfigValue()))
-					.orElse(false);
+			SystemConfig config = systemConfigService.findCachedByKey(EXCEPTION_LOG_CONFIG_KEY);
+			boolean enabled = config != null && "Y".equalsIgnoreCase(config.getConfigValue());
 			if (!enabled) return traceId;
 
 			StringWriter sw = new StringWriter();

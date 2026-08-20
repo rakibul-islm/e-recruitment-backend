@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -27,6 +28,7 @@ public class MailServiceImpl implements MailService {
 
 	private final RestClient restClient = RestClient.create();
 	private final ReentrantLock tokenLock = new ReentrantLock();
+	private final Map<String, String> templateCache = new ConcurrentHashMap<>();
 
 	private volatile String cachedAccessToken;
 	private volatile Instant cachedTokenExpiry = Instant.EPOCH;
@@ -166,6 +168,10 @@ public class MailServiceImpl implements MailService {
 	}
 
 	private String loadTemplate(String templateFile) {
+		return templateCache.computeIfAbsent(templateFile, this::readTemplate);
+	}
+
+	private String readTemplate(String templateFile) {
 		String classpathLocation = "templates/email/" + templateFile;
 		try (InputStream in = new ClassPathResource(classpathLocation).getInputStream()) {
 			return new String(in.readAllBytes(), StandardCharsets.UTF_8);
