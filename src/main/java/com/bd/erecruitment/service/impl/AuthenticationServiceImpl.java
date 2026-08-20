@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -49,6 +50,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	@Autowired private BCryptPasswordEncoder encoder;
 	@Autowired private ExceptionLogWriter exceptionLogWriter;
 	@Autowired private UserSessionService userSessionService;
+	@Autowired private GoogleAvatarFetcher googleAvatarFetcher;
 
 	@Value("${google.client-id}")
 	private String googleClientId;
@@ -57,7 +59,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	private long otpExpiryMinutes;
 
 	private final UserRepo userRepo;
-	private final RestTemplate restTemplate = new RestTemplate();
+	private final RestTemplate restTemplate = buildRestTemplate();
 
 	AuthenticationServiceImpl(UserRepo userRepo){
 		super(userRepo);
@@ -117,18 +119,10 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 				user.setActive(true);
 				user.setExpiryDate(getDefaultExpiryDate());
 				userService.assignRegisteredUserRole(user);
+				user = createNormalUser(user);
 
 				String pictureUrl = (String) tokenInfo.get("picture");
-				if (StringUtils.isNotBlank(pictureUrl)) {
-					try {
-						user.setFileData(restTemplate.getForObject(pictureUrl, byte[].class));
-					} catch (Exception e) {
-						// Non-fatal: proceed even if the avatar fetch fails.
-						exceptionLogWriter.log(e, 0, e.getMessage(), "loginWithGoogle:avatarFetch");
-					}
-				}
-
-				user = createNormalUser(user);
+				if (StringUtils.isNotBlank(pictureUrl)) googleAvatarFetcher.fetchAndStore(user.getId(), pictureUrl);
 			}
 		}
 
@@ -255,6 +249,13 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		return AuthenticationResDTO.builder()
 			.token(token)
 			.build();
+	}
+
+	private static RestTemplate buildRestTemplate() {
+		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+		factory.setConnectTimeout(5000);
+		factory.setReadTimeout(5000);
+		return new RestTemplate(factory);
 	}
 
 }

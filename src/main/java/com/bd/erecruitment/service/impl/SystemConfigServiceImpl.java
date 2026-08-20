@@ -12,12 +12,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> implements BaseService<SystemConfigResDTO, SystemConfigReqDto> {
 
+	private final SystemConfigRepo systemConfigRepo;
+
+	// Lazily filled, kept in sync on every write below; read by hot paths like ExceptionLogWriter.
+	private final Map<String, SystemConfig> configCache = new ConcurrentHashMap<>();
+
 	SystemConfigServiceImpl(SystemConfigRepo systemConfigRepo) {
 		super(systemConfigRepo);
+		this.systemConfigRepo = systemConfigRepo;
+	}
+
+	public SystemConfig findCachedByKey(String configKey) {
+		return configCache.computeIfAbsent(configKey, key -> systemConfigRepo.findByConfigKeyAndDeleted(key, false).orElse(null));
 	}
 
 	@Transactional
@@ -31,7 +42,9 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 	@Override
 	public Response<SystemConfigResDTO> save(SystemConfigReqDto reqDto) {
 		validateForm(reqDto);
-		return getCreatedResponse("Saved successfully", new SystemConfigResDTO(createEntity(reqDto.getBean())));
+		SystemConfig saved = createEntity(reqDto.getBean());
+		configCache.put(saved.getConfigKey(), saved);
+		return getCreatedResponse("Saved successfully", new SystemConfigResDTO(saved));
 	}
 
 	@Transactional
@@ -40,22 +53,30 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 		if (reqDto.getId() == null) returnErrorException("Id required");
 		validateForm(reqDto);
 		SystemConfig existing = findByIdOrThrow(reqDto.getId(), "Config not found");
+		String previousKey = existing.getConfigKey();
 		existing.setConfigKey(reqDto.getConfigKey()).setConfigValue(reqDto.getConfigValue())
 			.setDescription(reqDto.getDescription()).setExpectedValues(reqDto.getExpectedValues());
-		return getSuccessResponse("Updated successfully", new SystemConfigResDTO(updateEntity(existing)));
+		SystemConfig updated = updateEntity(existing);
+		if (!updated.getConfigKey().equals(previousKey)) configCache.remove(previousKey);
+		configCache.put(updated.getConfigKey(), updated);
+		return getSuccessResponse("Updated successfully", new SystemConfigResDTO(updated));
 	}
 
 	@Transactional
 	@Override
 	public Response<SystemConfigResDTO> delete(Long id) {
-		deleteEntity(findByIdOrThrow(id, "Config not found"));
+		SystemConfig existing = findByIdOrThrow(id, "Config not found");
+		deleteEntity(existing);
+		configCache.remove(existing.getConfigKey());
 		return getSuccessResponse("Deleted successfully");
 	}
 
 	@Transactional
 	@Override
 	public Response<SystemConfigResDTO> remove(Long id) {
-		removeEntity(findByIdOrThrow(id, "Config not found"));
+		SystemConfig existing = findByIdOrThrow(id, "Config not found");
+		removeEntity(existing);
+		configCache.remove(existing.getConfigKey());
 		return getSuccessResponse("Removed successfully");
 	}
 
