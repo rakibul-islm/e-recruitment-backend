@@ -33,9 +33,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 
 	private final UserSessionRepo userSessionRepo;
 
-	// In-memory revocation cache checked on every authenticated request; preloaded on
-	// startup and re-synced hourly so it self-heals across restarts, while revoke()
-	// updates it immediately so force-logout takes effect without waiting for the sync.
+	// Checked on every request; preloaded at startup, re-synced hourly, updated instantly by revoke().
 	private final Set<String> revokedJtiCache = ConcurrentHashMap.newKeySet();
 
 	UserSessionServiceImpl(UserSessionRepo userSessionRepo) {

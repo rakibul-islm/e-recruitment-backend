@@ -9,9 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CORSConfig implements WebMvcConfigurer {
 
-	// Guest-session tracking relies on a Set-Cookie round-trip, which browsers only honor
-	// cross-origin when the CORS response carries a concrete allowed origin plus
-	// allowCredentials(true) — a wildcard origin can't be paired with credentials.
+	// Concrete origin + allowCredentials required for the guest-session cookie to round-trip cross-origin.
 	@Value("${app.frontend.base-url:http://localhost:4200}")
 	private String frontendBaseUrl;
 
