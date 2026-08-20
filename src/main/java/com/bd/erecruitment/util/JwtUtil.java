@@ -34,6 +34,10 @@ public class JwtUtil {
 		return extractClaim(token, Claims::getExpiration);
 	}
 
+	public String extractJti(String token) {
+		return extractClaim(token, c -> c.get("jti", String.class));
+	}
+
 	public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
 		final Claims claims = extractAllClaims(token);
 		return claimsResolver.apply(claims);
@@ -51,7 +55,7 @@ public class JwtUtil {
 		return extractExpiration(token).before(new Date());
 	}
 
-	public String generateToken(UserDetails userDetails) {
+	public String generateToken(UserDetails userDetails, String jti) {
 		MyUserDetail mud = (MyUserDetail) userDetails;
 
 		List<String> authorityList = mud.getAuthorities().stream()
@@ -64,6 +68,7 @@ public class JwtUtil {
 
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("userDetails", liud);
+		claims.put("jti", jti);
 		return createToken(claims, userDetails.getUsername());
 	}
 

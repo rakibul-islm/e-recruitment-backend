@@ -1,5 +1,6 @@
 package com.bd.erecruitment.filter;
 
+import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.util.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -25,6 +26,7 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 
 	private final UserDetailsService userDetailsService;
 	private final JwtUtil jwtUtil;
+	private final UserSessionService userSessionService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -44,7 +46,9 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-			if (Boolean.TRUE.equals(jwtUtil.validateToken(jwt, userDetails))) {
+			String jti = extractJtiSafely(jwt);
+			boolean sessionRevoked = jti != null && !userSessionService.isActive(jti);
+			if (!sessionRevoked && Boolean.TRUE.equals(jwtUtil.validateToken(jwt, userDetails))) {
 				UsernamePasswordAuthenticationToken upat = new UsernamePasswordAuthenticationToken(userDetails, null,
 						userDetails.getAuthorities());
 				upat.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -53,6 +57,15 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	// Tokens issued before session tracking existed carry no jti claim; treat those as always active.
+	private String extractJtiSafely(String token) {
+		try {
+			return jwtUtil.extractJti(token);
+		} catch (JwtException | IllegalArgumentException ex) {
+			return null;
+		}
 	}
 
 }

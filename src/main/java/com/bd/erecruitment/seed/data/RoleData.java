@@ -36,7 +36,8 @@ public class RoleData {
 					"job-circular:read",
 					"system-config:read",
 					"password-policy:read",
-					"exception-log:read"
+					"exception-log:read",
+					"session:read"
 				)
 			),
 			new RoleDef(
@@ -56,7 +57,8 @@ public class RoleData {
 					"job-circular:write",
 					"password-policy:read",
 					"password-policy:write",
-					"exception-log:read"
+					"exception-log:read",
+					"session:read"
 				)
 			),
 			new RoleDef(
@@ -83,7 +85,9 @@ public class RoleData {
 					"password-policy:write",
 					"password-policy:delete",
 					"exception-log:read",
-					"exception-log:delete"
+					"exception-log:delete",
+					"session:read",
+					"session:delete"
 				)
 			)
 		);

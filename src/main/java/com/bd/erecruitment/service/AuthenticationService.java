@@ -17,4 +17,5 @@ public interface AuthenticationService<R, E> extends BaseService<R, E> {
 	Response<Object> verifyOtp(VerifyOtpReqDto reqDto);
 	Response<Object> resetPassword(ResetPasswordReqDto reqDto);
 	Response<Object> setPassword(SetPasswordReqDto reqDto);
+	Response<Object> logout(String authorizationHeader);
 }
