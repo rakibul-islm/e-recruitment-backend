@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
@@ -71,6 +72,12 @@ public class AuthenticationController extends AbstractBaseController<Authenticat
 	@PostMapping("/set-password")
 	public ResponseEntity<Response<Object>> setPassword(@RequestBody SetPasswordReqDto reqDto) {
 		return respond(authService.setPassword(reqDto));
+	}
+
+	@Operation(summary = "Logout the current session")
+	@PostMapping("/logout")
+	public ResponseEntity<Response<Object>> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
+		return respond(authService.logout(authorization));
 	}
 
 	@Hidden

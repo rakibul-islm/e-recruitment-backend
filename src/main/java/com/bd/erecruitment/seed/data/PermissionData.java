@@ -43,7 +43,10 @@ public class PermissionData {
 			new PermissionDef("Delete Password Policy",  "password-policy:delete", "SYSTEM_CONFIG",  null),
 
 			new PermissionDef("View Exception Logs",    "exception-log:read",   "SYSTEM_CONFIG",  "exception-log-list"),
-			new PermissionDef("Delete Exception Logs",  "exception-log:delete", "SYSTEM_CONFIG",  "exception-log-delete")
+			new PermissionDef("Delete Exception Logs",  "exception-log:delete", "SYSTEM_CONFIG",  "exception-log-delete"),
+
+			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
+			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete")
 		);
 	}
 }

@@ -9,11 +9,13 @@ import com.bd.erecruitment.dto.req.VerifyOtpReqDto;
 import com.bd.erecruitment.dto.res.AuthenticationResDTO;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.exception.ExceptionLogWriter;
+import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.AuthenticationService;
 import com.bd.erecruitment.service.MailService;
 import com.bd.erecruitment.service.OtpService;
 import com.bd.erecruitment.service.PasswordPolicyService;
+import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.util.JwtUtil;
 import com.bd.erecruitment.util.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -45,6 +48,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	@Autowired private OtpService otpService;
 	@Autowired private BCryptPasswordEncoder encoder;
 	@Autowired private ExceptionLogWriter exceptionLogWriter;
+	@Autowired private UserSessionService userSessionService;
 
 	@Value("${google.client-id}")
 	private String googleClientId;
@@ -229,9 +233,27 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		return getSuccessResponse("Password set successfully. You can now sign in");
 	}
 
+	@Override
+	public Response<Object> logout(String authorizationHeader) {
+		String jti = null;
+		if (StringUtils.isNotBlank(authorizationHeader) && authorizationHeader.startsWith("Bearer ")) {
+			try {
+				jti = jwtUtil.extractJti(authorizationHeader.substring(7));
+			} catch (Exception ignored) {}
+		}
+		return userSessionService.logoutCurrentSession(jti);
+	}
+
 	private AuthenticationResDTO buildAuthResponse(UserDetails userDetails) {
+		MyUserDetail mud = (MyUserDetail) userDetails;
+		String jti = UUID.randomUUID().toString();
+		String token = jwtUtil.generateToken(userDetails, jti);
+
+		User user = userRepo.findByIdAndDeleted(mud.getId(), false).orElse(null);
+		if (user != null) userSessionService.createSession(user, jti, new Date(), jwtUtil.extractExpiration(token));
+
 		return AuthenticationResDTO.builder()
-			.token(jwtUtil.generateToken(userDetails))
+			.token(token)
 			.build();
 	}
 

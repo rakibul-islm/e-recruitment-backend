@@ -19,6 +19,11 @@ public class RequestUtils {
 		return request.getRemoteAddr();
 	}
 
+	public static String getUserAgent() {
+		HttpServletRequest request = currentRequest();
+		return request == null ? null : request.getHeader("User-Agent");
+	}
+
 	private static HttpServletRequest currentRequest() {
 		return RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs
 				? attrs.getRequest()
