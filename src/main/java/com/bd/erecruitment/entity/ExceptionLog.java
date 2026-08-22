@@ -35,6 +35,9 @@ public class ExceptionLog extends SequenceIdGenerator {
 	@Column(name = "request_uri")
 	private String requestUri;
 
+	@Column(name = "correlation_id", length = 100)
+	private String correlationId;
+
 	@JdbcTypeCode(SqlTypes.LONGVARCHAR)
 	private String message;
 

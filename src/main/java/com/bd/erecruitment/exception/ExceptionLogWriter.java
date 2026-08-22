@@ -2,11 +2,13 @@ package com.bd.erecruitment.exception;
 
 import com.bd.erecruitment.entity.ExceptionLog;
 import com.bd.erecruitment.entity.SystemConfig;
+import com.bd.erecruitment.filter.CorrelationIdFilter;
 import com.bd.erecruitment.repository.ExceptionLogRepo;
 import com.bd.erecruitment.service.impl.SystemConfigServiceImpl;
 import com.bd.erecruitment.util.RequestUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.io.PrintWriter;
@@ -54,6 +56,7 @@ public class ExceptionLogWriter {
 					.setExceptionClass(ex.getClass().getName())
 					.setStatusCode(statusCode)
 					.setRequestUri(context)
+					.setCorrelationId(MDC.get(CorrelationIdFilter.MDC_KEY))
 					.setMessage(message)
 					.setStackTrace(sw.toString())
 					.setCreatedBy("system").setCreatedOn(now).setCreatedTerminal(terminal)

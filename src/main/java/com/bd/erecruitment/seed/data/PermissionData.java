@@ -12,6 +12,7 @@ public class PermissionData {
 
 			new PermissionDef("View Users",             "user:read",            "USER_MANAGEMENT",  "user-list"),
 			new PermissionDef("Manage Users",           "user:write",           "USER_MANAGEMENT",  "user-manage"),
+			new PermissionDef("Edit User Email",        "user:email-write",     "USER_MANAGEMENT",  "user-email-edit"),
 			new PermissionDef("Delete Users",           "user:delete",          "USER_MANAGEMENT",  "user-delete"),
 
 			// routeName left null: profile access is unconditional in the account menu, not admin-menu-gated.
@@ -36,6 +37,7 @@ public class PermissionData {
 
 			new PermissionDef("View System Config",     "system-config:read",   "SYSTEM_CONFIG",    "system-config-list"),
 			new PermissionDef("Manage System Config",   "system-config:write",  "SYSTEM_CONFIG",    "system-config-manage"),
+			new PermissionDef("Edit System Config Description", "system-config:description-write", "SYSTEM_CONFIG", "system-config-description-edit"),
 			new PermissionDef("Delete System Config",   "system-config:delete", "SYSTEM_CONFIG",    null),
 
 			new PermissionDef("View Password Policy",   "password-policy:read",   "SYSTEM_CONFIG",  "password-policy-list"),
@@ -44,6 +46,9 @@ public class PermissionData {
 
 			new PermissionDef("View Exception Logs",    "exception-log:read",   "SYSTEM_CONFIG",  "exception-log-list"),
 			new PermissionDef("Delete Exception Logs",  "exception-log:delete", "SYSTEM_CONFIG",  "exception-log-delete"),
+
+			// No write/delete counterpart: the audit trail is append-only, enforced at the controller (501).
+			new PermissionDef("View Audit Logs",        "audit-log:read",       "SYSTEM_CONFIG",  "audit-log-list"),
 
 			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
 			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete")
