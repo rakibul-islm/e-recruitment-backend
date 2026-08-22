@@ -26,6 +26,9 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Role-based access control** — users, roles, permissions, and user groups, with method-level security (`@EnableMethodSecurity`) enforced per permission
 - **System configuration & password policy** — runtime-configurable settings and a centrally enforced password policy, both exposed via REST for the admin UI
 - **Centralized exception logging** — `GlobalExceptionHandler` persists unhandled exceptions to the database (toggleable via the `EXCEPTION_LOG_TO_DB` system config key) and exposes them through `ExceptionLogController` for the admin exception-log viewer
+- **Audit logging** — an append-only audit trail (security events, entity changes) written asynchronously off the request thread by `AuditLogWriter` on a dedicated executor, exposed read-only via `AuditLogController` (`/audit-log`); enabled/disabled and retention-purged (nightly) via the `AUDIT_LOG_ENABLED` / `AUDIT_LOG_RETENTION_DAYS` system config keys
+- **Session management** — active JWT sessions are tracked in `UserSession` (plus guest/unauthenticated session counts via `GuestSessionTracker`), searchable per user and force-logout-able individually or globally via `UserSessionController` (`/session`)
+- **Google avatar fetching** — on Google Sign-In, the user's profile picture is downloaded and stored asynchronously (`GoogleAvatarFetcher`) so it doesn't delay login
 - **Job circulars** — endpoints for listing/filtering job circulars (`JobCircularController`)
 - **Auto-seeded reference data** — roles, permissions, user groups, a password policy, system config, and two starter accounts are seeded on startup (`seed/` package)
 - **API documentation** — interactive Swagger UI via springdoc-openapi
@@ -120,11 +123,14 @@ Raw OpenAPI spec: `http://localhost:8041/e-recruitment/v3/api-docs`.
 ```
 src/main/java/com/bd/erecruitment/
 ├── controller/         REST controllers (Authentication, User, Role, Permission, UserGroup,
-│                        SystemConfig, PasswordPolicy, ExceptionLog, JobCircular, Profile)
-├── service/             Business logic interfaces
-│   └── impl/             Implementations
+│                        SystemConfig, PasswordPolicy, ExceptionLog, AuditLog, UserSession,
+│                        JobCircular, Profile)
+├── service/             Business logic interfaces (incl. UserSessionService, GuestSessionTracker)
+│   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher)
+├── audit/               Audit action constants, AuditLogWriter (async), exemption annotations
+│                        (@AuditExempt, @AuditIgnore)
 ├── repository/          Spring Data JPA repositories
-├── entity/               JPA entities
+├── entity/               JPA entities (incl. AuditLog, UserSession)
 ├── dto/
 │   ├── req/               Request DTOs
 │   └── res/               Response DTOs
@@ -136,7 +142,7 @@ src/main/java/com/bd/erecruitment/
 ├── annotation/           Custom annotations
 ├── model/                Auth/user-detail models used by Spring Security
 ├── enums/                Shared enums
-├── config/               CORS, Swagger, and general web config
+├── config/               CORS, Swagger, async executor (AsyncConfig), and general web config
 └── seed/                 Startup data seeding (roles, permissions, users, groups, config, policy)
 
 src/main/resources/

@@ -1,5 +1,6 @@
 package com.bd.erecruitment.entity;
 
+import com.bd.erecruitment.audit.AuditIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -21,10 +22,12 @@ import java.util.Set;
 @NoArgsConstructor
 @Accessors(chain = true)
 @Table(name = "USER_ACCOUNT")
-@EqualsAndHashCode(callSuper = true, exclude = {"roles", "userGroup"})
+@EqualsAndHashCode(callSuper = true, exclude = {"roles"})
 public class User extends SequenceIdGenerator {
 
 	private String fullName;
+
+	@AuditIgnore
 	private String password;
 
 	@Column(name = "email", unique = true)
@@ -49,14 +52,19 @@ public class User extends SequenceIdGenerator {
 	@Column(name = "google_id", unique = true)
 	private String googleId;
 
+	@AuditIgnore
 	private String otpCode;
 
+	@AuditIgnore
 	private Date otpExpiry;
 
+	@AuditIgnore
 	private int otpAttempts;
 
+	@AuditIgnore
 	private String activationToken;
 
+	@AuditIgnore
 	private Date activationTokenExpiry;
 
 	@Builder.Default
@@ -69,8 +77,7 @@ public class User extends SequenceIdGenerator {
 	)
 	private Set<Role> roles = new HashSet<>();
 
-	@ToString.Exclude
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "group_id")
-	private UserGroup userGroup;
+	// No JPA relation to UserGroup on purpose: only seeds the UI's role picklist default, no ongoing meaning.
+	@Column(name = "group_id")
+	private Long userGroupId;
 }

@@ -13,7 +13,6 @@ import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.RoleRepo;
-import com.bd.erecruitment.repository.UserGroupRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.MailService;
 import com.bd.erecruitment.service.OtpService;
@@ -47,7 +46,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	private final UserRepo userRepo;
 	private final BCryptPasswordEncoder encoder;
 	private final RoleRepo roleRepo;
-	private final UserGroupRepo userGroupRepo;
 	private final PasswordPolicyService passwordPolicyService;
 	private final MailService mailService;
 	private final OtpService otpService;
@@ -61,22 +59,20 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	@Value("${app.account-setup.expiry-hours:48}")
 	private long activationExpiryHours;
 
-	public UserServiceImpl(UserRepo userRepo, BCryptPasswordEncoder encoder, RoleRepo roleRepo, UserGroupRepo userGroupRepo,
+	public UserServiceImpl(UserRepo userRepo, BCryptPasswordEncoder encoder, RoleRepo roleRepo,
 			PasswordPolicyService passwordPolicyService, MailService mailService, OtpService otpService) {
 		super(userRepo);
 		this.userRepo = userRepo;
 		this.encoder = encoder;
 		this.roleRepo = roleRepo;
-		this.userGroupRepo = userGroupRepo;
 		this.passwordPolicyService = passwordPolicyService;
 		this.mailService = mailService;
 		this.otpService = otpService;
-		// PropertyMap.skip() avoids ModelMapper triggering a lazy load of roles/userGroup here.
+		// PropertyMap.skip() avoids ModelMapper triggering a lazy load of roles here.
 		modelMapper.addMappings(new PropertyMap<User, UserResDTO>() {
 			@Override
 			protected void configure() {
 				skip(destination.getRoles());
-				skip(destination.getUserGroup());
 			}
 		});
 	}
@@ -324,7 +320,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	private void resolveRolesAndGroups(User user, UserReqDto reqDto) {
 		if (reqDto.getRoleIds() != null && !reqDto.getRoleIds().isEmpty())
 			user.setRoles(new HashSet<>(roleRepo.findAllByIdInAndDeleted(new ArrayList<>(reqDto.getRoleIds()), false)));
-		if (reqDto.getUserGroupId() != null)
-			user.setUserGroup(userGroupRepo.findByIdAndDeleted(reqDto.getUserGroupId(), false).orElse(null));
+		user.setUserGroupId(reqDto.getUserGroupId());
 	}
 }

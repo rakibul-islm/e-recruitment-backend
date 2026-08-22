@@ -30,14 +30,14 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 	@Transactional
 	@Override
 	public Response<PasswordPolicyResDTO> find() {
-		return getSuccessResponse("Found", new PasswordPolicyResDTO(findPolicyOrThrow()));
+		return getSuccessResponse("Found", new PasswordPolicyResDTO(getActivePolicy()));
 	}
 
 	@Transactional
 	@Override
 	public Response<PasswordPolicyResDTO> update(PasswordPolicyReqDto reqDto) {
 		validateForm(reqDto);
-		PasswordPolicy existing = findPolicyOrThrow();
+		PasswordPolicy existing = captureSnapshot(findPolicyOrThrow());
 		existing.setMinLength(reqDto.getMinLength())
 			.setMaxLength(reqDto.getMaxLength())
 			.setRequireUppercase(reqDto.isRequireUppercase())

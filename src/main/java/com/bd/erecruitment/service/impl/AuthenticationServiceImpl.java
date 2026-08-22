@@ -1,5 +1,7 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.audit.AuditAction;
+import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.dto.req.AuthenticationReqDTO;
 import com.bd.erecruitment.dto.req.ForgotPasswordReqDto;
 import com.bd.erecruitment.dto.req.GoogleAuthReqDTO;
@@ -8,6 +10,7 @@ import com.bd.erecruitment.dto.req.SetPasswordReqDto;
 import com.bd.erecruitment.dto.req.VerifyOtpReqDto;
 import com.bd.erecruitment.dto.res.AuthenticationResDTO;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.UserRepo;
@@ -51,6 +54,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 	@Autowired private ExceptionLogWriter exceptionLogWriter;
 	@Autowired private UserSessionService userSessionService;
 	@Autowired private GoogleAvatarFetcher googleAvatarFetcher;
+	@Autowired private AuditLogWriter auditLogWriter;
 
 	@Value("${google.client-id}")
 	private String googleClientId;
@@ -94,15 +98,23 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			tokenInfo = response.getBody();
 		} catch (Exception e) {
 			exceptionLogWriter.log(e, 401, "Invalid Google token", "loginWithGoogle");
+			auditLogWriter.logSecurity(AuditAction.LOGIN_FAILURE, "unknown", AuditOutcome.FAILURE);
 			returnUnauthorizedException("Invalid Google token");
 			return null; // unreachable, satisfies compiler
 		}
 
-		if (!googleClientId.equals(tokenInfo.get("aud"))) returnUnauthorizedException("Invalid Google token audience");
-		if (!"true".equals(String.valueOf(tokenInfo.get("email_verified")))) returnUnauthorizedException("Google email not verified");
+		String email = (String) tokenInfo.get("email");
+
+		if (!googleClientId.equals(tokenInfo.get("aud"))) {
+			auditLogWriter.logSecurity(AuditAction.LOGIN_FAILURE, email, AuditOutcome.FAILURE);
+			returnUnauthorizedException("Invalid Google token audience");
+		}
+		if (!"true".equals(String.valueOf(tokenInfo.get("email_verified")))) {
+			auditLogWriter.logSecurity(AuditAction.LOGIN_FAILURE, email, AuditOutcome.FAILURE);
+			returnUnauthorizedException("Google email not verified");
+		}
 
 		String googleId = (String) tokenInfo.get("sub");
-		String email    = (String) tokenInfo.get("email");
 		String fullName = (String) tokenInfo.get("name");
 
 		User user = userRepo.findByGoogleId(googleId);
@@ -127,6 +139,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		}
 
 		UserDetails userDetails = userService.loadUserByUsername(user.getEmail());
+		auditLogWriter.logSecurity(AuditAction.LOGIN_SUCCESS, email, AuditOutcome.SUCCESS);
 		return getSuccessResponse("Login successful", buildAuthResponse(userDetails));
 	}
 
@@ -136,11 +149,14 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(reqDto.getEmail(), reqDto.getPassword()));
 		} catch (BadCredentialsException e) {
+			auditLogWriter.logSecurity(AuditAction.LOGIN_FAILURE, reqDto.getEmail(), AuditOutcome.FAILURE);
 			returnUnauthorizedException("Invalid email or password");
 		} catch (DisabledException e) {
 			exceptionLogWriter.log(e, 401, e.getMessage(), "generateToken");
+			auditLogWriter.logSecurity(AuditAction.LOGIN_FAILURE, reqDto.getEmail(), AuditOutcome.FAILURE);
 			returnUnauthorizedException("Your account isn't active yet. Please complete the verification/setup link sent to your email before signing in");
 		}
+		auditLogWriter.logSecurity(AuditAction.LOGIN_SUCCESS, reqDto.getEmail(), AuditOutcome.SUCCESS);
 		return getSuccessResponse("Token generated successfully", buildAuthResponse(userService.loadUserByUsername(reqDto.getEmail())));
 	}
 
@@ -170,7 +186,13 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			returnErrorException("Email and OTP are required");
 
 		User user = userRepo.findByEmail(reqDto.getEmail());
-		otpService.validate(user, reqDto.getOtp());
+		try {
+			otpService.validate(user, reqDto.getOtp());
+		} catch (RuntimeException e) {
+			auditLogWriter.logSecurity(AuditAction.OTP_FAILED, reqDto.getEmail(), AuditOutcome.FAILURE);
+			throw e;
+		}
+		auditLogWriter.logSecurity(AuditAction.OTP_VERIFIED, reqDto.getEmail(), AuditOutcome.SUCCESS);
 		return getSuccessResponse("OTP verified successfully");
 	}
 
@@ -184,18 +206,24 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			returnErrorException("New password and confirm password do not match");
 
 		User user = userRepo.findByEmail(reqDto.getEmail());
-		otpService.validate(user, reqDto.getOtp());
+		try {
+			otpService.validate(user, reqDto.getOtp());
 
-		if (StringUtils.isNotBlank(user.getPassword()) && encoder.matches(reqDto.getNewPassword(), user.getPassword()))
-			returnErrorException("New password must be different from the current password");
+			if (StringUtils.isNotBlank(user.getPassword()) && encoder.matches(reqDto.getNewPassword(), user.getPassword()))
+				returnErrorException("New password must be different from the current password");
 
-		passwordPolicyService.validatePassword(reqDto.getNewPassword(), user.getEmail(), user.getFullName());
+			passwordPolicyService.validatePassword(reqDto.getNewPassword(), user.getEmail(), user.getFullName());
 
-		user.setPassword(encoder.encode(reqDto.getNewPassword()));
-		user.setOtpCode(null);
-		user.setOtpExpiry(null);
-		user.setOtpAttempts(0);
-		userRepo.save(user);
+			user.setPassword(encoder.encode(reqDto.getNewPassword()));
+			user.setOtpCode(null);
+			user.setOtpExpiry(null);
+			user.setOtpAttempts(0);
+			userRepo.save(user);
+		} catch (RuntimeException e) {
+			auditLogWriter.logSecurity(AuditAction.PASSWORD_RESET, reqDto.getEmail(), AuditOutcome.FAILURE);
+			throw e;
+		}
+		auditLogWriter.logSecurity(AuditAction.PASSWORD_RESET, reqDto.getEmail(), AuditOutcome.SUCCESS);
 		return getSuccessResponse("Password reset successfully");
 	}
 
@@ -210,20 +238,26 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 		User user = userRepo.findByActivationToken(reqDto.getToken());
 		if (user == null) returnErrorException("Invalid or expired link");
 
-		if (user.getActivationTokenExpiry() == null || user.getActivationTokenExpiry().before(new Date())) {
+		try {
+			if (user.getActivationTokenExpiry() == null || user.getActivationTokenExpiry().before(new Date())) {
+				user.setActivationToken(null);
+				user.setActivationTokenExpiry(null);
+				userRepo.save(user);
+				returnErrorException("Link has expired. Please ask an admin to recreate your account");
+			}
+
+			passwordPolicyService.validatePassword(reqDto.getNewPassword(), user.getEmail(), user.getFullName());
+
+			user.setPassword(encoder.encode(reqDto.getNewPassword()));
+			user.setActive(true);
 			user.setActivationToken(null);
 			user.setActivationTokenExpiry(null);
 			userRepo.save(user);
-			returnErrorException("Link has expired. Please ask an admin to recreate your account");
+		} catch (RuntimeException e) {
+			auditLogWriter.logSecurity(AuditAction.PASSWORD_SET, user.getEmail(), AuditOutcome.FAILURE);
+			throw e;
 		}
-
-		passwordPolicyService.validatePassword(reqDto.getNewPassword(), user.getEmail(), user.getFullName());
-
-		user.setPassword(encoder.encode(reqDto.getNewPassword()));
-		user.setActive(true);
-		user.setActivationToken(null);
-		user.setActivationTokenExpiry(null);
-		userRepo.save(user);
+		auditLogWriter.logSecurity(AuditAction.PASSWORD_SET, user.getEmail(), AuditOutcome.SUCCESS);
 		return getSuccessResponse("Password set successfully. You can now sign in");
 	}
 
@@ -235,7 +269,9 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 				jti = jwtUtil.extractJti(authorizationHeader.substring(7));
 			} catch (Exception ignored) {}
 		}
-		return userSessionService.logoutCurrentSession(jti);
+		Response<Object> response = userSessionService.logoutCurrentSession(jti);
+		auditLogWriter.logSecurity(AuditAction.LOGOUT, AuditOutcome.SUCCESS);
+		return response;
 	}
 
 	private AuthenticationResDTO buildAuthResponse(UserDetails userDetails) {
