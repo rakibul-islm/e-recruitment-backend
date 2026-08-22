@@ -37,7 +37,7 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 	@Override
 	public Response<PasswordPolicyResDTO> update(PasswordPolicyReqDto reqDto) {
 		validateForm(reqDto);
-		PasswordPolicy existing = findPolicyOrThrow();
+		PasswordPolicy existing = captureSnapshot(findPolicyOrThrow());
 		existing.setMinLength(reqDto.getMinLength())
 			.setMaxLength(reqDto.getMaxLength())
 			.setRequireUppercase(reqDto.isRequireUppercase())

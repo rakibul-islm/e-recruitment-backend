@@ -1,5 +1,6 @@
 package com.bd.erecruitment.entity;
 
+import com.bd.erecruitment.audit.AuditIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,8 @@ import java.util.Set;
 public class User extends SequenceIdGenerator {
 
 	private String fullName;
+
+	@AuditIgnore
 	private String password;
 
 	@Column(name = "email", unique = true)
@@ -49,14 +52,19 @@ public class User extends SequenceIdGenerator {
 	@Column(name = "google_id", unique = true)
 	private String googleId;
 
+	@AuditIgnore
 	private String otpCode;
 
+	@AuditIgnore
 	private Date otpExpiry;
 
+	@AuditIgnore
 	private int otpAttempts;
 
+	@AuditIgnore
 	private String activationToken;
 
+	@AuditIgnore
 	private Date activationTokenExpiry;
 
 	@Builder.Default

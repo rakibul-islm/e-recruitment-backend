@@ -37,6 +37,7 @@ public class RoleData {
 					"system-config:read",
 					"password-policy:read",
 					"exception-log:read",
+					"audit-log:read",
 					"session:read"
 				)
 			),
@@ -58,6 +59,7 @@ public class RoleData {
 					"password-policy:read",
 					"password-policy:write",
 					"exception-log:read",
+					"audit-log:read",
 					"session:read"
 				)
 			),
@@ -86,6 +88,7 @@ public class RoleData {
 					"password-policy:delete",
 					"exception-log:read",
 					"exception-log:delete",
+					"audit-log:read",
 					"session:read",
 					"session:delete"
 				)

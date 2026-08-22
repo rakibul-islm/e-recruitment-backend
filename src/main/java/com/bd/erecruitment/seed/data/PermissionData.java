@@ -45,6 +45,9 @@ public class PermissionData {
 			new PermissionDef("View Exception Logs",    "exception-log:read",   "SYSTEM_CONFIG",  "exception-log-list"),
 			new PermissionDef("Delete Exception Logs",  "exception-log:delete", "SYSTEM_CONFIG",  "exception-log-delete"),
 
+			// No write/delete counterpart: the audit trail is append-only, enforced at the controller (501).
+			new PermissionDef("View Audit Logs",        "audit-log:read",       "SYSTEM_CONFIG",  "audit-log-list"),
+
 			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
 			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete")
 		);
