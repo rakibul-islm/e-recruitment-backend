@@ -58,7 +58,7 @@ public class UserSeeder implements DataSeeder {
 				.setLocked(false)
 				.setExpiryDate(yearFromNow(50))
 				.setRoles(roles)
-				.setUserGroup(group)
+				.setUserGroupId(group != null ? group.getId() : null)
 				.setCreatedBy("system").setCreatedOn(now)
 				.setUpdatedBy("system").setUpdatedOn(now)
 				.setDeleted(false);

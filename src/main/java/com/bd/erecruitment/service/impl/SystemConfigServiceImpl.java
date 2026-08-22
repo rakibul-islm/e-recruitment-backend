@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -19,8 +20,8 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 
 	private final SystemConfigRepo systemConfigRepo;
 
-	// Lazily filled, kept in sync on every write below; read by hot paths like ExceptionLogWriter.
-	private final Map<String, SystemConfig> configCache = new ConcurrentHashMap<>();
+	// Lazily filled, kept in sync on every write below; caches Optional so a missing key is cached too.
+	private final Map<String, Optional<SystemConfig>> configCache = new ConcurrentHashMap<>();
 
 	SystemConfigServiceImpl(SystemConfigRepo systemConfigRepo) {
 		super(systemConfigRepo);
@@ -28,7 +29,14 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 	}
 
 	public SystemConfig findCachedByKey(String configKey) {
-		return configCache.computeIfAbsent(configKey, key -> systemConfigRepo.findByConfigKeyAndDeleted(key, false).orElse(null));
+		return configCache.computeIfAbsent(configKey, key -> systemConfigRepo.findByConfigKeyAndDeleted(key, false)).orElse(null);
+	}
+
+	@Transactional
+	public Response<SystemConfigResDTO> findByKey(String configKey) {
+		SystemConfig config = findCachedByKey(configKey);
+		if (config == null) returnNotFoundException("Config not found");
+		return getSuccessResponse("Found", new SystemConfigResDTO(config));
 	}
 
 	@Transactional
@@ -43,7 +51,7 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 	public Response<SystemConfigResDTO> save(SystemConfigReqDto reqDto) {
 		validateForm(reqDto);
 		SystemConfig saved = createEntity(reqDto.getBean());
-		configCache.put(saved.getConfigKey(), saved);
+		configCache.put(saved.getConfigKey(), Optional.of(saved));
 		return getCreatedResponse("Saved successfully", new SystemConfigResDTO(saved));
 	}
 
@@ -58,7 +66,7 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 			.setDescription(reqDto.getDescription()).setExpectedValues(reqDto.getExpectedValues());
 		SystemConfig updated = updateEntity(existing);
 		if (!updated.getConfigKey().equals(previousKey)) configCache.remove(previousKey);
-		configCache.put(updated.getConfigKey(), updated);
+		configCache.put(updated.getConfigKey(), Optional.of(updated));
 		return getSuccessResponse("Updated successfully", new SystemConfigResDTO(updated));
 	}
 

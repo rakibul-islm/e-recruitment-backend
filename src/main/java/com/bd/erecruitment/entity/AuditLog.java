@@ -26,7 +26,8 @@ import org.hibernate.type.SqlTypes;
 		@Index(name = "idx_audit_log_actor", columnList = "created_by, created_on"),
 		@Index(name = "idx_audit_log_created_on", columnList = "created_on"),
 		@Index(name = "idx_audit_log_category_action", columnList = "category, action"),
-		@Index(name = "idx_audit_log_correlation", columnList = "correlation_id")
+		@Index(name = "idx_audit_log_correlation", columnList = "correlation_id"),
+		@Index(name = "idx_audit_log_outcome", columnList = "outcome")
 })
 @EqualsAndHashCode(callSuper = true)
 public class AuditLog extends SequenceIdGenerator {

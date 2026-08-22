@@ -132,7 +132,9 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 			entity.setUpdatedTerminal(terminal);
 			entity.setDeleted(false);
 		}
-		return repository.saveAll(entities);
+		List<E> saved = repository.saveAll(entities);
+		saved.forEach(entity -> audit(AuditAction.CREATE, entity));
+		return saved;
 	}
 
 	protected E createEntity(E entity) {

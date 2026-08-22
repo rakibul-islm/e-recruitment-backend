@@ -12,6 +12,7 @@ public class PermissionData {
 
 			new PermissionDef("View Users",             "user:read",            "USER_MANAGEMENT",  "user-list"),
 			new PermissionDef("Manage Users",           "user:write",           "USER_MANAGEMENT",  "user-manage"),
+			new PermissionDef("Edit User Email",        "user:email-write",     "USER_MANAGEMENT",  "user-email-edit"),
 			new PermissionDef("Delete Users",           "user:delete",          "USER_MANAGEMENT",  "user-delete"),
 
 			// routeName left null: profile access is unconditional in the account menu, not admin-menu-gated.
@@ -36,6 +37,7 @@ public class PermissionData {
 
 			new PermissionDef("View System Config",     "system-config:read",   "SYSTEM_CONFIG",    "system-config-list"),
 			new PermissionDef("Manage System Config",   "system-config:write",  "SYSTEM_CONFIG",    "system-config-manage"),
+			new PermissionDef("Edit System Config Description", "system-config:description-write", "SYSTEM_CONFIG", "system-config-description-edit"),
 			new PermissionDef("Delete System Config",   "system-config:delete", "SYSTEM_CONFIG",    null),
 
 			new PermissionDef("View Password Policy",   "password-policy:read",   "SYSTEM_CONFIG",  "password-policy-list"),
