@@ -113,6 +113,10 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		if (StringUtils.isNotBlank(reqDto.getPassword()))
 			passwordPolicyService.validatePassword(reqDto.getPassword(), reqDto.getEmail(), reqDto.getFullName());
 		reqDto.setPassword(StringUtils.isBlank(reqDto.getPassword()) ? exUser.getPassword() : encoder.encode(reqDto.getPassword()));
+		// The profile form doesn't send these, so an unguarded map() would wipe them with UserReqDto's defaults.
+		reqDto.setActive(exUser.isActive());
+		reqDto.setLocked(exUser.isLocked());
+		reqDto.setExpiryDate(exUser.getExpiryDate());
 		modelMapper.map(reqDto, exUser);
 		exUser.setFileData(StringUtils.isBlank(reqDto.getImageBase64()) ? exUser.getFileData() : Base64.getDecoder().decode(reqDto.getImageBase64()));
 		return getSuccessResponse("Profile updated successfully", new UserResDTO(updateEntity(exUser)));
