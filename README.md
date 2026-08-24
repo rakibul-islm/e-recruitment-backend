@@ -85,6 +85,16 @@ Configuration is externalized via environment variables, read in `application.ym
 
 Other tunables (OTP expiry/attempts, account-setup link expiry) are set in `application.yml` under `app.otp` / `app.account-setup` rather than env vars.
 
+### Generating `GMAIL_REFRESH_TOKEN`
+
+The refresh token can expire or be revoked (commonly because the Google Cloud OAuth consent screen is left in "Testing" status, which auto-expires tokens after 7 days). Emails will fail with `invalid_grant: Token has been expired or revoked.` when this happens — regenerate it:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), confirm the OAuth client matching `GMAIL_CLIENT_ID` still exists, and check the OAuth consent screen's publishing status. If it's "Testing," publish it (or re-add the `MAIL_FROM` account as a test user) so the token doesn't keep expiring after a week.
+2. Open the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground), click the gear icon, and check "Use your own OAuth credentials," pasting in `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET`.
+3. Authorize the `https://www.googleapis.com/auth/gmail.send` scope, signed in as the `MAIL_FROM` account.
+4. Exchange the authorization code for tokens and copy the resulting `refresh_token`.
+5. Update `GMAIL_REFRESH_TOKEN` in the deployment environment (e.g. Render dashboard) and restart the service.
+
 ## Database Profiles
 
 Spring profiles are grouped under `dev` (default) and `prod` in `application.yml`:
