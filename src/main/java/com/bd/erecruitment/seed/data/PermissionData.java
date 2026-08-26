@@ -50,6 +50,10 @@ public class PermissionData {
 			// No write/delete counterpart: the audit trail is append-only, enforced at the controller (501).
 			new PermissionDef("View Audit Logs",        "audit-log:read",       "SYSTEM_CONFIG",  "audit-log-list"),
 
+			new PermissionDef("View Archive Config",    "archive-config:read",   "SYSTEM_CONFIG",  "archive-config-list"),
+			new PermissionDef("Manage Archive Config",  "archive-config:write",  "SYSTEM_CONFIG",  "archive-config-manage"),
+			new PermissionDef("Delete Archive Config",  "archive-config:delete", "SYSTEM_CONFIG",  "archive-config-delete"),
+
 			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
 			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete")
 		);

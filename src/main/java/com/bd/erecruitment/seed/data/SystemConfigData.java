@@ -25,6 +25,18 @@ public class SystemConfigData {
 				"365",
 				"Number of days audit_log rows are retained before the scheduled retention job purges them",
 				null
+			),
+			new ConfigDef(
+				"EXCEPTION_LOG_RETENTION_DAYS",
+				"90",
+				"Number of days exception_log rows are retained before the scheduled retention job archives and purges them",
+				null
+			),
+			new ConfigDef(
+				"USER_SESSION_RETENTION_DAYS",
+				"90",
+				"Number of days past expiry a user_session row is retained before the scheduled retention job archives and purges it",
+				null
 			)
 		);
 	}
