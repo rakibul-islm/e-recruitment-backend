@@ -74,7 +74,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan image for vulnerabilities
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ needs.initialize.outputs.image }}:latest
           format: table
