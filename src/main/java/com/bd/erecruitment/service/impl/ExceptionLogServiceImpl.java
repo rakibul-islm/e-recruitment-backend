@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
+// Retention archiving lives in ArchiveScheduler/GenericArchiveEngine, not this class.
 @Service
 public class ExceptionLogServiceImpl extends AbstractBaseService<ExceptionLog> implements BaseService<ExceptionLogResDTO, ExceptionLogReqDto> {
 

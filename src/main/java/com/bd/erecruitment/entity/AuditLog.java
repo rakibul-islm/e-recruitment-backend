@@ -64,7 +64,6 @@ public class AuditLog extends SequenceIdGenerator {
 	@Column(name = "http_method", length = 10)
 	private String httpMethod;
 
-	// Reserved for future per-entity diffing; not populated in phase 1 (see plan's Performance impact notes).
 	@JdbcTypeCode(SqlTypes.LONGVARCHAR)
 	@Column(name = "changed_fields")
 	private String changedFields;
