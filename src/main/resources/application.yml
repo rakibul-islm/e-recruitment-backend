@@ -41,6 +41,15 @@ springdoc:
   swagger-ui:
     tags-sorter: alpha
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 google:
   client-id: ${GOOGLE_CLIENT_ID}
 

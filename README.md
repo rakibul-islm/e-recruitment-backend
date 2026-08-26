@@ -128,6 +128,8 @@ http://localhost:8041/e-recruitment/swagger-ui/index.html
 
 Raw OpenAPI spec: `http://localhost:8041/e-recruitment/v3/api-docs`.
 
+A public, unauthenticated health check is exposed via Spring Boot Actuator at `http://localhost:8041/e-recruitment/actuator/health` (returns `{"status":"UP"}`, including datasource connectivity; used as the deploy pipeline's post-deploy health check).
+
 ## Project Structure
 
 ```
@@ -184,4 +186,4 @@ Provide the [required environment variables](#configuration) via `--env-file` or
 
 ## Deployment
 
-A GitHub Actions pipeline (`.github/workflows/deploy.yml`) builds the `Dockerfile` and pushes the image to GitHub Container Registry on every push to `master`, then triggers a deploy on the hosting provider via its deploy-hook webhook (stored as the `RENDER_DEPLOY_HOOK_URL` repo secret) — the provider pulls the image directly from the registry rather than being connected to this Git repo. Set the environment variables from [Configuration](#configuration) (plus `SPRING_PROFILES_ACTIVE=prod` and PostgreSQL credentials) once in the hosting provider's dashboard — they aren't managed through this pipeline.
+A GitHub Actions pipeline (`.github/workflows/deploy.yml`) runs on every push to `master`: run tests → build the Docker image and scan it for critical vulnerabilities (Trivy) → push it to GitHub Container Registry → trigger a deploy on the hosting provider via its deploy-hook webhook (stored as the `RENDER_DEPLOY_HOOK_URL` repo secret) → poll `/actuator/health` (via the `HEALTHCHECK_URL` repo secret) until the new deploy is confirmed healthy. The provider pulls the image directly from the registry rather than being connected to this Git repo. Set the environment variables from [Configuration](#configuration) (plus `SPRING_PROFILES_ACTIVE=prod` and PostgreSQL credentials) once in the hosting provider's dashboard — they aren't managed through this pipeline.
