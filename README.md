@@ -184,4 +184,4 @@ Provide the [required environment variables](#configuration) via `--env-file` or
 
 ## Deployment
 
-`render.yaml` configures this service for deployment on [Render](https://render.com) as a Docker web service, building with `./gradlew build` and running the generated `build/libs/e-recruitment-0.0.1-SNAPSHOT.jar`. Set the environment variables from [Configuration](#configuration) (plus `SPRING_PROFILES_ACTIVE=prod` and PostgreSQL credentials) in the Render service settings.
+A GitHub Actions pipeline (`.github/workflows/deploy.yml`) builds the `Dockerfile` and pushes the image to GitHub Container Registry on every push to `master`, then triggers a deploy on the hosting provider via its deploy-hook webhook (stored as the `RENDER_DEPLOY_HOOK_URL` repo secret) — the provider pulls the image directly from the registry rather than being connected to this Git repo. Set the environment variables from [Configuration](#configuration) (plus `SPRING_PROFILES_ACTIVE=prod` and PostgreSQL credentials) once in the hosting provider's dashboard — they aren't managed through this pipeline.
