@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+// Retention archiving lives in ArchiveScheduler/GenericArchiveEngine, not this class.
 @Service
 @AuditExempt // session churn on every login shouldn't flood the entity-audit path; session events are covered explicitly instead (phase 2)
 public class UserSessionServiceImpl extends AbstractBaseService<UserSession> implements UserSessionService, BaseService<UserSessionResDTO, UserSessionReqDto> {
