@@ -51,4 +51,12 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// Required placeholders (application.yml) have no defaults; supply dummy
+	// values so the Spring context loads in CI without real secrets.
+	environment "MAIL_FROM", "test@example.com"
+	environment "GMAIL_CLIENT_ID", "test-client-id"
+	environment "GMAIL_CLIENT_SECRET", "test-client-secret"
+	environment "GMAIL_REFRESH_TOKEN", "test-refresh-token"
+	environment "GOOGLE_CLIENT_ID", "test-google-client-id"
+	environment "FRONTEND_BASE_URL", "http://localhost:4200"
 }
