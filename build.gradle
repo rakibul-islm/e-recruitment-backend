@@ -1,11 +1,13 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.3.5'
+	id 'org.springframework.boot' version '3.3.13'
 	id 'io.spring.dependency-management' version '1.1.6'
 }
 
 group = 'com.bd'
 version = '0.0.1-SNAPSHOT'
+
+ext['tomcat.version'] = '10.1.55' // CVE-2026-41293/43512/43515 fix; Spring Boot 3.3.x's own managed version (10.1.42) predates these
 
 java {
 	toolchain {

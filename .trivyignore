@@ -1,0 +1,5 @@
+# CVE-2026-22732 (spring-security-web): fix requires spring-security-web >=6.5.9,
+# which needs Spring Framework 6.2+ (i.e. Spring Boot 3.5.x+). Spring Boot 3.3.x and
+# Spring Security 6.3.x are both past their patch window, so no backport exists.
+# Remove this line once the project is upgraded to Spring Boot 3.5.x or later.
+CVE-2026-22732
