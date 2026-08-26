@@ -39,7 +39,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 | Layer               | Technology |
 |----------------------|------------|
 | Language / runtime     | Java 21 |
-| Framework              | Spring Boot 3.3.5 (Web, Data JPA, Security, Mail, JDBC) |
+| Framework              | Spring Boot 3.3.13 (Web, Data JPA, Security, Mail, JDBC) |
 | Auth                   | JWT ([jjwt](https://github.com/jwtk/jjwt) 0.12.x) + Google Identity Services |
 | Persistence             | Spring Data JPA / Hibernate — H2, PostgreSQL, or Oracle |
 | API docs               | springdoc-openapi (Swagger UI) |
