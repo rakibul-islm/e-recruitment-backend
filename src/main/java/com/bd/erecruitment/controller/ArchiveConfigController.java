@@ -2,6 +2,7 @@ package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.dto.req.ArchiveConfigReqDto;
+import com.bd.erecruitment.dto.res.ArchiveConfigColumnDTO;
 import com.bd.erecruitment.dto.res.ArchiveConfigResDTO;
 import com.bd.erecruitment.dto.res.ArchivedDataResDTO;
 import com.bd.erecruitment.service.impl.ArchiveConfigServiceImpl;
@@ -43,6 +44,12 @@ public class ArchiveConfigController extends AbstractBaseController<ArchiveConfi
 	@Operation(summary = "List a source table's date/timestamp columns, for the date column dropdown")
 	public ResponseEntity<Response<String>> listDateColumns(@RequestParam String sourceTable) {
 		return respond(getSuccessResponse("Found", archiveConfigService.listDateColumns(sourceTable)));
+	}
+
+	@GetMapping("/columns")
+	@Operation(summary = "List a source table's columns with simplified type categories, for the where-condition builder")
+	public ResponseEntity<Response<ArchiveConfigColumnDTO>> listColumns(@RequestParam String sourceTable) {
+		return respond(getSuccessResponse("Found", archiveConfigService.listColumns(sourceTable)));
 	}
 
 	@PostMapping("/{id}/archive-now")
