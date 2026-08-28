@@ -29,6 +29,8 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Audit logging** — an append-only audit trail (security events, entity changes) written asynchronously off the request thread by `AuditLogWriter` on a dedicated executor, exposed read-only via `AuditLogController` (`/audit-log`); enabled/disabled and retention-purged (nightly) via the `AUDIT_LOG_ENABLED` / `AUDIT_LOG_RETENTION_DAYS` system config keys
 - **Session management** — active JWT sessions are tracked in `UserSession` (plus guest/unauthenticated session counts via `GuestSessionTracker`), searchable per user and force-logout-able individually or globally via `UserSessionController` (`/session`)
 - **Google avatar fetching** — on Google Sign-In, the user's profile picture is downloaded and stored asynchronously (`GoogleAvatarFetcher`) so it doesn't delay login
+- **User profile self-service** — view/update own profile and OTP-verified self password change, separate from admin-initiated flows (`ProfileController`, `/profile`)
+- **Data archiving & retention** — runtime-configurable per-table archive policies (source table, archive schema/table, date column, retention days, optional SQL where-condition), run on a nightly schedule or on demand, with the archived data browsable through the admin UI (`ArchiveConfigController`, `GenericArchiveEngine`, `ArchiveScheduler`, `/archive-config`)
 - **Job circulars** — endpoints for listing/filtering job circulars (`JobCircularController`)
 - **Auto-seeded reference data** — roles, permissions, user groups, a password policy, system config, and two starter accounts are seeded on startup (`seed/` package)
 - **API documentation** — interactive Swagger UI via springdoc-openapi
@@ -136,9 +138,10 @@ A public, unauthenticated health check is exposed via Spring Boot Actuator at `h
 src/main/java/com/bd/erecruitment/
 ├── controller/         REST controllers (Authentication, User, Role, Permission, UserGroup,
 │                        SystemConfig, PasswordPolicy, ExceptionLog, AuditLog, UserSession,
-│                        JobCircular, Profile)
+│                        JobCircular, Profile, ArchiveConfig)
 ├── service/             Business logic interfaces (incl. UserSessionService, GuestSessionTracker)
-│   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher)
+│   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher, ArchiveConfigServiceImpl)
+├── retention/            Data archiving/retention engine (GenericArchiveEngine, ArchiveScheduler)
 ├── audit/               Audit action constants, AuditLogWriter (async), exemption annotations
 │                        (@AuditExempt, @AuditIgnore)
 ├── repository/          Spring Data JPA repositories
