@@ -1,6 +1,7 @@
 package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.dto.req.ArchiveConfigReqDto;
+import com.bd.erecruitment.dto.res.ArchiveConfigColumnDTO;
 import com.bd.erecruitment.dto.res.ArchiveConfigResDTO;
 import com.bd.erecruitment.dto.res.ArchivedDataResDTO;
 import com.bd.erecruitment.entity.ArchiveConfig;
@@ -35,6 +36,14 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 
 	private static final Set<Integer> DATE_SQL_TYPES = Set.of(Types.DATE, Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE, Types.TIME);
 
+	private static final Set<Integer> STRING_SQL_TYPES = Set.of(
+			Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR, Types.CLOB);
+
+	private static final Set<Integer> NUMBER_SQL_TYPES = Set.of(
+			Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT, Types.FLOAT, Types.REAL, Types.DOUBLE, Types.NUMERIC, Types.DECIMAL);
+
+	private static final Set<Integer> BOOLEAN_SQL_TYPES = Set.of(Types.BOOLEAN, Types.BIT);
+
 	private final ArchiveConfigRepo archiveConfigRepo;
 	private final JdbcTemplate jdbcTemplate;
 	private final GenericArchiveEngine archiveEngine;
@@ -43,6 +52,7 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 	private volatile List<String> cachedSourceTables;
 	private volatile List<String> cachedArchiveSchemas;
 	private final Map<String, List<String>> cachedDateColumnsByTable = new ConcurrentHashMap<>();
+	private final Map<String, List<ArchiveConfigColumnDTO>> cachedColumnsByTable = new ConcurrentHashMap<>();
 
 	ArchiveConfigServiceImpl(ArchiveConfigRepo archiveConfigRepo, JdbcTemplate jdbcTemplate, GenericArchiveEngine archiveEngine) {
 		super(archiveConfigRepo);
@@ -115,6 +125,31 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 			}
 			return found.stream().sorted(String.CASE_INSENSITIVE_ORDER).toList();
 		}));
+	}
+
+	// Lists every column of a source table, for the where-condition builder's field dropdown.
+	public List<ArchiveConfigColumnDTO> listColumns(String sourceTable) {
+		String table = GenericArchiveEngine.requireValidIdentifier(sourceTable, "source table");
+		return cachedColumnsByTable.computeIfAbsent(table.toUpperCase(), key -> jdbcTemplate.execute((ConnectionCallback<List<ArchiveConfigColumnDTO>>) connection -> {
+			String defaultSchema = connection.getSchema();
+			List<ArchiveConfigColumnDTO> found = new ArrayList<>();
+			try (ResultSet rs = connection.getMetaData().getColumns(connection.getCatalog(), null, "%", "%")) {
+				while (rs.next()) {
+					if (!table.equalsIgnoreCase(rs.getString("TABLE_NAME"))) continue;
+					if (defaultSchema != null && !defaultSchema.equalsIgnoreCase(rs.getString("TABLE_SCHEM"))) continue;
+					found.add(new ArchiveConfigColumnDTO(rs.getString("COLUMN_NAME"), categorize(rs.getInt("DATA_TYPE"))));
+				}
+			}
+			return found.stream().sorted((a, b) -> String.CASE_INSENSITIVE_ORDER.compare(a.getName(), b.getName())).toList();
+		}));
+	}
+
+	private static String categorize(int sqlType) {
+		if (STRING_SQL_TYPES.contains(sqlType)) return "STRING";
+		if (NUMBER_SQL_TYPES.contains(sqlType)) return "NUMBER";
+		if (DATE_SQL_TYPES.contains(sqlType)) return "DATE";
+		if (BOOLEAN_SQL_TYPES.contains(sqlType)) return "BOOLEAN";
+		return "OTHER";
 	}
 
 	@Transactional
