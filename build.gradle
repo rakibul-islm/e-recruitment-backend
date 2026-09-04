@@ -7,7 +7,7 @@ plugins {
 group = 'com.bd'
 version = '0.0.1-SNAPSHOT'
 
-ext['tomcat.version'] = '10.1.55' // CVE-2026-41293/43512/43515 fix; Spring Boot 3.3.x's own managed version (10.1.42) predates these
+ext['tomcat.version'] = '10.1.59' // CVE-2026-65182/65905/68525 fix (10.1.58 withdrawn from Maven Central); Spring Boot 3.3.x's own managed version (10.1.42) predates these
 
 java {
 	toolchain {
