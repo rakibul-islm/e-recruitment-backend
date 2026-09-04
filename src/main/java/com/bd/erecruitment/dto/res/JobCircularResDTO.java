@@ -26,15 +26,21 @@ public class JobCircularResDTO extends BaseResponseDTO<JobCircular>{
 	private String companyEmail;
 	private String companyWebsite;
 	private String companyBusiness;
+	private Long companyId;
 	@Temporal(TemporalType.DATE)
 	private Date applicationDeadLine;
 	private Integer vacancy;
 	private String experience;
 	private String salary;
+	private Integer salaryMin;
+	private Integer salaryMax;
 	private String jobLocation;
 	private String jobRequirement;
 	private String jobResponsibilities;
 	private String otherBenefits;
 	private String workPlace;
 	private String employmentStatus;
+	private String skills;
+	private String category;
+	private String status;
 }

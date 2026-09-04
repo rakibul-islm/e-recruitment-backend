@@ -31,9 +31,46 @@ public class PermissionData {
 			new PermissionDef("Manage User Groups",     "user-group:write",     "ACCESS_CONTROL",   "user-group-manage"),
 			new PermissionDef("Delete User Groups",     "user-group:delete",    "ACCESS_CONTROL",   "user-group-delete"),
 
+			new PermissionDef("View Recruiter Applications",            "recruiter-application:read",  "USER_MANAGEMENT", "recruiter-application-list"),
+			new PermissionDef("Approve/Reject Recruiter Applications",  "recruiter-application:write", "USER_MANAGEMENT", "recruiter-application-manage"),
+
 			new PermissionDef("View Job Circulars",     "job-circular:read",    "JOB_MANAGEMENT",   "job-circular-list"),
-			new PermissionDef("Manage Job Circulars",   "job-circular:write",   "JOB_MANAGEMENT",   null),
+			new PermissionDef("Manage Job Circulars",   "job-circular:write",   "JOB_MANAGEMENT",   "job-circular-manage"),
 			new PermissionDef("Delete Job Circulars",   "job-circular:delete",  "JOB_MANAGEMENT",   null),
+
+			new PermissionDef("View Companies",         "company:read",         "JOB_MANAGEMENT",   "company-list"),
+			new PermissionDef("Manage Companies",       "company:write",        "JOB_MANAGEMENT",   "company-manage"),
+			new PermissionDef("Delete Companies",       "company:delete",       "JOB_MANAGEMENT",   null),
+
+			// Self-service only (own profile/CVs) - unconditional for any authenticated account, see PermissionInterceptor.ALWAYS_ALLOWED.
+			new PermissionDef("View My Candidate Profile",   "candidate-profile:read",  "PROFILE", null),
+			new PermissionDef("Update My Candidate Profile", "candidate-profile:write", "PROFILE", null),
+
+			// routeName left null on write: both candidates (apply) and staff (status change) hold
+			// application:write, so it can't distinguish them for Angular route gating - the recruiter
+			// application-management list route instead gates on job-circular-manage (staff-only), the
+			// same "is staff" proxy ApplicationServiceImpl uses server-side.
+			new PermissionDef("View Applications",      "application:read",     "JOB_MANAGEMENT",   "application-list"),
+			new PermissionDef("Manage Applications",    "application:write",    "JOB_MANAGEMENT",   null),
+
+			new PermissionDef("View Interviews",        "interview:read",       "JOB_MANAGEMENT",   "interview-list"),
+			new PermissionDef("Manage Interviews",      "interview:write",      "JOB_MANAGEMENT",   "interview-manage"),
+
+			new PermissionDef("View Offers",            "offer:read",           "JOB_MANAGEMENT",   "offer-list"),
+			new PermissionDef("Manage Offers",          "offer:write",          "JOB_MANAGEMENT",   "offer-manage"),
+
+			new PermissionDef("View Onboarding Tasks",     "onboarding-task:read",  "JOB_MANAGEMENT", "onboarding-task-list"),
+			new PermissionDef("Manage Onboarding Tasks",   "onboarding-task:write", "JOB_MANAGEMENT", null),
+
+			new PermissionDef("View Recruitment Analytics", "analytics:read",     "JOB_MANAGEMENT",   "analytics-list"),
+
+			// Self-service only (own saved jobs/alerts) - unconditional for any authenticated account,
+			// same as candidate-profile:* - see PermissionInterceptor.ALWAYS_ALLOWED.
+			new PermissionDef("Manage My Saved Jobs",   "saved-job:read",       "PROFILE",           null),
+			new PermissionDef("Save/Unsave Jobs",       "saved-job:write",      "PROFILE",           null),
+			new PermissionDef("Manage My Job Alerts",   "job-alert:read",       "PROFILE",           null),
+			new PermissionDef("Create/Update Job Alerts", "job-alert:write",    "PROFILE",           null),
+			new PermissionDef("Delete Job Alerts",      "job-alert:delete",     "PROFILE",           null),
 
 			new PermissionDef("View System Config",     "system-config:read",   "SYSTEM_CONFIG",    "system-config-list"),
 			new PermissionDef("Manage System Config",   "system-config:write",  "SYSTEM_CONFIG",    "system-config-manage"),

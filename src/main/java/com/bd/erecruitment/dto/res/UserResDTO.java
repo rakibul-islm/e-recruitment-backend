@@ -25,6 +25,7 @@ public class UserResDTO extends BaseResponseDTO<User> {
 	private Date expiryDate;
 	private Set<UserRoleResDTO> roles;
 	private Long userGroupId;
+	private Long companyId;
 
 	public UserResDTO(User user) {
 		new ModelMapper().map(user, this);

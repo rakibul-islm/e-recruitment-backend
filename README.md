@@ -81,6 +81,7 @@ Configuration is externalized via environment variables, read in `application.ym
 | `GMAIL_REFRESH_TOKEN`  | Yes      | Long-lived refresh token authorizing `gmail.send` for the `MAIL_FROM` account |
 | `GOOGLE_CLIENT_ID`     | Yes      | Google OAuth 2.0 client ID, validated against Google Sign-In tokens |
 | `FRONTEND_BASE_URL`    | Yes      | Base URL of the Angular client, used to build links in emails (e.g. account setup, password reset) |
+| `GEMINI_API_KEY`       | No       | Google Gemini API key (free tier, from [Google AI Studio](https://aistudio.google.com/apikey)) powering "auto-fill by AI" on the job posting form. Feature returns a 503 if unset |
 | `DB_URL`               | Prod/Oracle only | JDBC URL — see [Database Profiles](#database-profiles) for defaults |
 | `DB_USERNAME`          | Prod/Oracle only | Database username |
 | `DB_PASSWORD`          | Prod/Oracle only | Database password |

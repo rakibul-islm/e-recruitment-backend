@@ -198,6 +198,19 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return principal instanceof MyUserDetail mud ? mud : null;
 	}
 
+	// A plain RECRUITER (not also Manager/Editor/Viewer/Super Admin - those keep unrestricted
+	// access) is scoped to their own company (User.companyId). Shared by any service that owns
+	// company-scoped data (Company itself, JobCircular, ...) so the rule stays in one place.
+	private static final java.util.Set<String> UNRESTRICTED_ROLE_CODES = java.util.Set.of("MANAGER", "EDITOR", "VIEWER");
+
+	protected boolean isScopedRecruiter() {
+		MyUserDetail me = getLoggedInUserDetails();
+		if (me == null) return false;
+		if (me.getAuthorities().stream().anyMatch(a -> "SUPER_ADMIN".equals(a.getAuthority()))) return false;
+		if (me.getRoleCodes().stream().anyMatch(UNRESTRICTED_ROLE_CODES::contains)) return false;
+		return me.getRoleCodes().contains("RECRUITER");
+	}
+
 	private void audit(String action, E entity) {
 		if (isAuditExempt()) return;
 		String changedFields = buildChangedFieldsJson(action, entity);

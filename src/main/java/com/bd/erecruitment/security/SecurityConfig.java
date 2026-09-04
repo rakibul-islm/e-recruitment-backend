@@ -44,9 +44,21 @@ public class SecurityConfig {
 								"/user/verify-signup-otp",
 								"/user/resend-signup-otp",
 								"/job-circular/filter",
+								"/company/filter",
+								"/company-type/filter",
 								"/h2-console/**"
 						).permitAll()
 						.requestMatchers("/actuator/**").permitAll()
+						// Public job portal browsing: job/company listing is above, detail views below (single
+						// path segment only, so this never opens /job-circular/delete/{id} etc.).
+						.requestMatchers(HttpMethod.GET, "/job-circular/*", "/company/*").permitAll()
+						// Public recruiter/employer access request form - submission only, everything else
+						// on this controller (list/approve/reject) stays behind authentication plus the
+						// service's own recruiter-application:read/write permission check.
+						.requestMatchers(HttpMethod.POST, "/recruiter-application").permitAll()
+						// The recruiter registration form is itself public and needs to both list and add
+						// company types (its "add new type" dialog) before the visitor has an account.
+						.requestMatchers(HttpMethod.POST, "/company-type").permitAll()
 						// Needed by unauthenticated flows (account setup, password reset) for the requirements checklist.
 						.requestMatchers(HttpMethod.GET, "/password-policy").permitAll()
 						.requestMatchers(AUTH_WHITELIST).permitAll()
