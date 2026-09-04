@@ -28,6 +28,7 @@ public class UserReqDto extends BaseRequestDTO<User> {
 
 	private Set<Long> roleIds;
 	private Long userGroupId;
+	private Long companyId;
 
 	@JsonIgnore
 	@Override

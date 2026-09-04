@@ -81,6 +81,88 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Override
+	public void sendApplicationReceivedEmail(String toEmail, String fullName, String jobTitle) {
+		sendTemplateEmail(toEmail, "application-received-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobTitle", jobTitle
+		));
+	}
+
+	@Override
+	public void sendApplicationStatusChangedEmail(String toEmail, String fullName, String jobTitle, String status, String note) {
+		sendTemplateEmail(toEmail, "application-status-changed-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobTitle", jobTitle,
+			"status", status,
+			"note", StringUtils.defaultIfBlank(note, "")
+		));
+	}
+
+	@Override
+	public void sendNewApplicationEmail(String toEmail, String jobTitle, String candidateName) {
+		sendTemplateEmail(toEmail, "new-application-email.html", Map.of(
+			"jobTitle", jobTitle,
+			"candidateName", candidateName
+		));
+	}
+
+	@Override
+	public void sendInterviewScheduledEmail(String toEmail, String fullName, String jobTitle, String interviewTitle,
+			java.util.Date scheduledAt, String mode, String location) {
+		java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm");
+		sendTemplateEmail(toEmail, "interview-scheduled-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobTitle", jobTitle,
+			"interviewTitle", interviewTitle,
+			"scheduledAt", scheduledAt != null ? format.format(scheduledAt) : "TBD",
+			"mode", StringUtils.defaultIfBlank(mode, "TBD"),
+			"location", StringUtils.defaultIfBlank(location, "")
+		));
+	}
+
+	@Override
+	public void sendOfferEmail(String toEmail, String fullName, String jobTitle) {
+		sendTemplateEmail(toEmail, "offer-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobTitle", jobTitle
+		));
+	}
+
+	@Override
+	public void sendOfferResponseEmail(String toEmail, String jobTitle, String candidateName, boolean accepted) {
+		sendTemplateEmail(toEmail, "offer-response-email.html", Map.of(
+			"jobTitle", jobTitle,
+			"candidateName", candidateName,
+			"decision", accepted ? "ACCEPTED" : "DECLINED"
+		));
+	}
+
+	@Override
+	public void sendJobAlertDigestEmail(String toEmail, String fullName, java.util.List<String> jobTitles) {
+		sendTemplateEmail(toEmail, "job-alert-digest-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobList", String.join(", ", jobTitles),
+			"jobCount", String.valueOf(jobTitles.size())
+		));
+	}
+
+	@Override
+	public void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName) {
+		sendTemplateEmail(toEmail, "recruiter-application-received-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"companyName", companyName
+		));
+	}
+
+	@Override
+	public void sendRecruiterApplicationRejectedEmail(String toEmail, String fullName, String note) {
+		sendTemplateEmail(toEmail, "recruiter-application-rejected-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"note", StringUtils.defaultIfBlank(note, "")
+		));
+	}
+
 	private String greetingName(String fullName) {
 		return StringUtils.isNotBlank(fullName) ? fullName : "there";
 	}

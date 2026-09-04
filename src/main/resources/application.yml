@@ -54,6 +54,10 @@ google:
   client-id: ${GOOGLE_CLIENT_ID}
 
 app:
+  ai:
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: gemini-3.6-flash
   mail:
     from: ${MAIL_FROM}
     gmail:

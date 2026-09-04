@@ -80,4 +80,10 @@ public class User extends SequenceIdGenerator {
 	// No JPA relation to UserGroup on purpose: only seeds the UI's role picklist default, no ongoing meaning.
 	@Column(name = "group_id")
 	private Long userGroupId;
+
+	// No JPA relation to Company, same convention as userGroupId - a recruiter's employer, set
+	// automatically when their RecruiterApplication is approved (or by an admin from the User form).
+	// CompanyServiceImpl scopes recruiters' company access to this id.
+	@Column(name = "company_id")
+	private Long companyId;
 }

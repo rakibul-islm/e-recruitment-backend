@@ -1,5 +1,6 @@
 package com.bd.erecruitment.model;
 
+import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.entity.User;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,6 +13,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 public class MyUserDetail implements UserDetails {
@@ -28,6 +30,8 @@ public class MyUserDetail implements UserDetails {
 	private boolean locked;
 	private Date expiryDate;
 	private List<GrantedAuthority> authorities;
+	private Long companyId;
+	private Set<String> roleCodes;
 
 	public MyUserDetail(User user) {
 		this.id = user.getId();
@@ -39,14 +43,19 @@ public class MyUserDetail implements UserDetails {
 		this.enabled = user.isActive();
 		this.locked = user.isLocked();
 		this.expiryDate = user.getExpiryDate();
+		this.companyId = user.getCompanyId();
 
 		Set<GrantedAuthority> auths = new HashSet<>();
 
-		if (user.getRoles() != null)
+		if (user.getRoles() != null) {
 			user.getRoles().stream()
 				.flatMap(r -> r.getPermissions().stream())
 				.map(p -> new SimpleGrantedAuthority(p.getAuthority()))
 				.forEach(auths::add);
+			this.roleCodes = user.getRoles().stream().map(Role::getCode).collect(Collectors.toSet());
+		} else {
+			this.roleCodes = Set.of();
+		}
 
 		this.authorities = new ArrayList<>(auths);
 	}
