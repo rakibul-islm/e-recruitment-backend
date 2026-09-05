@@ -11,7 +11,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -25,9 +24,12 @@ public class PermissionSeeder implements DataSeeder {
 	@Override
 	public void seed() {
 		Date now = new Date();
-		List<Permission> toInsert = PermissionData.get().stream()
-			.filter(def -> permissionRepo.findByAuthority(def.authority()) == null)
-			.map(def -> {
+		int inserted = 0;
+		int restored = 0;
+
+		for (PermissionData.PermissionDef def : PermissionData.get()) {
+			Permission existing = permissionRepo.findByAuthority(def.authority());
+			if (existing == null) {
 				Permission p = new Permission();
 				p.setName(def.name())
 					.setAuthority(def.authority())
@@ -36,15 +38,24 @@ public class PermissionSeeder implements DataSeeder {
 					.setCreatedBy("system").setCreatedOn(now)
 					.setUpdatedBy("system").setUpdatedOn(now)
 					.setDeleted(false);
-				return p;
-			})
-			.toList();
-
-		if (toInsert.isEmpty()) {
-			log.info("[PermissionSeeder] already seeded, skipping");
-			return;
+				permissionRepo.save(p);
+				inserted++;
+			} else if (existing.isDeleted()) {
+				// authority is unique, so a soft-deleted permission can never be re-created through
+				// the UI, and findByAuthority ignores the deleted flag, so it would otherwise stay
+				// hidden forever instead of ever being re-seeded - heal it back to the canonical
+				// definition rather than leaving admins with a permanently missing permission.
+				existing.setName(def.name())
+					.setModule(def.module())
+					.setRouteName(def.routeName())
+					.setUpdatedBy("system").setUpdatedOn(now)
+					.setDeleted(false);
+				permissionRepo.save(existing);
+				restored++;
+			}
 		}
-		permissionRepo.saveAll(toInsert);
-		log.info("[PermissionSeeder] inserted {} permissions", toInsert.size());
+
+		if (inserted == 0 && restored == 0) log.info("[PermissionSeeder] already seeded, skipping");
+		else log.info("[PermissionSeeder] inserted {} permissions, restored {} soft-deleted permissions", inserted, restored);
 	}
 }

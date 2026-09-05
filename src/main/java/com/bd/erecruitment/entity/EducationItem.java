@@ -23,5 +23,8 @@ public class EducationItem {
 	@Temporal(TemporalType.DATE)
 	private Date endDate;
 
+	// Boolean, not boolean: pre-existing rows have NULL here, which a primitive boolean can't hold.
+	private Boolean current;
+
 	private String grade;
 }

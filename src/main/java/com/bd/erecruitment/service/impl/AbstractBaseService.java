@@ -138,7 +138,12 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	}
 
 	protected E createEntity(E entity) {
-		String actor = getLoggedInUserDetails().getUsername();
+		return createEntity(entity, getLoggedInUserDetails().getUsername());
+	}
+
+	// For services reachable from a permitAll endpoint, where the caller may be anonymous and
+	// must supply its own actor (e.g. "system") instead of assuming a logged-in user.
+	protected E createEntity(E entity, String actor) {
 		String terminal = RequestUtils.getClientTerminal();
 		Date now = new Date();
 		entity.setCreatedBy(actor);

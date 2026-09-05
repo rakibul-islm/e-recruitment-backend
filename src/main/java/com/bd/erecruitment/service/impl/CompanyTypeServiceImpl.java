@@ -3,6 +3,7 @@ package com.bd.erecruitment.service.impl;
 import com.bd.erecruitment.dto.req.CompanyTypeReqDto;
 import com.bd.erecruitment.dto.res.CompanyTypeResDTO;
 import com.bd.erecruitment.entity.CompanyType;
+import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.CompanyTypeRepo;
 import com.bd.erecruitment.service.BaseService;
 import com.bd.erecruitment.util.Response;
@@ -36,8 +37,15 @@ public class CompanyTypeServiceImpl extends AbstractBaseService<CompanyType> imp
 		companyTypeRepo.findFirstByNameIgnoreCaseAndDeleted(reqDto.getName(), false)
 			.ifPresent(existing -> returnErrorException("This company type already exists"));
 
-		CompanyType companyType = createEntity(reqDto.getBean());
+		// POST /company-type is public (recruiter registration form's "add new type" dialog), so the
+		// caller may be anonymous - don't assume a logged-in actor like createEntity(entity) does.
+		CompanyType companyType = createEntity(reqDto.getBean(), currentActorOrSystem());
 		return getCreatedResponse("Company type saved successfully", new CompanyTypeResDTO(companyType));
+	}
+
+	private String currentActorOrSystem() {
+		MyUserDetail me = getLoggedInUserDetails();
+		return me != null ? me.getUsername() : "system";
 	}
 
 	@Transactional
