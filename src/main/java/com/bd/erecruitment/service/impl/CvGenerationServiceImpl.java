@@ -58,27 +58,41 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 	private String buildHtml(User user, CandidateProfile profile) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><head><meta charset='UTF-8'/><style>")
-			.append("body{font-family:'Helvetica',sans-serif;color:#1f2937;font-size:11px;margin:30px 30px 55px 30px;line-height:1.45;}")
-			.append("h1{font-size:23px;margin:0 0 4px 0;color:#032967;}")
-			.append(".headline{color:#1e4d8f;font-size:12.5px;font-weight:bold;margin-bottom:10px;}")
-			.append(".cv-header{overflow:hidden;background:#f4f7fc;border:1px solid #dce6f7;border-radius:8px;padding:18px 22px;margin-bottom:22px;}")
-			.append(".cv-photo{float:right;width:72px;height:72px;margin-left:18px;border-radius:50%;border:2px solid #ffffff;}")
+			// @page margin reserves the footer's strip as part of the page box itself, and the
+			// @bottom-center margin box lays out the running(footer) element inside it - unlike a
+			// plain position:fixed overlay, content can never flow underneath it.
+			.append("@page{margin:30px 30px 55px 30px;@bottom-center{content:element(footer);}}")
+			.append("body{font-family:'Helvetica',sans-serif;color:#1f2937;font-size:11px;margin:0;line-height:1.5;}")
+			.append("h1{font-size:25px;margin:0 0 4px 0;color:#032967;letter-spacing:0.2px;}")
+			.append(".headline{display:inline-block;color:#1e4d8f;font-size:11.5px;font-weight:bold;background:#eef3fb;border:1px solid #dbe4f3;border-radius:10px;padding:3px 12px;margin-bottom:10px;}")
+			.append(".cv-header{overflow:hidden;background:#f4f7fc;border:1px solid #dce6f7;border-left:4px solid #032967;border-radius:8px;padding:20px 24px;margin-bottom:24px;}")
+			.append(".cv-photo{float:right;width:80px;height:80px;margin-left:20px;border-radius:50%;border:3px solid #ffffff;}")
 			.append(".cv-header-text{overflow:hidden;}")
-			.append(".contact{font-size:10px;color:#4b5563;}")
-			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.6px;color:#032967;border-left:3px solid #032967;padding-left:8px;margin-top:20px;margin-bottom:10px;}")
-			.append(".item{margin-bottom:12px;}")
+			.append(".contact{font-size:10px;color:#4b5563;margin-top:2px;}")
+			.append(".contact span{display:inline-block;margin:0 14px 4px 0;}")
+			// break-after avoid keeps a heading from being stranded alone at the bottom of a page.
+			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.8px;color:#032967;border-left:3px solid #032967;border-bottom:1px solid #e2e8f5;padding:0 0 6px 8px;margin-top:22px;margin-bottom:12px;page-break-after:avoid;break-after:avoid;}")
+			// break-inside avoid keeps a single entry from being split across two pages - if it
+			// doesn't fit in the remaining space, the whole entry moves to the next page instead.
+			.append(".item{overflow:hidden;margin-bottom:13px;padding-left:12px;border-left:2px solid #e2e8f5;page-break-inside:avoid;break-inside:avoid;}")
 			.append(".item-title{font-weight:bold;font-size:12px;color:#111827;}")
 			.append(".item-sub{color:#5b6b85;font-size:10.5px;margin-top:1px;}")
-			.append(".item-dates{float:right;color:#1e4d8f;font-weight:bold;font-size:9.5px;background:#eef3fb;border-radius:9px;padding:2px 10px;}")
+			.append(".item-dates{float:right;color:#1e4d8f;font-weight:bold;font-size:9.5px;background:#eef3fb;border:1px solid #dbe4f3;border-radius:9px;padding:2px 10px;}")
 			.append(".item-desc{margin-top:5px;white-space:pre-line;color:#374151;}")
-			.append(".tag{display:inline-block;background:#eef3fb;color:#1e4d8f;font-weight:bold;border-radius:3px;padding:3px 10px;margin:0 6px 6px 0;font-size:10px;}")
-			// position:fixed is relative to the page box itself (not the body's margin box) in the
-			// PDF renderer, and repeats the element on every page - a running page footer rather
-			// than a one-off block that just trails the last section's content.
-			.append(".cv-footer{position:fixed;bottom:15px;left:30px;right:30px;padding-top:8px;border-top:1px solid #e5e7eb;text-align:center;color:#9ca3af;font-size:9px;}")
+			.append(".tag{display:inline-block;background:#eef3fb;color:#1e4d8f;font-weight:bold;border:1px solid #dbe4f3;border-radius:3px;padding:3px 10px;margin:0 6px 6px 0;font-size:10px;}")
+			.append(".cv-footer{position:running(footer);padding-top:8px;border-top:1px solid #e5e7eb;text-align:center;color:#9ca3af;font-size:9px;}")
 			.append(".cv-footer-brand{color:#1e4d8f;font-weight:bold;letter-spacing:0.4px;}")
 			.append(".cv-footer-link{color:#9ca3af;text-decoration:none;}")
 			.append("</style></head><body>");
+
+		// A running() element only takes effect on pages laid out after its point in document
+		// order, so it has to appear before the first page's content - not trailing at the end -
+		// or the first page renders with no footer at all.
+		sb.append("<div class='cv-footer'>Powered by <span class='cv-footer-brand'>E-RECRUITMENT</span>");
+		if (StringUtils.isNotBlank(frontendBaseUrl)) {
+			sb.append(" · <a class='cv-footer-link' href='").append(esc(frontendBaseUrl)).append("'>").append(esc(displayUrl(frontendBaseUrl))).append("</a>");
+		}
+		sb.append("</div>");
 
 		sb.append("<div class='cv-header'>");
 		sb.append("<img class='cv-photo' src='data:image/png;base64,").append(photoBase64(user)).append("' alt='' />");
@@ -98,7 +112,9 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			StringUtils.defaultString(profile.getLinkedinUrl()),
 			StringUtils.defaultString(profile.getPortfolioUrl())
 		);
-		sb.append(esc(String.join("   ·   ", contactParts.stream().filter(StringUtils::isNotBlank).toList())));
+		for (String part : contactParts) {
+			if (StringUtils.isNotBlank(part)) sb.append("<span>").append(esc(part)).append("</span>");
+		}
 		sb.append("</div>");
 		sb.append("</div></div>");
 
@@ -122,7 +138,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			sb.append("<h2>Education</h2>");
 			for (EducationItem ed : profile.getEducation()) {
 				sb.append("<div class='item'>")
-					.append("<span class='item-dates'>").append(dateRange(ed.getStartDate(), ed.getEndDate(), false)).append("</span>")
+					.append("<span class='item-dates'>").append(dateRange(ed.getStartDate(), ed.getEndDate(), Boolean.TRUE.equals(ed.getCurrent()))).append("</span>")
 					.append("<div class='item-title'>").append(esc(joinNonBlank(ed.getDegree(), ed.getFieldOfStudy()))).append("</div>")
 					.append("<div class='item-sub'>").append(esc(ed.getInstitution())).append(StringUtils.isNotBlank(ed.getGrade()) ? " · " + esc(ed.getGrade()) : "").append("</div>")
 					.append("</div>");
@@ -168,12 +184,6 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			}
 			sb.append("</div>");
 		}
-
-		sb.append("<div class='cv-footer'>Powered by <span class='cv-footer-brand'>E-RECRUITMENT</span>");
-		if (StringUtils.isNotBlank(frontendBaseUrl)) {
-			sb.append(" · <a class='cv-footer-link' href='").append(esc(frontendBaseUrl)).append("'>").append(esc(displayUrl(frontendBaseUrl))).append("</a>");
-		}
-		sb.append("</div>");
 
 		sb.append("</body></html>");
 		return sb.toString();
