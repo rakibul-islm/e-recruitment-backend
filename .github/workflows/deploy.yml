@@ -23,6 +23,7 @@ jobs:
     outputs:
       image: ${{ steps.vars.outputs.image }}
       sha_tag: ${{ steps.vars.outputs.sha_tag }}
+      build_tag: ${{ steps.vars.outputs.build_tag }}
 
     steps:
       - name: Compute image metadata
@@ -35,8 +36,13 @@ jobs:
           # Use full Git commit SHA as immutable Docker tag
           echo "sha_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
+          # Human-friendly sequential build number, starting at 1001
+          BUILD_NUMBER=$((GITHUB_RUN_NUMBER + 1000))
+          echo "build_tag=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
           echo "Docker image: $IMAGE"
           echo "Image tag: ${GITHUB_SHA}"
+          echo "Build number: $BUILD_NUMBER"
 
 
   # ============================================================
@@ -162,14 +168,21 @@ jobs:
         run: |
           IMAGE="${{ needs.initialize.outputs.image }}"
           SHA_TAG="${{ needs.initialize.outputs.sha_tag }}"
+          BUILD_TAG="${{ needs.initialize.outputs.build_tag }}"
 
           echo "Image: $IMAGE"
           echo "SHA tag: $SHA_TAG"
+          echo "Build tag: $BUILD_TAG"
 
           # Tag immutable commit image
           docker tag \
             "$IMAGE:latest" \
             "$IMAGE:$SHA_TAG"
+
+          # Tag sequential build number image
+          docker tag \
+            "$IMAGE:latest" \
+            "$IMAGE:$BUILD_TAG"
 
           # Push latest
           docker push "$IMAGE:latest"
@@ -177,9 +190,13 @@ jobs:
           # Push immutable SHA tag
           docker push "$IMAGE:$SHA_TAG"
 
+          # Push sequential build number tag
+          docker push "$IMAGE:$BUILD_TAG"
+
           echo "Successfully pushed:"
           echo "$IMAGE:latest"
           echo "$IMAGE:$SHA_TAG"
+          echo "$IMAGE:$BUILD_TAG"
 
 
   # ============================================================
@@ -192,15 +209,15 @@ jobs:
     steps:
 
       # ----------------------------------------------------------
-      # Deploy EXACT SHA image to Render
+      # Deploy build-numbered image to Render
       # ----------------------------------------------------------
       - name: Trigger Render deployment
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
           IMAGE: ${{ needs.initialize.outputs.image }}
-          SHA_TAG: ${{ needs.initialize.outputs.sha_tag }}
+          BUILD_TAG: ${{ needs.initialize.outputs.build_tag }}
         run: |
-          FULL_IMAGE="${IMAGE}:${SHA_TAG}"
+          FULL_IMAGE="${IMAGE}:${BUILD_TAG}"
 
           echo "======================================"
           echo "Deploying image:"
