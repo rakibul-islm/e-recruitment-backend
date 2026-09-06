@@ -48,6 +48,7 @@ public class JobCircular extends SequenceIdGenerator{
 	@Column(length = 4000)
 	private String jobResponsibilities;
 
+	@Column(length = 1000)
 	private String otherBenefits;
 	private String workPlace;
 	private String employmentStatus;

@@ -35,6 +35,8 @@ public class JobPostingAiServiceImpl {
 
 	private static final String STAFF_AUTHORITY = "job-circular:write";
 	private static final String GEMINI_URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s";
+	private static final int MAX_ATTEMPTS = 3;
+	private static final long RETRY_BACKOFF_MILLIS = 1000;
 
 	private final RestTemplate restTemplate = buildRestTemplate();
 	private final ObjectMapper objectMapper = new ObjectMapper();
@@ -56,16 +58,32 @@ public class JobPostingAiServiceImpl {
 		}
 
 		String url = String.format(GEMINI_URL_TEMPLATE, model, apiKey);
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(buildGeminiRequest(req), headers);
+
+		String rawResponse = null;
+		RestClientException lastFailure = null;
+		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+			try {
+				rawResponse = restTemplate.exchange(url, HttpMethod.POST, entity, String.class).getBody();
+				lastFailure = null;
+				break;
+			} catch (RestClientException e) {
+				lastFailure = e;
+				log.warn("Gemini AI suggestion call failed (attempt {}/{}): {}", attempt, MAX_ATTEMPTS, e.getMessage());
+				if (attempt < MAX_ATTEMPTS) {
+					sleepBeforeRetry();
+				}
+			}
+		}
+		if (lastFailure != null) {
+			throw new ApiException(502, "AI suggestion service is unavailable, please try again");
+		}
+
 		JsonNode root;
 		try {
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
-			HttpEntity<Map<String, Object>> entity = new HttpEntity<>(buildGeminiRequest(req), headers);
-			String rawResponse = restTemplate.exchange(url, HttpMethod.POST, entity, String.class).getBody();
 			root = objectMapper.readTree(rawResponse);
-		} catch (RestClientException e) {
-			log.warn("Gemini AI suggestion call failed: {}", e.getMessage());
-			throw new ApiException(502, "AI suggestion service is unavailable, please try again");
 		} catch (Exception e) {
 			log.warn("Failed to read Gemini AI response: {}", e.getMessage());
 			throw new ApiException(502, "AI suggestion service returned an unexpected response");
@@ -143,6 +161,14 @@ public class JobPostingAiServiceImpl {
 	private void appendIfPresent(StringBuilder sb, String label, String value) {
 		if (StringUtils.isNotBlank(value)) {
 			sb.append(label).append(": ").append(value).append("\n");
+		}
+	}
+
+	private void sleepBeforeRetry() {
+		try {
+			Thread.sleep(RETRY_BACKOFF_MILLIS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
 	}
 
