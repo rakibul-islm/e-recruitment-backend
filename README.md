@@ -1,6 +1,6 @@
 # E-Recruitment Backend
 
-A Spring Boot REST API powering the E-Recruitment platform — JWT + Google authentication, role-based administration, OTP-driven account flows, and centralized exception logging.
+A Spring Boot REST API powering the E-Recruitment platform — JWT + Google authentication, role-based administration, the end-to-end hiring workflow (postings, applications, interviews, offers, onboarding), and centralized exception/audit logging.
 
 The companion Angular client for this API lives in `e-recruitment-web`.
 
@@ -31,7 +31,16 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Google avatar fetching** — on Google Sign-In, the user's profile picture is downloaded and stored asynchronously (`GoogleAvatarFetcher`) so it doesn't delay login
 - **User profile self-service** — view/update own profile and OTP-verified self password change, separate from admin-initiated flows (`ProfileController`, `/profile`)
 - **Data archiving & retention** — runtime-configurable per-table archive policies (source table, archive schema/table, date column, retention days, optional SQL where-condition), run on a nightly schedule or on demand, with the archived data browsable through the admin UI (`ArchiveConfigController`, `GenericArchiveEngine`, `ArchiveScheduler`, `/archive-config`)
-- **Job circulars** — endpoints for listing/filtering job circulars (`JobCircularController`)
+- **Companies & job circulars** — company profiles (`CompanyController`, `/company`) and company types (`CompanyTypeController`, `/company-type`) backing job postings; job circulars can be linked to a `Company` or carry free-text company details for backward compatibility (`JobCircularController`)
+- **Recruiter self-registration** — prospective recruiters submit a company/application request that an admin reviews and approves or rejects, promoting the requester into a recruiter role on approval (`RecruiterApplicationController`, `/recruiter-application`)
+- **Candidate profiles & CV generation** — structured candidate profiles (education, work experience, skills, certifications, projects, languages) that can be rendered to a downloadable PDF CV via HTML-to-PDF (`CandidateProfileController`, `/candidate-profile`, `CvGenerationService`, `HtmlToPdfRenderer`)
+- **Job applications & hiring pipeline** — candidates apply to a job circular with a resume or generated CV, with status history tracked per application (`ApplicationController`, `/application`, `ApplicationStatusHistory`)
+- **Interview scheduling & feedback** — scheduling interviews against an application and recording structured interviewer feedback (`InterviewController`, `/interview`)
+- **Offers & offer letters** — creating and sending offers with a PDF offer letter (via the shared `HtmlToPdfRenderer`) and recording the candidate's response (`OfferController`, `/offer`)
+- **Onboarding tasks** — post-hire onboarding checklists tracked per candidate (`OnboardingTaskController`, `/onboarding-task`)
+- **Saved jobs & job alerts** — candidates can bookmark job circulars (`SavedJobController`, `/saved-job`) and configure alerts for new matching postings (`JobAlertController`, `/job-alert`)
+- **AI-assisted job posting** — "auto-fill by AI" drafts job posting fields from a short prompt via the Google Gemini API, with retry/backoff on transient failures (`JobPostingAiServiceImpl`)
+- **Recruitment analytics** — aggregate metrics across postings, applications, and hiring stages for dashboards (`AnalyticsController`, `/analytics`)
 - **Auto-seeded reference data** — roles, permissions, user groups, a password policy, system config, and two starter accounts are seeded on startup (`seed/` package)
 - **API documentation** — interactive Swagger UI via springdoc-openapi
 - **Multi-database support** — Spring profiles for H2 (dev, in-memory), PostgreSQL (prod), and Oracle
@@ -46,6 +55,8 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 | Persistence             | Spring Data JPA / Hibernate — H2, PostgreSQL, or Oracle |
 | API docs               | springdoc-openapi (Swagger UI) |
 | Object mapping          | ModelMapper |
+| PDF generation           | openhtmltopdf (HTML → PDF for generated CVs and offer letters) |
+| AI content assist        | Google Gemini API (job posting auto-fill) |
 | Build                  | Gradle (wrapper included) |
 | Boilerplate reduction    | Lombok |
 
@@ -54,7 +65,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - JDK 21
 - No local Gradle install needed — use the included wrapper (`./gradlew` / `gradlew.bat`)
 - A database if not using the default in-memory H2 profile (PostgreSQL or Oracle)
-- SMTP credentials for outbound email (OTP / account-setup emails)
+- Gmail API OAuth credentials for outbound email (OTP / account-setup emails) — see [Configuration](#configuration)
 - A Google OAuth 2.0 client ID (for Google Sign-In)
 
 ## Getting Started
@@ -139,9 +150,13 @@ A public, unauthenticated health check is exposed via Spring Boot Actuator at `h
 src/main/java/com/bd/erecruitment/
 ├── controller/         REST controllers (Authentication, User, Role, Permission, UserGroup,
 │                        SystemConfig, PasswordPolicy, ExceptionLog, AuditLog, UserSession,
-│                        JobCircular, Profile, ArchiveConfig)
-├── service/             Business logic interfaces (incl. UserSessionService, GuestSessionTracker)
-│   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher, ArchiveConfigServiceImpl)
+│                        Profile, ArchiveConfig, Company, CompanyType, JobCircular,
+│                        RecruiterApplication, CandidateProfile, Application, Interview, Offer,
+│                        OnboardingTask, SavedJob, JobAlert, Analytics)
+├── service/             Business logic interfaces (incl. UserSessionService, GuestSessionTracker,
+│                        CvGenerationService)
+│   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher,
+│                          ArchiveConfigServiceImpl, JobPostingAiServiceImpl, HtmlToPdfRenderer)
 ├── retention/            Data archiving/retention engine (GenericArchiveEngine, ArchiveScheduler)
 ├── audit/               Audit action constants, AuditLogWriter (async), exemption annotations
 │                        (@AuditExempt, @AuditIgnore)
