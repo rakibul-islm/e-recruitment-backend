@@ -16,6 +16,7 @@ import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -48,6 +49,9 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	private final GeneratedCvRepo generatedCvRepo;
 	private final StorageService storageService;
 	private final MailService mailService;
+
+	@Value("${app.frontend.base-url}")
+	private String frontendBaseUrl;
 
 	public ApplicationServiceImpl(ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
 			JobCircularRepo jobCircularRepo, UserRepo userRepo, CandidateProfileRepo candidateProfileRepo,
@@ -99,8 +103,8 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		application = createEntity(application);
 		recordHistory(application.getId(), "APPLIED", "Application submitted", me.getUsername());
 
-		notifyApplicationReceived(me, job);
-		notifyNewApplication(job, me);
+		notifyApplicationReceived(me, job, application);
+		notifyNewApplication(job, me, application);
 
 		return getSuccessResponse("Application submitted successfully", toDto(application, job, null));
 	}
@@ -217,20 +221,20 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		return dto;
 	}
 
-	private void notifyApplicationReceived(MyUserDetail candidate, JobCircular job) {
+	private void notifyApplicationReceived(MyUserDetail candidate, JobCircular job, Application application) {
 		try {
-			mailService.sendApplicationReceivedEmail(candidate.getUsername(), null, job.getJobTitle());
+			mailService.sendApplicationReceivedEmail(candidate.getUsername(), null, job.getJobTitle(), candidateApplicationLink(application.getId()));
 		} catch (Exception e) {
 			log.warn("Failed to send application-received email for job {}: {}", job.getId(), e.getMessage());
 		}
 	}
 
-	private void notifyNewApplication(JobCircular job, MyUserDetail candidate) {
+	private void notifyNewApplication(JobCircular job, MyUserDetail candidate, Application application) {
 		if (StringUtils.isBlank(job.getCreatedBy())) return;
 		try {
 			User candidateEntity = userRepo.findByIdAndDeleted(candidate.getId(), false).orElse(null);
 			String candidateName = candidateEntity != null ? candidateEntity.getFullName() : candidate.getUsername();
-			mailService.sendNewApplicationEmail(job.getCreatedBy(), job.getJobTitle(), candidateName);
+			mailService.sendNewApplicationEmail(job.getCreatedBy(), job.getJobTitle(), candidateName, recruiterApplicationLink(application.getId()));
 		} catch (Exception e) {
 			log.warn("Failed to send new-application email for job {}: {}", job.getId(), e.getMessage());
 		}
@@ -242,9 +246,17 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			if (candidate == null || job == null) return;
 			mailService.sendApplicationStatusChangedEmail(candidate.getEmail(), candidate.getFullName(),
-				job.getJobTitle(), application.getStatus(), null);
+				job.getJobTitle(), application.getStatus(), null, candidateApplicationLink(application.getId()));
 		} catch (Exception e) {
 			log.warn("Failed to send status-changed email for application {}: {}", application.getId(), e.getMessage());
 		}
+	}
+
+	private String candidateApplicationLink(Long applicationId) {
+		return frontendBaseUrl + "/my/applications/" + applicationId;
+	}
+
+	private String recruiterApplicationLink(Long applicationId) {
+		return frontendBaseUrl + "/application-management/" + applicationId;
 	}
 }

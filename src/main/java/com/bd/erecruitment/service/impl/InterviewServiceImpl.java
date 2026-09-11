@@ -17,6 +17,7 @@ import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -39,6 +40,9 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 	private final JobCircularRepo jobCircularRepo;
 	private final UserRepo userRepo;
 	private final MailService mailService;
+
+	@Value("${app.frontend.base-url}")
+	private String frontendBaseUrl;
 
 	public InterviewServiceImpl(InterviewRepo interviewRepo, ApplicationRepo applicationRepo,
 			ApplicationStatusHistoryRepo historyRepo, JobCircularRepo jobCircularRepo, UserRepo userRepo,
@@ -206,7 +210,8 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			if (candidate == null || job == null) return;
 			mailService.sendInterviewScheduledEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle(),
-				interview.getTitle(), interview.getScheduledAt(), interview.getMode(), interview.getLocation());
+				interview.getTitle(), interview.getScheduledAt(), interview.getMode(), interview.getLocation(),
+				frontendBaseUrl + "/my/applications/" + application.getId());
 		} catch (Exception e) {
 			log.warn("Failed to send interview-scheduled email for interview {}: {}", interview.getId(), e.getMessage());
 		}

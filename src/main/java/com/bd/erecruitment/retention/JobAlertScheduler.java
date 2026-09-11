@@ -1,5 +1,6 @@
 package com.bd.erecruitment.retention;
 
+import com.bd.erecruitment.dto.JobAlertItemDto;
 import com.bd.erecruitment.entity.JobAlert;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.entity.User;
@@ -11,9 +12,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +32,9 @@ public class JobAlertScheduler {
 	private final JobCircularRepo jobCircularRepo;
 	private final UserRepo userRepo;
 	private final MailService mailService;
+
+	@Value("${app.frontend.base-url}")
+	private String frontendBaseUrl;
 
 	@Scheduled(cron = "0 0 7 * * *")
 	public void runDailyDigest() {
@@ -47,9 +53,9 @@ public class JobAlertScheduler {
 		Date since = alert.getLastNotifiedOn() != null ? alert.getLastNotifiedOn() : defaultLookback();
 		List<JobCircular> candidates = jobCircularRepo.findAllByStatusAndUpdatedOnAfterAndDeleted("PUBLISHED", since, false);
 
-		List<String> matches = candidates.stream()
+		List<JobAlertItemDto> matches = candidates.stream()
 			.filter(job -> matches(job, alert))
-			.map(JobCircular::getJobTitle)
+			.map(this::toJobAlertItem)
 			.toList();
 
 		alert.setLastNotifiedOn(new Date());
@@ -62,6 +68,15 @@ public class JobAlertScheduler {
 
 		mailService.sendJobAlertDigestEmail(user.getEmail(), user.getFullName(), matches);
 		log.info("[JobAlertScheduler] alert {}: sent digest of {} job(s) to {}", alert.getId(), matches.size(), user.getEmail());
+	}
+
+	private JobAlertItemDto toJobAlertItem(JobCircular job) {
+		String employmentType = StringUtils.defaultIfBlank(job.getEmploymentStatus(), job.getWorkPlace());
+		String deadline = job.getApplicationDeadLine() != null
+			? new SimpleDateFormat("dd MMM yyyy").format(job.getApplicationDeadLine())
+			: null;
+		return new JobAlertItemDto(job.getJobTitle(), job.getCompanyName(), job.getJobLocation(), employmentType,
+			deadline, frontendBaseUrl + "/jobs/" + job.getId());
 	}
 
 	private boolean matches(JobCircular job, JobAlert alert) {

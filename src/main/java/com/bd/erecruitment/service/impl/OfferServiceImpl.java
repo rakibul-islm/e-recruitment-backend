@@ -18,6 +18,7 @@ import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -40,6 +41,9 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 	private final HtmlToPdfRenderer pdfRenderer;
 	private final MailService mailService;
 	private final OnboardingServiceImpl onboardingService;
+
+	@Value("${app.frontend.base-url}")
+	private String frontendBaseUrl;
 
 	public OfferServiceImpl(OfferRepo offerRepo, ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
 			JobCircularRepo jobCircularRepo, UserRepo userRepo, StorageService storageService, HtmlToPdfRenderer pdfRenderer,
@@ -117,7 +121,8 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 			if (job != null && candidate != null) {
 				try {
-					mailService.sendOfferEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle());
+					mailService.sendOfferEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle(),
+						frontendBaseUrl + "/my/applications/" + application.getId());
 				} catch (Exception e) {
 					log.warn("Failed to send offer email for offer {}: {}", offer.getId(), e.getMessage());
 				}
@@ -239,7 +244,8 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 			if (job == null || candidate == null || StringUtils.isBlank(job.getCreatedBy())) return;
-			mailService.sendOfferResponseEmail(job.getCreatedBy(), job.getJobTitle(), candidate.getFullName(), accepted);
+			mailService.sendOfferResponseEmail(job.getCreatedBy(), job.getJobTitle(), candidate.getFullName(), accepted,
+				frontendBaseUrl + "/application-management/" + application.getId());
 		} catch (Exception e) {
 			log.warn("Failed to send offer-response email for offer {}: {}", offer.getId(), e.getMessage());
 		}
