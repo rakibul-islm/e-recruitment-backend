@@ -1,6 +1,9 @@
 package com.bd.erecruitment.service;
 
+import com.bd.erecruitment.dto.JobAlertItemDto;
+
 import java.util.Date;
+import java.util.List;
 
 public interface MailService {
 
@@ -12,19 +15,19 @@ public interface MailService {
 
 	void sendAccountSetupEmail(String toEmail, String fullName, String link, long expiryHours);
 
-	void sendApplicationReceivedEmail(String toEmail, String fullName, String jobTitle);
+	void sendApplicationReceivedEmail(String toEmail, String fullName, String jobTitle, String applicationLink);
 
-	void sendApplicationStatusChangedEmail(String toEmail, String fullName, String jobTitle, String status, String note);
+	void sendApplicationStatusChangedEmail(String toEmail, String fullName, String jobTitle, String status, String note, String applicationLink);
 
-	void sendNewApplicationEmail(String toEmail, String jobTitle, String candidateName);
+	void sendNewApplicationEmail(String toEmail, String jobTitle, String candidateName, String applicationLink);
 
-	void sendInterviewScheduledEmail(String toEmail, String fullName, String jobTitle, String interviewTitle, Date scheduledAt, String mode, String location);
+	void sendInterviewScheduledEmail(String toEmail, String fullName, String jobTitle, String interviewTitle, Date scheduledAt, String mode, String location, String applicationLink);
 
-	void sendOfferEmail(String toEmail, String fullName, String jobTitle);
+	void sendOfferEmail(String toEmail, String fullName, String jobTitle, String applicationLink);
 
-	void sendOfferResponseEmail(String toEmail, String jobTitle, String candidateName, boolean accepted);
+	void sendOfferResponseEmail(String toEmail, String jobTitle, String candidateName, boolean accepted, String applicationLink);
 
-	void sendJobAlertDigestEmail(String toEmail, String fullName, java.util.List<String> jobTitles);
+	void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs);
 
 	void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName);
 

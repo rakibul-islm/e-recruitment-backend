@@ -9,9 +9,13 @@ Subject: {{jobCount}} new job(s) matching your alert
 </td></tr>
 <tr><td style="padding:32px;">
 <p style="margin:0 0 16px;color:#111827;font-size:16px;">Hello {{greetingName}},</p>
-<p style="margin:0 0 16px;color:#374151;font-size:14px;line-height:1.6;">New jobs matching your saved alert:</p>
-<p style="margin:0 0 16px;color:#1d4ed8;font-size:14px;line-height:1.6;">{{jobList}}</p>
-<p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.6;">Visit the job portal to view and apply.</p>
+<p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.6;">We found <strong>{{jobCount}}</strong> new job(s) matching your saved alert:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+{{jobItems}}
+</table>
+<div style="margin:8px 0 0;text-align:center;">
+<a href="{{browseAllLink}}" style="display:inline-block;padding:12px 24px;background-color:#111827;border-radius:8px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">Browse All Jobs</a>
+</div>
 </td></tr>
 <tr><td style="padding:20px 32px;background-color:#f9fafb;border-top:1px solid #e5e7eb;">
 <p style="margin:0;color:#9ca3af;font-size:12px;">This is an automated message, please do not reply.</p>

@@ -1,5 +1,6 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.dto.JobAlertItemDto;
 import com.bd.erecruitment.service.MailService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -44,6 +47,9 @@ public class MailServiceImpl implements MailService {
 
 	@Value("${app.mail.gmail.refresh-token}")
 	private String refreshToken;
+
+	@Value("${app.frontend.base-url}")
+	private String frontendBaseUrl;
 
 	@Override
 	public void sendOtpEmail(String toEmail, String fullName, String otp, long expiryMinutes) {
@@ -82,34 +88,37 @@ public class MailServiceImpl implements MailService {
 	}
 
 	@Override
-	public void sendApplicationReceivedEmail(String toEmail, String fullName, String jobTitle) {
+	public void sendApplicationReceivedEmail(String toEmail, String fullName, String jobTitle, String applicationLink) {
 		sendTemplateEmail(toEmail, "application-received-email.html", Map.of(
 			"greetingName", greetingName(fullName),
-			"jobTitle", jobTitle
+			"jobTitle", jobTitle,
+			"applicationLink", applicationLink
 		));
 	}
 
 	@Override
-	public void sendApplicationStatusChangedEmail(String toEmail, String fullName, String jobTitle, String status, String note) {
+	public void sendApplicationStatusChangedEmail(String toEmail, String fullName, String jobTitle, String status, String note, String applicationLink) {
 		sendTemplateEmail(toEmail, "application-status-changed-email.html", Map.of(
 			"greetingName", greetingName(fullName),
 			"jobTitle", jobTitle,
 			"status", status,
-			"note", StringUtils.defaultIfBlank(note, "")
+			"note", StringUtils.defaultIfBlank(note, ""),
+			"applicationLink", applicationLink
 		));
 	}
 
 	@Override
-	public void sendNewApplicationEmail(String toEmail, String jobTitle, String candidateName) {
+	public void sendNewApplicationEmail(String toEmail, String jobTitle, String candidateName, String applicationLink) {
 		sendTemplateEmail(toEmail, "new-application-email.html", Map.of(
 			"jobTitle", jobTitle,
-			"candidateName", candidateName
+			"candidateName", candidateName,
+			"applicationLink", applicationLink
 		));
 	}
 
 	@Override
 	public void sendInterviewScheduledEmail(String toEmail, String fullName, String jobTitle, String interviewTitle,
-			java.util.Date scheduledAt, String mode, String location) {
+			java.util.Date scheduledAt, String mode, String location, String applicationLink) {
 		java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm");
 		sendTemplateEmail(toEmail, "interview-scheduled-email.html", Map.of(
 			"greetingName", greetingName(fullName),
@@ -117,34 +126,70 @@ public class MailServiceImpl implements MailService {
 			"interviewTitle", interviewTitle,
 			"scheduledAt", scheduledAt != null ? format.format(scheduledAt) : "TBD",
 			"mode", StringUtils.defaultIfBlank(mode, "TBD"),
-			"location", StringUtils.defaultIfBlank(location, "")
+			"location", StringUtils.defaultIfBlank(location, ""),
+			"applicationLink", applicationLink
 		));
 	}
 
 	@Override
-	public void sendOfferEmail(String toEmail, String fullName, String jobTitle) {
+	public void sendOfferEmail(String toEmail, String fullName, String jobTitle, String applicationLink) {
 		sendTemplateEmail(toEmail, "offer-email.html", Map.of(
 			"greetingName", greetingName(fullName),
-			"jobTitle", jobTitle
+			"jobTitle", jobTitle,
+			"applicationLink", applicationLink
 		));
 	}
 
 	@Override
-	public void sendOfferResponseEmail(String toEmail, String jobTitle, String candidateName, boolean accepted) {
+	public void sendOfferResponseEmail(String toEmail, String jobTitle, String candidateName, boolean accepted, String applicationLink) {
 		sendTemplateEmail(toEmail, "offer-response-email.html", Map.of(
 			"jobTitle", jobTitle,
 			"candidateName", candidateName,
-			"decision", accepted ? "ACCEPTED" : "DECLINED"
+			"decision", accepted ? "ACCEPTED" : "DECLINED",
+			"applicationLink", applicationLink
 		));
 	}
 
 	@Override
-	public void sendJobAlertDigestEmail(String toEmail, String fullName, java.util.List<String> jobTitles) {
+	public void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs) {
 		sendTemplateEmail(toEmail, "job-alert-digest-email.html", Map.of(
 			"greetingName", greetingName(fullName),
-			"jobList", String.join(", ", jobTitles),
-			"jobCount", String.valueOf(jobTitles.size())
-		));
+			"jobItems", buildJobItemsHtml(jobs),
+			"jobCount", String.valueOf(jobs.size()),
+			"browseAllLink", frontendBaseUrl + "/jobs"
+		), Set.of("jobItems"));
+	}
+
+	private String buildJobItemsHtml(List<JobAlertItemDto> jobs) {
+		StringBuilder html = new StringBuilder();
+		for (JobAlertItemDto job : jobs) {
+			html.append("<tr><td style=\"padding:0 0 12px;\">")
+				.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;\">")
+				.append("<tr><td style=\"padding:16px 20px;\">")
+				.append("<a href=\"").append(escape(job.jobLink())).append("\" style=\"display:block;margin:0 0 4px;color:#1d4ed8;font-size:15px;font-weight:600;text-decoration:none;\">")
+				.append(escape(job.jobTitle())).append("</a>");
+
+			String companyLine = StringUtils.join(java.util.stream.Stream.of(job.companyName(), job.jobLocation())
+				.filter(StringUtils::isNotBlank).toList(), " · ");
+			if (StringUtils.isNotBlank(companyLine)) {
+				html.append("<p style=\"margin:0 0 10px;color:#6b7280;font-size:13px;\">").append(escape(companyLine)).append("</p>");
+			}
+
+			if (StringUtils.isNotBlank(job.employmentType()) || StringUtils.isNotBlank(job.applicationDeadline())) {
+				html.append("<p style=\"margin:0;font-size:12px;\">");
+				if (StringUtils.isNotBlank(job.employmentType())) {
+					html.append("<span style=\"display:inline-block;padding:2px 10px;background-color:#e0e7ff;color:#1d4ed8;border-radius:12px;font-weight:600;margin-right:8px;\">")
+						.append(escape(job.employmentType())).append("</span>");
+				}
+				if (StringUtils.isNotBlank(job.applicationDeadline())) {
+					html.append("<span style=\"color:#9ca3af;\">Apply by ").append(escape(job.applicationDeadline())).append("</span>");
+				}
+				html.append("</p>");
+			}
+
+			html.append("</td></tr></table></td></tr>");
+		}
+		return html.toString();
 	}
 
 	@Override
@@ -168,6 +213,10 @@ public class MailServiceImpl implements MailService {
 	}
 
 	private void sendTemplateEmail(String toEmail, String templateFile, Map<String, String> values) {
+		sendTemplateEmail(toEmail, templateFile, values, Set.of());
+	}
+
+	private void sendTemplateEmail(String toEmail, String templateFile, Map<String, String> values, Set<String> rawKeys) {
 		String template = loadTemplate(templateFile);
 
 		int firstNewline = template.indexOf('\n');
@@ -175,8 +224,8 @@ public class MailServiceImpl implements MailService {
 		if (!subjectLine.startsWith("Subject:")) {
 			throw new IllegalStateException("Email template " + templateFile + " is missing a leading 'Subject:' line");
 		}
-		String subject = substitute(subjectLine.substring("Subject:".length()).trim(), values);
-		String body = substitute(template.substring(firstNewline + 1), values);
+		String subject = substitute(subjectLine.substring("Subject:".length()).trim(), values, rawKeys);
+		String body = substitute(template.substring(firstNewline + 1), values, rawKeys);
 
 		try {
 			restClient.post()
@@ -242,9 +291,10 @@ public class MailServiceImpl implements MailService {
 		}
 	}
 
-	private String substitute(String text, Map<String, String> values) {
+	private String substitute(String text, Map<String, String> values, Set<String> rawKeys) {
 		for (Map.Entry<String, String> entry : values.entrySet()) {
-			text = text.replace("{{" + entry.getKey() + "}}", escape(entry.getValue()));
+			String replacement = rawKeys.contains(entry.getKey()) ? entry.getValue() : escape(entry.getValue());
+			text = text.replace("{{" + entry.getKey() + "}}", replacement);
 		}
 		return text;
 	}
