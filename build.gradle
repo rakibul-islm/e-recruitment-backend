@@ -43,6 +43,14 @@ dependencies {
 
 	// HTML -> PDF rendering for generated candidate CVs (CvGenerationService)
 	implementation group: 'com.openhtmltopdf', name: 'openhtmltopdf-pdfbox', version: '1.0.10'
+
+	// JasperReports-based downloadable reports (ReportServiceImpl) - PDF/Excel export of job
+	// posting, application, MCQ result and audit log data. poi/poi-ooxml are declared explicitly
+	// since JasperReports marks them optional in its own POM (needed for the XLSX exporter).
+	implementation group: 'net.sf.jasperreports', name: 'jasperreports', version: '6.21.3'
+	implementation group: 'org.apache.poi', name: 'poi', version: '5.2.5'
+	implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.2.5'
+
 	implementation group: 'com.oracle.ojdbc', name: 'ojdbc8', version: '19.3.0.0'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'

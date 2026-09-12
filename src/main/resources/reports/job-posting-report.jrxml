@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="job-posting-report" pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="842" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0"
+              whenNoDataType="NoDataSection">
+
+	<style name="stripe" mode="Opaque" backcolor="#FFFFFF">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$V{REPORT_COUNT}.intValue() % 2 == 0]]></conditionExpression>
+			<style backcolor="#F8FAFC"/>
+		</conditionalStyle>
+	</style>
+
+	<parameter name="frontendBaseUrl" class="java.lang.String"/>
+
+	<field name="jobTitle" class="java.lang.String"/>
+	<field name="companyName" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="vacancy" class="java.lang.Integer"/>
+	<field name="applicationDeadLine" class="java.util.Date"/>
+	<field name="jobLocation" class="java.lang.String"/>
+	<field name="employmentStatus" class="java.lang.String"/>
+	<field name="applicantCount" class="java.lang.Integer"/>
+
+	<title>
+		<band height="60">
+			<rectangle>
+				<reportElement x="0" y="0" width="842" height="60" backcolor="#032967" mode="Opaque"/>
+				<graphicElement><pen lineWidth="0.0"/></graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="20" y="10" width="802" height="26" mode="Opaque" backcolor="#032967" forecolor="#FFFFFF"/>
+				<textElement verticalAlignment="Middle"><font size="18" isBold="true"/></textElement>
+				<text><![CDATA[Job Posting Report]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="20" y="38" width="90" height="14" mode="Opaque" backcolor="#032967" forecolor="#C7D2E0"/>
+				<textElement><font size="8" isItalic="true"/></textElement>
+				<text><![CDATA[Generated on]]></text>
+			</staticText>
+			<textField pattern="dd-MM-yyyy HH:mm" isBlankWhenNull="true">
+				<reportElement x="110" y="38" width="712" height="14" mode="Opaque" backcolor="#032967" forecolor="#C7D2E0"/>
+				<textElement><font size="8" isItalic="true"/></textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+
+	<pageHeader>
+		<band height="24">
+			<rectangle>
+				<reportElement x="0" y="0" width="842" height="24" backcolor="#EEF2F9" mode="Opaque"/>
+				<graphicElement><pen lineWidth="0.0"/></graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="22" width="842" height="2" backcolor="#032967" mode="Opaque"/>
+				<graphicElement><pen lineWidth="0.0"/></graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="20" y="0" width="150" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/><leftPen lineWidth="0.0"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="0" width="130" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Company]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="0" width="80" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="380" y="0" width="60" height="22" forecolor="#032967"/>
+				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Vacancy]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="440" y="0" width="90" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Deadline]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="530" y="0" width="110" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Location]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="640" y="0" width="110" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Employment Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="750" y="0" width="72" height="22" forecolor="#032967"/>
+				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#94A3B8"/><rightPen lineWidth="0.0"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Applicants]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+
+	<detail>
+		<band height="20" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="842" height="20" style="stripe"/>
+				<graphicElement><pen lineWidth="0.0"/></graphicElement>
+			</rectangle>
+			<textField isBlankWhenNull="true">
+				<reportElement x="20" y="0" width="150" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/><leftPen lineWidth="0.0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{jobTitle}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="170" y="0" width="130" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{companyName}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="300" y="0" width="80" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="380" y="0" width="60" height="20" forecolor="#1F2937"/>
+				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{vacancy}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd-MM-yyyy" isBlankWhenNull="true">
+				<reportElement x="440" y="0" width="90" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{applicationDeadLine}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="530" y="0" width="110" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{jobLocation}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="640" y="0" width="110" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{employmentStatus}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="750" y="0" width="72" height="20" forecolor="#1F2937"/>
+				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#E2E8F0"/><rightPen lineWidth="0.0"/></box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{applicantCount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+
+	<pageFooter>
+		<band height="26">
+			<rectangle>
+				<reportElement x="0" y="0" width="842" height="1" backcolor="#E5E7EB" mode="Opaque"/>
+				<graphicElement><pen lineWidth="0.0"/></graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="20" y="8" width="150" height="14" forecolor="#9CA3AF"/>
+				<textElement verticalAlignment="Middle"><font size="7"/></textElement>
+				<text><![CDATA[Powered by ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="8" width="130" height="14" forecolor="#1E4D8F"/>
+				<textElement verticalAlignment="Middle"><font size="7" isBold="true"/></textElement>
+				<text><![CDATA[E-RECRUITMENT]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true" hyperlinkType="Reference">
+				<reportElement x="300" y="8" width="340" height="14" forecolor="#9CA3AF"/>
+				<textElement verticalAlignment="Middle"><font size="7"/></textElement>
+				<textFieldExpression><![CDATA[($P{frontendBaseUrl} == null || $P{frontendBaseUrl}.trim().isEmpty()) ? "" : " · " + $P{frontendBaseUrl}.replaceFirst("^https?://", "").replaceFirst("/$", "")]]></textFieldExpression>
+				<hyperlinkReferenceExpression><![CDATA[($P{frontendBaseUrl} == null || $P{frontendBaseUrl}.trim().isEmpty()) ? null : $P{frontendBaseUrl}]]></hyperlinkReferenceExpression>
+			</textField>
+			<textField evaluationTime="Now">
+				<reportElement x="640" y="7" width="110" height="14" forecolor="#6B7280"/>
+				<textElement textAlignment="Right"><font size="7"/></textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="750" y="7" width="72" height="14" forecolor="#6B7280"/>
+				<textElement textAlignment="Left"><font size="7"/></textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}.toString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+
+	<noData>
+		<band height="40">
+			<staticText>
+				<reportElement x="0" y="10" width="842" height="24" forecolor="#6B7280"/>
+				<textElement textAlignment="Center"><font size="11" isItalic="true"/></textElement>
+				<text><![CDATA[No job postings match the selected filters.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

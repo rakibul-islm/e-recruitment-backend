@@ -208,6 +208,29 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Override
+	public void sendMcqTestAssignedEmail(String toEmail, String fullName, String jobTitle, String testName, int durationMinutes, String applicationLink) {
+		sendTemplateEmail(toEmail, "mcq-test-assigned-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobTitle", jobTitle,
+			"testName", testName,
+			"durationMinutes", String.valueOf(durationMinutes),
+			"applicationLink", applicationLink
+		));
+	}
+
+	@Override
+	public void sendMcqTestResultEmail(String toEmail, String fullName, String jobTitle, String testName, int scorePercent, boolean passed, String applicationLink) {
+		sendTemplateEmail(toEmail, "mcq-test-result-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"jobTitle", jobTitle,
+			"testName", testName,
+			"scorePercent", String.valueOf(scorePercent),
+			"resultLabel", passed ? "PASSED" : "NOT PASSED",
+			"applicationLink", applicationLink
+		));
+	}
+
 	private String greetingName(String fullName) {
 		return StringUtils.isNotBlank(fullName) ? fullName : "there";
 	}

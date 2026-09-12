@@ -23,9 +23,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -119,13 +121,36 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
 	public Response<ApplicationResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		requireStaff("view all applications");
-		Specification<Application> spec = GenericSpecification.build(filters);
+		Specification<Application> spec = GenericSpecification.build(resolveCandidateFilters(filters));
 		if (Boolean.TRUE.equals(isPageable)) {
 			Page<Application> page = applicationRepo.findAll(spec, pageable);
 			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(a -> toDto(a, null, null)));
 		}
 		List<ApplicationResDTO> list = applicationRepo.findAll(spec).stream().map(a -> toDto(a, null, null)).toList();
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
+	}
+
+	// Resolves candidateName_like/candidateEmail_like (not real Application columns) to a User-based candidateUserId_in filter.
+	private Map<String, String> resolveCandidateFilters(Map<String, String> filters) {
+		String candidateName = filters.get("candidateName_like");
+		String candidateEmail = filters.get("candidateEmail_like");
+		if (StringUtils.isBlank(candidateName) && StringUtils.isBlank(candidateEmail)) return filters;
+
+		Map<String, String> effectiveFilters = new HashMap<>(filters);
+		effectiveFilters.remove("candidateName_like");
+		effectiveFilters.remove("candidateEmail_like");
+
+		Map<String, String> userFilters = new HashMap<>();
+		if (StringUtils.isNotBlank(candidateName)) userFilters.put("fullName_like", candidateName);
+		if (StringUtils.isNotBlank(candidateEmail)) userFilters.put("email_like", candidateEmail);
+
+		List<Long> matchingUserIds = userRepo.findAll(GenericSpecification.<User>build(userFilters))
+			.stream().map(User::getId).toList();
+		// Empty match: force an impossible id instead of dropping the filter and matching everyone.
+		effectiveFilters.put("candidateUserId_in", matchingUserIds.isEmpty()
+			? "-1"
+			: matchingUserIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
+		return effectiveFilters;
 	}
 
 	public Response<ApplicationResDTO> find(Long id) {
