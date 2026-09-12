@@ -41,6 +41,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Saved jobs & job alerts** — candidates can bookmark job circulars (`SavedJobController`, `/saved-job`) and configure alerts for new matching postings (`JobAlertController`, `/job-alert`)
 - **AI-assisted job posting** — "auto-fill by AI" drafts job posting fields from a short prompt via the Google Gemini API, with retry/backoff on transient failures (`JobPostingAiServiceImpl`)
 - **Recruitment analytics** — aggregate metrics across postings, applications, and hiring stages for dashboards (`AnalyticsController`, `/analytics`)
+- **Downloadable reports** — JasperReports-based PDF/Excel reports (job posting, application, MCQ result, audit log), each independently permission-gated and filterable via the same `_like`/`_gte`/`_eq` query-param convention as the regular search endpoints (`ReportController`, `/report/{reportKey}/generate`, `ReportServiceImpl`, `.jrxml` templates under `resources/reports/`)
 - **Auto-seeded reference data** — roles, permissions, user groups, a password policy, system config, and two starter accounts are seeded on startup (`seed/` package)
 - **API documentation** — interactive Swagger UI via springdoc-openapi
 - **Multi-database support** — Spring profiles for H2 (dev, in-memory), PostgreSQL (prod), and Oracle
@@ -56,6 +57,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 | API docs               | springdoc-openapi (Swagger UI) |
 | Object mapping          | ModelMapper |
 | PDF generation           | openhtmltopdf (HTML → PDF for generated CVs and offer letters) |
+| Reporting               | JasperReports (PDF/Excel downloadable reports) |
 | AI content assist        | Google Gemini API (job posting auto-fill) |
 | Build                  | Gradle (wrapper included) |
 | Boilerplate reduction    | Lombok |
@@ -152,7 +154,7 @@ src/main/java/com/bd/erecruitment/
 │                        SystemConfig, PasswordPolicy, ExceptionLog, AuditLog, UserSession,
 │                        Profile, ArchiveConfig, Company, CompanyType, JobCircular,
 │                        RecruiterApplication, CandidateProfile, Application, Interview, Offer,
-│                        OnboardingTask, SavedJob, JobAlert, Analytics)
+│                        OnboardingTask, SavedJob, JobAlert, Analytics, Report)
 ├── service/             Business logic interfaces (incl. UserSessionService, GuestSessionTracker,
 │                        CvGenerationService)
 │   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher,
@@ -164,7 +166,8 @@ src/main/java/com/bd/erecruitment/
 ├── entity/               JPA entities (incl. AuditLog, UserSession)
 ├── dto/
 │   ├── req/               Request DTOs
-│   └── res/               Response DTOs
+│   ├── res/               Response DTOs
+│   └── report/            One row DTO per Jasper report (field names must match the .jrxml's <field> declarations)
 ├── security/             Spring Security config, JWT entry point
 ├── filter/               JWT authentication filter
 ├── util/                 JWT utility, response wrapper helpers, request utils
@@ -181,7 +184,8 @@ src/main/resources/
 ├── application-h2.yml           Dev / H2 datasource
 ├── application-postgres.yml     Prod / PostgreSQL datasource
 ├── application-oracle.yml       Oracle datasource
-└── templates/email/             HTML email templates (signup OTP, forgot/change password OTP, account setup)
+├── templates/email/             HTML email templates (signup OTP, forgot/change password OTP, account setup)
+└── reports/                     JasperReports .jrxml templates (one per report key)
 ```
 
 ## Testing

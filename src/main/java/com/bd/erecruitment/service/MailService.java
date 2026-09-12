@@ -32,4 +32,8 @@ public interface MailService {
 	void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName);
 
 	void sendRecruiterApplicationRejectedEmail(String toEmail, String fullName, String note);
+
+	void sendMcqTestAssignedEmail(String toEmail, String fullName, String jobTitle, String testName, int durationMinutes, String applicationLink);
+
+	void sendMcqTestResultEmail(String toEmail, String fullName, String jobTitle, String testName, int scorePercent, boolean passed, String applicationLink);
 }

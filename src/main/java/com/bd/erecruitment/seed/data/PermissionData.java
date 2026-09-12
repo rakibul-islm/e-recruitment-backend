@@ -59,10 +59,30 @@ public class PermissionData {
 			new PermissionDef("View Offers",            "offer:read",           "JOB_MANAGEMENT",   "offer-list"),
 			new PermissionDef("Manage Offers",          "offer:write",          "JOB_MANAGEMENT",   "offer-manage"),
 
+			new PermissionDef("View Question Bank",     "mcq-question:read",   "JOB_MANAGEMENT",   "mcq-question-list"),
+			new PermissionDef("Manage Question Bank",   "mcq-question:write",  "JOB_MANAGEMENT",   "mcq-question-manage"),
+			new PermissionDef("Delete Question Bank",   "mcq-question:delete", "JOB_MANAGEMENT",   null),
+
+			new PermissionDef("View MCQ Tests",         "mcq-test:read",       "JOB_MANAGEMENT",   "mcq-test-list"),
+			new PermissionDef("Manage MCQ Tests",       "mcq-test:write",      "JOB_MANAGEMENT",   "mcq-test-manage"),
+			new PermissionDef("Delete MCQ Tests",       "mcq-test:delete",     "JOB_MANAGEMENT",   null),
+
+			// routeName left null: assignment is an inline panel inside application-management (staff)
+			// and a plain AuthGuard-only route (candidate), same as application:write's reasoning -
+			// both roles hold these, so it can't gate a single Angular route either way.
+			new PermissionDef("View Test Assignments",   "mcq-test-assignment:read",   "JOB_MANAGEMENT", null),
+			new PermissionDef("Manage Test Assignments", "mcq-test-assignment:write",  "JOB_MANAGEMENT", null),
+			new PermissionDef("Delete Test Assignments", "mcq-test-assignment:delete", "JOB_MANAGEMENT", null),
+
 			new PermissionDef("View Onboarding Tasks",     "onboarding-task:read",  "JOB_MANAGEMENT", "onboarding-task-list"),
 			new PermissionDef("Manage Onboarding Tasks",   "onboarding-task:write", "JOB_MANAGEMENT", null),
 
 			new PermissionDef("View Recruitment Analytics", "analytics:read",     "JOB_MANAGEMENT",   "analytics-list"),
+
+			new PermissionDef("View Job Posting Report", "report:job-posting-read", "JOB_MANAGEMENT", "report-job-posting-list"),
+			new PermissionDef("View Application Report", "report:application-read", "JOB_MANAGEMENT", "report-application-list"),
+			new PermissionDef("View MCQ Result Report",  "report:mcq-result-read",  "JOB_MANAGEMENT", "report-mcq-result-list"),
+			new PermissionDef("View Audit Log Report",   "report:audit-log-read",  "JOB_MANAGEMENT", "report-audit-log-list"),
 
 			// Self-service only (own saved jobs/alerts) - unconditional for any authenticated account,
 			// same as candidate-profile:* - see PermissionInterceptor.ALWAYS_ALLOWED.
