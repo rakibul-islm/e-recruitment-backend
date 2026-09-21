@@ -19,6 +19,10 @@ public class ArchiveConfigData {
 			new ConfigDef(
 				"USER_SESSION", "archive", "USER_SESSION", "expires_at", 90,
 				"Sessions expired for longer than retention - never touches a still-valid session"
+			),
+			new ConfigDef(
+				"NOTIFICATION", "archive", "NOTIFICATION", "created_on", 90,
+				"In-app notifications past retention"
 			)
 		);
 	}

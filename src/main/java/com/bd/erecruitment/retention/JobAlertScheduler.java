@@ -4,6 +4,8 @@ import com.bd.erecruitment.dto.JobAlertItemDto;
 import com.bd.erecruitment.entity.JobAlert;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.enums.NotificationType;
+import com.bd.erecruitment.notification.NotificationPublisher;
 import com.bd.erecruitment.repository.JobAlertRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
 import com.bd.erecruitment.repository.UserRepo;
@@ -32,6 +34,7 @@ public class JobAlertScheduler {
 	private final JobCircularRepo jobCircularRepo;
 	private final UserRepo userRepo;
 	private final MailService mailService;
+	private final NotificationPublisher notificationPublisher;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
@@ -66,6 +69,7 @@ public class JobAlertScheduler {
 		User user = userRepo.findByIdAndDeleted(alert.getUserId(), false).orElse(null);
 		if (user == null) return;
 
+		notificationPublisher.notifyUser(user.getId(), NotificationType.JOB_ALERT_MATCH, "/jobs", "count", matches.size());
 		mailService.sendJobAlertDigestEmail(user.getEmail(), user.getFullName(), matches);
 		log.info("[JobAlertScheduler] alert {}: sent digest of {} job(s) to {}", alert.getId(), matches.size(), user.getEmail());
 	}

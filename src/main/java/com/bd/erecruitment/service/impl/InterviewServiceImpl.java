@@ -6,7 +6,9 @@ import com.bd.erecruitment.dto.res.InterviewResDTO;
 import com.bd.erecruitment.entity.*;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
+import com.bd.erecruitment.enums.NotificationType;
 import com.bd.erecruitment.model.MyUserDetail;
+import com.bd.erecruitment.notification.NotificationPublisher;
 import com.bd.erecruitment.repository.ApplicationRepo;
 import com.bd.erecruitment.repository.ApplicationStatusHistoryRepo;
 import com.bd.erecruitment.repository.InterviewRepo;
@@ -40,13 +42,14 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 	private final JobCircularRepo jobCircularRepo;
 	private final UserRepo userRepo;
 	private final MailService mailService;
+	private final NotificationPublisher notificationPublisher;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
 	public InterviewServiceImpl(InterviewRepo interviewRepo, ApplicationRepo applicationRepo,
 			ApplicationStatusHistoryRepo historyRepo, JobCircularRepo jobCircularRepo, UserRepo userRepo,
-			MailService mailService) {
+			MailService mailService, NotificationPublisher notificationPublisher) {
 		super(interviewRepo);
 		this.interviewRepo = interviewRepo;
 		this.applicationRepo = applicationRepo;
@@ -54,6 +57,7 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		this.jobCircularRepo = jobCircularRepo;
 		this.userRepo = userRepo;
 		this.mailService = mailService;
+		this.notificationPublisher = notificationPublisher;
 	}
 
 	@Transactional
@@ -209,6 +213,9 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			if (candidate == null || job == null) return;
+			notificationPublisher.notifyUser(candidate.getId(), NotificationType.INTERVIEW_SCHEDULED,
+				"/my/applications/" + application.getId(), "jobTitle", job.getJobTitle(), "interviewTitle", interview.getTitle(),
+				"scheduledAt", interview.getScheduledAt() != null ? interview.getScheduledAt().toInstant().toString() : null);
 			mailService.sendInterviewScheduledEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle(),
 				interview.getTitle(), interview.getScheduledAt(), interview.getMode(), interview.getLocation(),
 				frontendBaseUrl + "/my/applications/" + application.getId());

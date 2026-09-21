@@ -6,7 +6,9 @@ import com.bd.erecruitment.dto.res.OfferResDTO;
 import com.bd.erecruitment.entity.*;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
+import com.bd.erecruitment.enums.NotificationType;
 import com.bd.erecruitment.model.MyUserDetail;
+import com.bd.erecruitment.notification.NotificationPublisher;
 import com.bd.erecruitment.repository.ApplicationRepo;
 import com.bd.erecruitment.repository.ApplicationStatusHistoryRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
@@ -41,13 +43,14 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 	private final HtmlToPdfRenderer pdfRenderer;
 	private final MailService mailService;
 	private final OnboardingServiceImpl onboardingService;
+	private final NotificationPublisher notificationPublisher;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
 	public OfferServiceImpl(OfferRepo offerRepo, ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
 			JobCircularRepo jobCircularRepo, UserRepo userRepo, StorageService storageService, HtmlToPdfRenderer pdfRenderer,
-			MailService mailService, OnboardingServiceImpl onboardingService) {
+			MailService mailService, OnboardingServiceImpl onboardingService, NotificationPublisher notificationPublisher) {
 		super(offerRepo);
 		this.offerRepo = offerRepo;
 		this.applicationRepo = applicationRepo;
@@ -58,6 +61,7 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 		this.pdfRenderer = pdfRenderer;
 		this.mailService = mailService;
 		this.onboardingService = onboardingService;
+		this.notificationPublisher = notificationPublisher;
 	}
 
 	@Transactional
@@ -121,6 +125,8 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 			if (job != null && candidate != null) {
 				try {
+					notificationPublisher.notifyUser(candidate.getId(), NotificationType.OFFER_RECEIVED,
+						"/my/applications/" + application.getId(), "jobTitle", job.getJobTitle());
 					mailService.sendOfferEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle(),
 						frontendBaseUrl + "/my/applications/" + application.getId());
 				} catch (Exception e) {
@@ -244,6 +250,8 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 			if (job == null || candidate == null || StringUtils.isBlank(job.getCreatedBy())) return;
+			notificationPublisher.notifyEmail(job.getCreatedBy(), accepted ? NotificationType.OFFER_ACCEPTED : NotificationType.OFFER_DECLINED,
+				"/application-management/" + application.getId(), "jobTitle", job.getJobTitle(), "candidateName", candidate.getFullName());
 			mailService.sendOfferResponseEmail(job.getCreatedBy(), job.getJobTitle(), candidate.getFullName(), accepted,
 				frontendBaseUrl + "/application-management/" + application.getId());
 		} catch (Exception e) {
