@@ -39,7 +39,7 @@
 				<textElement><font size="8" isItalic="true"/></textElement>
 				<text><![CDATA[Generated on]]></text>
 			</staticText>
-			<textField pattern="dd-MM-yyyy HH:mm" isBlankWhenNull="true">
+			<textField pattern="dd-MM-yyyy hh:mm a" isBlankWhenNull="true">
 				<reportElement x="110" y="38" width="712" height="14" mode="Opaque" backcolor="#032967" forecolor="#C7D2E0"/>
 				<textElement><font size="8" isItalic="true"/></textElement>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
@@ -144,7 +144,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
 				<textFieldExpression><![CDATA[$F{passed}]]></textFieldExpression>
 			</textField>
-			<textField pattern="dd-MM-yyyy HH:mm" isBlankWhenNull="true">
+			<textField pattern="dd-MM-yyyy hh:mm a" isBlankWhenNull="true">
 				<reportElement x="690" y="0" width="132" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/><rightPen lineWidth="0.0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>

@@ -25,6 +25,7 @@ import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
@@ -35,9 +36,17 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.time.DateTimeException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 // One .jrxml template + row-building method per report key.
@@ -45,6 +54,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ReportServiceImpl {
 
+	// Used when the caller sends no (or an unrecognised) time zone.
+	private static final ZoneId DEFAULT_REPORT_ZONE = ZoneId.of("Asia/Dhaka");
+	private static final DateTimeFormatter DEADLINE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneOffset.UTC);
 	private static final List<String> REPORT_KEYS = List.of("job-posting", "application", "mcq-result", "audit-log");
 
 	private final JobCircularRepo jobCircularRepo;
@@ -60,7 +72,7 @@ public class ReportServiceImpl {
 	// Compiled once per report key, reused across requests.
 	private final Map<String, JasperReport> compiledReports = new ConcurrentHashMap<>();
 
-	public byte[] generate(String reportKey, String format, Map<String, String> filters) {
+	public byte[] generate(String reportKey, String format, Map<String, String> filters, String timeZone) {
 		if (!REPORT_KEYS.contains(reportKey)) throw new BadRequestException("Unknown report: " + reportKey);
 
 		List<?> rows = switch (reportKey) {
@@ -74,12 +86,29 @@ public class ReportServiceImpl {
 		try {
 			Map<String, Object> params = new HashMap<>();
 			params.put("frontendBaseUrl", frontendBaseUrl);
+			// Dates render in the caller's zone with English AM/PM regardless of JVM default zone/locale (storage stays UTC).
+			params.put(JRParameter.REPORT_TIME_ZONE, TimeZone.getTimeZone(resolveZone(timeZone)));
+			params.put(JRParameter.REPORT_LOCALE, Locale.ENGLISH);
 
 			JasperPrint print = JasperFillManager.fillReport(
 				compiledReport(reportKey), params, new JRBeanCollectionDataSource(rows));
 			return "XLSX".equalsIgnoreCase(format) ? exportXlsx(print) : JasperExportManager.exportReportToPdf(print);
 		} catch (JRException e) {
 			throw new IllegalStateException("Failed to generate report: " + reportKey, e);
+		}
+	}
+
+	// DATE columns are stored as UTC midnight, so the calendar date is read in UTC.
+	private String deadlineText(Date deadline) {
+		return deadline == null ? "" : DEADLINE_FORMAT.format(Instant.ofEpochMilli(deadline.getTime()));
+	}
+
+	private ZoneId resolveZone(String timeZone) {
+		if (timeZone == null || timeZone.isBlank()) return DEFAULT_REPORT_ZONE;
+		try {
+			return ZoneId.of(timeZone.trim());
+		} catch (DateTimeException e) {
+			return DEFAULT_REPORT_ZONE;
 		}
 	}
 
@@ -115,7 +144,7 @@ public class ReportServiceImpl {
 		return jobCircularRepo.findAll(GenericSpecification.<JobCircular>build(filters)).stream()
 			.map(job -> new JobPostingReportRow(
 				job.getJobTitle(), job.getCompanyName(), job.getStatus(), job.getVacancy(),
-				job.getApplicationDeadLine(), job.getJobLocation(), job.getEmploymentStatus(),
+				deadlineText(job.getApplicationDeadLine()), job.getJobLocation(), job.getEmploymentStatus(),
 				applicationRepo.findAllByJobCircularIdAndDeleted(job.getId(), false).size()
 			))
 			.toList();
