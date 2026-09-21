@@ -8,8 +8,10 @@ import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.Company;
 import com.bd.erecruitment.entity.RecruiterApplication;
 import com.bd.erecruitment.entity.Role;
+import com.bd.erecruitment.enums.NotificationType;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.model.MyUserDetail;
+import com.bd.erecruitment.notification.NotificationPublisher;
 import com.bd.erecruitment.repository.CompanyRepo;
 import com.bd.erecruitment.repository.RecruiterApplicationRepo;
 import com.bd.erecruitment.repository.RoleRepo;
@@ -39,9 +41,11 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 	private final CompanyRepo companyRepo;
 	private final UserService<UserResDTO, UserReqDto> userService;
 	private final MailService mailService;
+	private final NotificationPublisher notificationPublisher;
 
 	public RecruiterApplicationServiceImpl(RecruiterApplicationRepo recruiterApplicationRepo, UserRepo userRepo,
-			RoleRepo roleRepo, CompanyRepo companyRepo, UserService<UserResDTO, UserReqDto> userService, MailService mailService) {
+			RoleRepo roleRepo, CompanyRepo companyRepo, UserService<UserResDTO, UserReqDto> userService, MailService mailService,
+			NotificationPublisher notificationPublisher) {
 		super(recruiterApplicationRepo);
 		this.recruiterApplicationRepo = recruiterApplicationRepo;
 		this.userRepo = userRepo;
@@ -49,6 +53,7 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		this.companyRepo = companyRepo;
 		this.userService = userService;
 		this.mailService = mailService;
+		this.notificationPublisher = notificationPublisher;
 	}
 
 	@Override
@@ -69,6 +74,7 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 
 		// Anonymous submission: no logged-in actor to attribute createdBy/On to, same as candidate self-signup.
 		RecruiterApplication application = createNormalUser(reqDto.getBean());
+		notifyReviewers(application);
 		sendReceivedEmail(application);
 		return getCreatedResponse("Application submitted. We'll review it and get back to you.", new RecruiterApplicationResDTO(application));
 	}
@@ -162,6 +168,15 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 				company.setCreatedBy(actor).setCreatedOn(now).setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
 				return companyRepo.save(company);
 			});
+	}
+
+	private void notifyReviewers(RecruiterApplication application) {
+		try {
+			notificationPublisher.notifyAuthority(WRITE_AUTHORITY, NotificationType.RECRUITER_APPLICATION_SUBMITTED,
+				"/recruiter-applications/" + application.getId(), "companyName", application.getCompanyName(), "applicantName", application.getFullName());
+		} catch (Exception ignored) {
+			// Never fail the submission because of a notification problem.
+		}
 	}
 
 	private void sendReceivedEmail(RecruiterApplication application) {

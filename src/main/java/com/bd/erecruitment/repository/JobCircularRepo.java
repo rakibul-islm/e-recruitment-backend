@@ -12,6 +12,8 @@ public interface JobCircularRepo extends ServiceRepository<JobCircular> {
 	// alert's last run", since JobCircular has no separate publishedOn timestamp.
 	List<JobCircular> findAllByStatusAndUpdatedOnAfterAndDeleted(String status, Date after, boolean deleted);
 
+	List<JobCircular> findAllByStatusAndApplicationDeadLineBetweenAndDeleted(String status, Date from, Date to, boolean deleted);
+
 	// Used by AnalyticsServiceImpl.
 	long countByDeleted(boolean deleted);
 

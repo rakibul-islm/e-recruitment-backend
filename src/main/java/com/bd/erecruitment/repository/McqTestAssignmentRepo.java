@@ -11,6 +11,8 @@ public interface McqTestAssignmentRepo extends ServiceRepository<McqTestAssignme
 
 	List<McqTestAssignment> findAllByApplicationIdAndDeletedOrderByAssignedOnDesc(Long applicationId, boolean deleted);
 
+	List<McqTestAssignment> findAllByStatusAndScheduledEndAtBetweenAndDeleted(String status, Date from, Date to, boolean deleted);
+
 	// Used by McqTestAssignmentExpirySweeper to catch abandoned/lost sessions whose client-side
 	// auto-submit never fired.
 	List<McqTestAssignment> findAllByStatusAndDeadlineAtBeforeAndDeleted(String status, Date deadlineBefore, boolean deleted);

@@ -9,7 +9,9 @@ import com.bd.erecruitment.dto.res.McqTestAttemptQuestionDto;
 import com.bd.erecruitment.entity.*;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
+import com.bd.erecruitment.enums.NotificationType;
 import com.bd.erecruitment.model.MyUserDetail;
+import com.bd.erecruitment.notification.NotificationPublisher;
 import com.bd.erecruitment.repository.ApplicationRepo;
 import com.bd.erecruitment.repository.ApplicationStatusHistoryRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
@@ -54,6 +56,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 	private final JobCircularRepo jobCircularRepo;
 	private final UserRepo userRepo;
 	private final MailService mailService;
+	private final NotificationPublisher notificationPublisher;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
@@ -61,7 +64,8 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 	public McqTestAssignmentServiceImpl(McqTestAssignmentRepo mcqTestAssignmentRepo,
 			McqTestAssignmentQuestionRepo mcqTestAssignmentQuestionRepo, McqTestRepo mcqTestRepo,
 			McqQuestionRepo mcqQuestionRepo, ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
-			JobCircularRepo jobCircularRepo, UserRepo userRepo, MailService mailService) {
+			JobCircularRepo jobCircularRepo, UserRepo userRepo, MailService mailService,
+			NotificationPublisher notificationPublisher) {
 		super(mcqTestAssignmentRepo);
 		this.mcqTestAssignmentRepo = mcqTestAssignmentRepo;
 		this.mcqTestAssignmentQuestionRepo = mcqTestAssignmentQuestionRepo;
@@ -72,6 +76,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		this.jobCircularRepo = jobCircularRepo;
 		this.userRepo = userRepo;
 		this.mailService = mailService;
+		this.notificationPublisher = notificationPublisher;
 	}
 
 	@Transactional
@@ -441,6 +446,12 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			McqTest test = mcqTestRepo.findByIdAndDeleted(assignment.getMcqTestId(), false).orElse(null);
 			if (candidate == null || job == null || test == null) return;
+			notificationPublisher.notifyUser(candidate.getId(), passed ? NotificationType.MCQ_TEST_PASSED : NotificationType.MCQ_TEST_FAILED,
+				"/my/applications/" + application.getId(), "jobTitle", job.getJobTitle(), "testName", test.getName(),
+				"scorePercent", assignment.getScorePercent());
+			notificationPublisher.notifyEmail(assignment.getAssignedBy(), NotificationType.MCQ_RESULT_RECEIVED,
+				"/application-management/" + application.getId(), "candidateName", candidate.getFullName(),
+				"jobTitle", job.getJobTitle(), "testName", test.getName(), "scorePercent", assignment.getScorePercent());
 			mailService.sendMcqTestResultEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle(),
 				test.getName(), assignment.getScorePercent(), passed, frontendBaseUrl + "/my/applications/" + application.getId());
 		} catch (Exception e) {
@@ -453,6 +464,9 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
 			if (candidate == null || job == null) return;
+			notificationPublisher.notifyUser(candidate.getId(), NotificationType.MCQ_TEST_ASSIGNED,
+				"/my/applications/" + application.getId(), "jobTitle", job.getJobTitle(), "testName", test.getName(),
+				"durationMinutes", test.getDurationMinutes());
 			mailService.sendMcqTestAssignedEmail(candidate.getEmail(), candidate.getFullName(), job.getJobTitle(),
 				test.getName(), test.getDurationMinutes(), frontendBaseUrl + "/my/applications/" + application.getId());
 		} catch (Exception e) {

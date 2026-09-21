@@ -31,8 +31,8 @@ public class PermissionInterceptor implements HandlerInterceptor {
 	private static final String PERMISSION_READ = "permission:read";
 
 	// Every authenticated account always has profile and password-policy-read access, regardless of role.
-	// candidate-profile:*, saved-job:* and job-alert:* are likewise unconditional: ownership (own
-	// profile/CVs, own bookmarks, own alerts) is enforced in the respective service by the logged-in
+	// candidate-profile:*, saved-job:*, job-alert:* and notification:* are likewise unconditional: ownership
+	// (own profile/CVs, own bookmarks, own alerts, own notifications) is enforced in the respective service by the logged-in
 	// user's id, the same pattern /profile uses. job-circular:read and company:read are public job
 	// portal browsing - SecurityConfig already permitAll()s GET on both for anonymous visitors, so
 	// this keeps a logged-in candidate (who lacks those authorities) from losing access an anonymous
@@ -42,6 +42,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
 		"candidate-profile:read", "candidate-profile:write",
 		"saved-job:read", "saved-job:write",
 		"job-alert:read", "job-alert:write", "job-alert:delete",
+		"notification:read", "notification:write", "notification:delete",
 		"job-circular:read", "company:read"
 	);
 
