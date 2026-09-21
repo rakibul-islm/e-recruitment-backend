@@ -27,14 +27,15 @@ public class ReportController {
 
 	private final ReportServiceImpl reportService;
 
-	@Operation(summary = "Generate a report as PDF or Excel (format=PDF|XLSX, remaining params are report-specific filters)")
+	@Operation(summary = "Generate a report as PDF or Excel (format=PDF|XLSX, timeZone=IANA id such as Asia/Dhaka for how dates are shown, remaining params are report-specific filters)")
 	@GetMapping("/{reportKey}/generate")
 	public ResponseEntity<byte[]> generate(@PathVariable String reportKey, @RequestParam Map<String, String> filters) {
 		String format = filters.getOrDefault("format", "PDF");
 		Map<String, String> dataFilters = new HashMap<>(filters);
 		dataFilters.remove("format");
+		String timeZone = dataFilters.remove("timeZone");
 
-		byte[] bytes = reportService.generate(reportKey, format, dataFilters);
+		byte[] bytes = reportService.generate(reportKey, format, dataFilters, timeZone);
 		boolean xlsx = "XLSX".equalsIgnoreCase(format);
 
 		return ResponseEntity.ok()
