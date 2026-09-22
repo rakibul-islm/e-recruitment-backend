@@ -39,6 +39,9 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	private static final String SUPER_ADMIN = "SUPER_ADMIN";
 	private static final int MAX_PAGE_SIZE = 50;
 	private static final int MAX_PARAM_LENGTH = 200;
+	// "message" is rich-text HTML, so it skips the short abbreviate() applied to other params.
+	private static final String MESSAGE_PARAM_KEY = "message";
+	private static final int MAX_MESSAGE_PARAM_LENGTH = 3500;
 
 	private final NotificationRepo notificationRepo;
 	private final UserRepo userRepo;
@@ -92,6 +95,10 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
+	public Response<NotificationResDTO> findById(Long id) {
+		return getSuccessResponse("Found", toDto(findOwned(id)));
+	}
+
 	@Transactional
 	public Response<NotificationResDTO> markRead(Long id) {
 		Notification notification = findOwned(id);
@@ -141,12 +148,16 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 
 	private String toJson(Map<String, Object> params) {
 		Map<String, Object> trimmed = new LinkedHashMap<>();
-		params.forEach((key, value) -> trimmed.put(key, value instanceof String text ? StringUtils.abbreviate(text, MAX_PARAM_LENGTH) : value));
+		params.forEach((key, value) -> trimmed.put(key, value instanceof String text ? trimParam(key, text) : value));
 		try {
 			return paramsMapper.writeValueAsString(trimmed);
 		} catch (JsonProcessingException e) {
 			return "{}";
 		}
+	}
+
+	private String trimParam(String key, String text) {
+		return MESSAGE_PARAM_KEY.equals(key) ? StringUtils.left(text, MAX_MESSAGE_PARAM_LENGTH) : StringUtils.abbreviate(text, MAX_PARAM_LENGTH);
 	}
 
 	private Map<String, Object> fromJson(String json) {

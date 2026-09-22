@@ -258,11 +258,12 @@ public class MailServiceImpl implements MailService {
 	@Async("notificationExecutor")
 	@Override
 	public void sendAdminMessageEmail(String toEmail, String fullName, String title, String message) {
+		// message is rich-text HTML from the broadcast form's editor, so it must not be escaped like the other values.
 		sendTemplateEmail(toEmail, "admin-message-email.html", Map.of(
 			"greetingName", greetingName(fullName),
 			"title", title,
 			"message", message
-		));
+		), Set.of("message"));
 	}
 
 	private String greetingName(String fullName) {

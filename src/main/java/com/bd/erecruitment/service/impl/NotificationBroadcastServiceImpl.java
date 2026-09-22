@@ -21,7 +21,8 @@ import java.util.List;
 public class NotificationBroadcastServiceImpl extends CommonFunctionsImpl {
 
 	private static final int MAX_TITLE_LENGTH = 150;
-	private static final int MAX_MESSAGE_LENGTH = 1000;
+	// Leaves margin in Notification.paramsJson (length 4000) for the JSON wrapper and escaping.
+	private static final int MAX_MESSAGE_LENGTH = 3000;
 	private static final int USER_SEARCH_LIMIT = 20;
 
 	private final RoleRepo roleRepo;
@@ -52,9 +53,13 @@ public class NotificationBroadcastServiceImpl extends CommonFunctionsImpl {
 		if (req.getTargetType() == null) {
 			returnErrorException("Target type is required");
 		}
+		// Reject overlong messages instead of truncating - abbreviate() would risk cutting mid-tag.
+		if (req.getMessage().trim().length() > MAX_MESSAGE_LENGTH) {
+			returnErrorException("Message is too long");
+		}
 
 		String title = StringUtils.abbreviate(req.getTitle().trim(), MAX_TITLE_LENGTH);
-		String message = StringUtils.abbreviate(req.getMessage().trim(), MAX_MESSAGE_LENGTH);
+		String message = req.getMessage().trim();
 
 		List<Long> recipientIds = resolveRecipientIds(req);
 		if (recipientIds.isEmpty()) {
