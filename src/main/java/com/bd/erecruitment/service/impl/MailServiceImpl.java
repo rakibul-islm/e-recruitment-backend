@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -14,7 +16,9 @@ import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
@@ -28,8 +32,13 @@ public class MailServiceImpl implements MailService {
 
 	private static final String TOKEN_URL = "https://oauth2.googleapis.com/token";
 	private static final String SEND_URL = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send";
+	private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+	private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
 
-	private final RestClient restClient = RestClient.create();
+	// Bounded connect/read timeouts so a slow or unreachable Gmail API can never hang a thread
+	// indefinitely - callers invoke these methods from within @Transactional blocks, and an
+	// unbounded HTTP call there would hold the DB connection for as long as Gmail takes to respond.
+	private final RestClient restClient = RestClient.builder().requestFactory(timeoutRequestFactory()).build();
 	private final ReentrantLock tokenLock = new ReentrantLock();
 	private final Map<String, String> templateCache = new ConcurrentHashMap<>();
 
@@ -51,6 +60,7 @@ public class MailServiceImpl implements MailService {
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendOtpEmail(String toEmail, String fullName, String otp, long expiryMinutes) {
 		sendTemplateEmail(toEmail, "forgot-password-otp-email.html", Map.of(
@@ -60,6 +70,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendSignupOtpEmail(String toEmail, String fullName, String otp, long expiryMinutes) {
 		sendTemplateEmail(toEmail, "signup-otp-email.html", Map.of(
@@ -69,6 +80,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendChangePasswordOtpEmail(String toEmail, String fullName, String otp, long expiryMinutes) {
 		sendTemplateEmail(toEmail, "change-password-otp-email.html", Map.of(
@@ -78,6 +90,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendAccountSetupEmail(String toEmail, String fullName, String link, long expiryHours) {
 		sendTemplateEmail(toEmail, "account-setup-email.html", Map.of(
@@ -87,6 +100,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendApplicationReceivedEmail(String toEmail, String fullName, String jobTitle, String applicationLink) {
 		sendTemplateEmail(toEmail, "application-received-email.html", Map.of(
@@ -96,6 +110,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendApplicationStatusChangedEmail(String toEmail, String fullName, String jobTitle, String status, String note, String applicationLink) {
 		sendTemplateEmail(toEmail, "application-status-changed-email.html", Map.of(
@@ -107,6 +122,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendNewApplicationEmail(String toEmail, String jobTitle, String candidateName, String applicationLink) {
 		sendTemplateEmail(toEmail, "new-application-email.html", Map.of(
@@ -116,6 +132,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendInterviewScheduledEmail(String toEmail, String fullName, String jobTitle, String interviewTitle,
 			java.util.Date scheduledAt, String mode, String location, String applicationLink) {
@@ -131,6 +148,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendOfferEmail(String toEmail, String fullName, String jobTitle, String applicationLink) {
 		sendTemplateEmail(toEmail, "offer-email.html", Map.of(
@@ -140,6 +158,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendOfferResponseEmail(String toEmail, String jobTitle, String candidateName, boolean accepted, String applicationLink) {
 		sendTemplateEmail(toEmail, "offer-response-email.html", Map.of(
@@ -150,6 +169,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs) {
 		sendTemplateEmail(toEmail, "job-alert-digest-email.html", Map.of(
@@ -192,6 +212,7 @@ public class MailServiceImpl implements MailService {
 		return html.toString();
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName) {
 		sendTemplateEmail(toEmail, "recruiter-application-received-email.html", Map.of(
@@ -200,6 +221,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendRecruiterApplicationRejectedEmail(String toEmail, String fullName, String note) {
 		sendTemplateEmail(toEmail, "recruiter-application-rejected-email.html", Map.of(
@@ -208,6 +230,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendMcqTestAssignedEmail(String toEmail, String fullName, String jobTitle, String testName, int durationMinutes, String applicationLink) {
 		sendTemplateEmail(toEmail, "mcq-test-assigned-email.html", Map.of(
@@ -219,6 +242,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendMcqTestResultEmail(String toEmail, String fullName, String jobTitle, String testName, int scorePercent, boolean passed, String applicationLink) {
 		sendTemplateEmail(toEmail, "mcq-test-result-email.html", Map.of(
@@ -231,6 +255,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Async("notificationExecutor")
 	@Override
 	public void sendAdminMessageEmail(String toEmail, String fullName, String title, String message) {
 		sendTemplateEmail(toEmail, "admin-message-email.html", Map.of(
@@ -346,5 +371,12 @@ public class MailServiceImpl implements MailService {
 
 	private String escape(String value) {
 		return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
+	private static JdkClientHttpRequestFactory timeoutRequestFactory() {
+		HttpClient httpClient = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
+		JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+		factory.setReadTimeout(READ_TIMEOUT);
+		return factory;
 	}
 }
