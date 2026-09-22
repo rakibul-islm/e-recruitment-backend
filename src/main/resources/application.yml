@@ -17,6 +17,7 @@ spring:
       indent-output: true
     time-zone: UTC
   jpa:
+    open-in-view: false
     properties:
       hibernate:
         jdbc:

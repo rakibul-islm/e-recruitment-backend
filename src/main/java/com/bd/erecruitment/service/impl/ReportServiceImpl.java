@@ -48,6 +48,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 // One .jrxml template + row-building method per report key.
 @Service
@@ -141,23 +142,33 @@ public class ReportServiceImpl {
 	}
 
 	private List<JobPostingReportRow> buildJobPostingRows(Map<String, String> filters) {
-		return jobCircularRepo.findAll(GenericSpecification.<JobCircular>build(filters)).stream()
+		List<JobCircular> jobs = jobCircularRepo.findAll(GenericSpecification.<JobCircular>build(filters));
+		if (jobs.isEmpty()) return List.of();
+
+		List<Long> jobIds = jobs.stream().map(JobCircular::getId).toList();
+		Map<Long, Long> applicantCounts = applicationRepo.countGroupByJobCircularIdIn(jobIds).stream()
+			.collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+
+		return jobs.stream()
 			.map(job -> new JobPostingReportRow(
 				job.getJobTitle(), job.getCompanyName(), job.getStatus(), job.getVacancy(),
 				deadlineText(job.getApplicationDeadLine()), job.getJobLocation(), job.getEmploymentStatus(),
-				applicationRepo.findAllByJobCircularIdAndDeleted(job.getId(), false).size()
+				applicantCounts.getOrDefault(job.getId(), 0L).intValue()
 			))
 			.toList();
 	}
 
 	private List<ApplicationReportRow> buildApplicationRows(Map<String, String> filters) {
-		Map<Long, String> jobTitleCache = new HashMap<>();
-		Map<Long, User> candidateCache = new HashMap<>();
+		List<Application> applications = applicationRepo.findAll(GenericSpecification.<Application>build(filters));
+		if (applications.isEmpty()) return List.of();
 
-		return applicationRepo.findAll(GenericSpecification.<Application>build(filters)).stream()
+		Map<Long, String> jobTitles = jobTitlesByJobCircularId(applications.stream().map(Application::getJobCircularId).distinct().toList());
+		Map<Long, User> candidates = usersByCandidateId(applications.stream().map(Application::getCandidateUserId).distinct().toList());
+
+		return applications.stream()
 			.map(application -> {
-				String jobTitle = jobTitleCache.computeIfAbsent(application.getJobCircularId(), this::jobTitleFor);
-				User candidate = candidateCache.computeIfAbsent(application.getCandidateUserId(), this::userFor);
+				String jobTitle = jobTitles.getOrDefault(application.getJobCircularId(), "");
+				User candidate = candidates.get(application.getCandidateUserId());
 				return new ApplicationReportRow(
 					jobTitle,
 					candidate != null ? candidate.getFullName() : "",
@@ -170,22 +181,24 @@ public class ReportServiceImpl {
 
 	// Skips ungraded assignments (no score yet).
 	private List<McqResultReportRow> buildMcqResultRows(Map<String, String> filters) {
-		Map<Long, String> testNameCache = new HashMap<>();
-		Map<Long, User> candidateCache = new HashMap<>();
-		Map<Long, Application> applicationCache = new HashMap<>();
-		Map<Long, String> jobTitleCache = new HashMap<>();
-
-		return mcqTestAssignmentRepo.findAll(GenericSpecification.<McqTestAssignment>build(filters)).stream()
+		List<McqTestAssignment> assignments = mcqTestAssignmentRepo.findAll(GenericSpecification.<McqTestAssignment>build(filters)).stream()
 			.filter(a -> a.getScorePercent() != null)
+			.toList();
+		if (assignments.isEmpty()) return List.of();
+
+		Map<Long, String> testNames = mcqTestRepo.findAllByIdInAndDeleted(assignments.stream().map(McqTestAssignment::getMcqTestId).distinct().toList(), false)
+			.stream().collect(Collectors.toMap(McqTest::getId, McqTest::getName));
+		Map<Long, User> candidates = usersByCandidateId(assignments.stream().map(McqTestAssignment::getCandidateUserId).distinct().toList());
+		Map<Long, Application> applications = applicationRepo.findAllByIdInAndDeleted(assignments.stream().map(McqTestAssignment::getApplicationId).distinct().toList(), false)
+			.stream().collect(Collectors.toMap(Application::getId, a -> a));
+		Map<Long, String> jobTitles = jobTitlesByJobCircularId(applications.values().stream().map(Application::getJobCircularId).distinct().toList());
+
+		return assignments.stream()
 			.map(assignment -> {
-				String testName = testNameCache.computeIfAbsent(assignment.getMcqTestId(),
-					id -> mcqTestRepo.findByIdAndDeleted(id, false).map(McqTest::getName).orElse(""));
-				User candidate = candidateCache.computeIfAbsent(assignment.getCandidateUserId(), this::userFor);
-				Application application = applicationCache.computeIfAbsent(assignment.getApplicationId(),
-					id -> applicationRepo.findByIdAndDeleted(id, false).orElse(null));
-				String jobTitle = application != null
-					? jobTitleCache.computeIfAbsent(application.getJobCircularId(), this::jobTitleFor)
-					: "";
+				String testName = testNames.getOrDefault(assignment.getMcqTestId(), "");
+				User candidate = candidates.get(assignment.getCandidateUserId());
+				Application application = applications.get(assignment.getApplicationId());
+				String jobTitle = application != null ? jobTitles.getOrDefault(application.getJobCircularId(), "") : "";
 
 				return new McqResultReportRow(
 					testName,
@@ -210,11 +223,15 @@ public class ReportServiceImpl {
 			.toList();
 	}
 
-	private String jobTitleFor(Long jobCircularId) {
-		return jobCircularRepo.findByIdAndDeleted(jobCircularId, false).map(JobCircular::getJobTitle).orElse("");
+	private Map<Long, String> jobTitlesByJobCircularId(List<Long> jobCircularIds) {
+		if (jobCircularIds.isEmpty()) return Map.of();
+		return jobCircularRepo.findAllByIdInAndDeleted(jobCircularIds, false).stream()
+			.collect(Collectors.toMap(JobCircular::getId, JobCircular::getJobTitle));
 	}
 
-	private User userFor(Long userId) {
-		return userRepo.findByIdAndDeleted(userId, false).orElse(null);
+	private Map<Long, User> usersByCandidateId(List<Long> userIds) {
+		if (userIds.isEmpty()) return Map.of();
+		return userRepo.findAllByIdInAndDeleted(userIds, false).stream()
+			.collect(Collectors.toMap(User::getId, u -> u));
 	}
 }
