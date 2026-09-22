@@ -231,6 +231,15 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
+	@Override
+	public void sendAdminMessageEmail(String toEmail, String fullName, String title, String message) {
+		sendTemplateEmail(toEmail, "admin-message-email.html", Map.of(
+			"greetingName", greetingName(fullName),
+			"title", title,
+			"message", message
+		));
+	}
+
 	private String greetingName(String fullName) {
 		return StringUtils.isNotBlank(fullName) ? fullName : "there";
 	}

@@ -8,7 +8,9 @@ import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestApiController
 @RequestMapping("/notification")
@@ -22,6 +24,12 @@ public class NotificationController {
 	@GetMapping("/poll")
 	public Response<NotificationPollResDTO> poll() {
 		return notificationService.poll();
+	}
+
+	@Operation(summary = "Live stream of unread-count updates for the logged-in user (SSE)")
+	@GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public SseEmitter stream() {
+		return notificationService.stream();
 	}
 
 	@Operation(summary = "My notifications, newest first; pass the last id received as beforeId to load older ones")

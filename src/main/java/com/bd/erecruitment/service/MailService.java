@@ -36,4 +36,6 @@ public interface MailService {
 	void sendMcqTestAssignedEmail(String toEmail, String fullName, String jobTitle, String testName, int durationMinutes, String applicationLink);
 
 	void sendMcqTestResultEmail(String toEmail, String fullName, String jobTitle, String testName, int scorePercent, boolean passed, String applicationLink);
+
+	void sendAdminMessageEmail(String toEmail, String fullName, String title, String message);
 }
