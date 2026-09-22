@@ -38,6 +38,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Interview scheduling & feedback** — scheduling interviews against an application and recording structured interviewer feedback (`InterviewController`, `/interview`)
 - **Offers & offer letters** — creating and sending offers with a PDF offer letter (via the shared `HtmlToPdfRenderer`) and recording the candidate's response (`OfferController`, `/offer`)
 - **Onboarding tasks** — post-hire onboarding checklists tracked per candidate (`OnboardingTaskController`, `/onboarding-task`)
+- **In-app notifications & admin broadcast** — a generic per-user notification pipeline (`NotificationEvent` → `NotificationPublisher` → `NotificationListener`, async, after-commit) drives an unread-count badge and toasts across the app; delivered via poll (`/notification/poll`) and a live SSE stream (`/notification/stream`, `SseEmitterRegistry`, 20s heartbeat) so every notification type gets real-time push with no per-type code. Admins can also compose and send an ad-hoc notification — to all users, a role, or specific users, optionally also by email — gated by dedicated `notification-broadcast:read`/`write` permissions (`NotificationController`, `NotificationBroadcastController`, `/notification`, `/notification-broadcast`)
 - **Saved jobs & job alerts** — candidates can bookmark job circulars (`SavedJobController`, `/saved-job`) and configure alerts for new matching postings (`JobAlertController`, `/job-alert`)
 - **AI-assisted job posting** — "auto-fill by AI" drafts job posting fields from a short prompt via the Google Gemini API, with retry/backoff on transient failures (`JobPostingAiServiceImpl`)
 - **Recruitment analytics** — aggregate metrics across postings, applications, and hiring stages for dashboards (`AnalyticsController`, `/analytics`)
@@ -154,14 +155,18 @@ src/main/java/com/bd/erecruitment/
 │                        SystemConfig, PasswordPolicy, ExceptionLog, AuditLog, UserSession,
 │                        Profile, ArchiveConfig, Company, CompanyType, JobCircular,
 │                        RecruiterApplication, CandidateProfile, Application, Interview, Offer,
-│                        OnboardingTask, SavedJob, JobAlert, Analytics, Report)
+│                        OnboardingTask, Notification, NotificationBroadcast, SavedJob, JobAlert,
+│                        Analytics, Report)
 ├── service/             Business logic interfaces (incl. UserSessionService, GuestSessionTracker,
 │                        CvGenerationService)
 │   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher,
-│                          ArchiveConfigServiceImpl, JobPostingAiServiceImpl, HtmlToPdfRenderer)
+│                          ArchiveConfigServiceImpl, JobPostingAiServiceImpl, HtmlToPdfRenderer,
+│                          NotificationBroadcastServiceImpl, AdminMessageEmailSender)
 ├── retention/            Data archiving/retention engine (GenericArchiveEngine, ArchiveScheduler)
 ├── audit/               Audit action constants, AuditLogWriter (async), exemption annotations
 │                        (@AuditExempt, @AuditIgnore)
+├── notification/         Generic notification pipeline (NotificationEvent, NotificationPublisher,
+│                          NotificationListener, SseEmitterRegistry, NotificationHeartbeatScheduler)
 ├── repository/          Spring Data JPA repositories
 ├── entity/               JPA entities (incl. AuditLog, UserSession)
 ├── dto/

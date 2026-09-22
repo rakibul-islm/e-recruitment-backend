@@ -8,6 +8,7 @@ import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.exception.UnauthorizedException;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.notification.NotificationEvent;
+import com.bd.erecruitment.notification.SseEmitterRegistry;
 import com.bd.erecruitment.repository.NotificationRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.util.Response;
@@ -22,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -40,6 +42,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 
 	private final NotificationRepo notificationRepo;
 	private final UserRepo userRepo;
+	private final SseEmitterRegistry sseEmitterRegistry;
 	private final ObjectMapper paramsMapper = new ObjectMapper();
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -56,12 +59,27 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 				.setDedupeKey(event.dedupeKey());
 			notification.setCreatedBy(SYSTEM).setCreatedOn(now).setUpdatedBy(SYSTEM).setUpdatedOn(now).setDeleted(false);
 			notificationRepo.save(notification);
+			sseEmitterRegistry.push(recipientId, pollPayload(recipientId));
 		}
 	}
 
 	public Response<NotificationPollResDTO> poll() {
-		NotificationRepo.PollSummary summary = notificationRepo.summarize(currentUser().getId());
-		return getSuccessResponse("OK", new NotificationPollResDTO(summary.getUnreadCount(), summary.getLatestId(), new Date()));
+		return getSuccessResponse("OK", pollPayload(currentUser().getId()));
+	}
+
+	// Every existing and future NotificationType gets live SSE push for free through this one hook in
+	// create() - no per-type code needed. On (re)connect the same payload is sent immediately so a
+	// client is always correct regardless of events missed while disconnected.
+	public SseEmitter stream() {
+		Long userId = currentUser().getId();
+		SseEmitter emitter = sseEmitterRegistry.register(userId);
+		sseEmitterRegistry.push(userId, pollPayload(userId));
+		return emitter;
+	}
+
+	private NotificationPollResDTO pollPayload(Long userId) {
+		NotificationRepo.PollSummary summary = notificationRepo.summarize(userId);
+		return new NotificationPollResDTO(summary.getUnreadCount(), summary.getLatestId(), new Date());
 	}
 
 	public Response<NotificationResDTO> myList(Long beforeId, int size, boolean unreadOnly) {

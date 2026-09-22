@@ -112,7 +112,14 @@ public class PermissionData {
 			new PermissionDef("Delete Archive Config",  "archive-config:delete", "SYSTEM_CONFIG",  "archive-config-delete"),
 
 			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
-			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete")
+			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete"),
+
+			// Deliberately scoped under /notification-broadcast, not /notification: notification:read/write/delete
+			// are unconditionally allowed for any authenticated user (PermissionInterceptor.ALWAYS_ALLOWED, own
+			// notifications only) - a POST under /notification/* would be caught by that same bucket and bypass
+			// this permission entirely.
+			new PermissionDef("View Notification Broadcast", "notification-broadcast:read",  "NOTIFICATION", "notification-broadcast-list"),
+			new PermissionDef("Send Notification Broadcast", "notification-broadcast:write", "NOTIFICATION", "notification-broadcast-manage")
 		);
 	}
 }

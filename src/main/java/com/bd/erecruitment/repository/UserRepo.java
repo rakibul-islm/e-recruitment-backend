@@ -1,6 +1,7 @@
 package com.bd.erecruitment.repository;
 
 import com.bd.erecruitment.entity.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,17 @@ public interface UserRepo extends ServiceRepository<User> {
 	User findByEmail(String email);
 	User findByGoogleId(String googleId);
 	User findByActivationToken(String activationToken);
+
+	@Query("SELECT u.id FROM User u WHERE u.deleted = false AND u.active = true")
+	List<Long> findAllActiveIds();
+
+	@Query("SELECT DISTINCT u.id FROM User u JOIN u.roles r " +
+		   "WHERE u.deleted = false AND u.active = true AND r.id = :roleId AND r.deleted = false")
+	List<Long> findActiveIdsByRoleId(@Param("roleId") Long roleId);
+
+	@Query("SELECT u FROM User u WHERE u.deleted = false AND u.active = true AND " +
+		   "(LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+	List<User> searchActiveByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
 	// Fetches roles eagerly to avoid a separate lazy-load query from audit diffing or response mapping.
 	@Override
