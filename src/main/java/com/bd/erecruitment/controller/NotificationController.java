@@ -41,6 +41,12 @@ public class NotificationController {
 		return notificationService.myList(beforeId, size, unreadOnly);
 	}
 
+	@Operation(summary = "A single notification of the logged-in user")
+	@GetMapping("/{id}")
+	public Response<NotificationResDTO> findById(@PathVariable Long id) {
+		return notificationService.findById(id);
+	}
+
 	@Operation(summary = "Mark one notification as read")
 	@PutMapping("/{id}/read")
 	public Response<NotificationResDTO> markRead(@PathVariable Long id) {

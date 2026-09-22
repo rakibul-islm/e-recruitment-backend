@@ -36,7 +36,8 @@ public class Notification extends SequenceIdGenerator {
 	@Column(name = "action_route")
 	private String actionRoute;
 
-	@Column(name = "params_json", length = 2000)
+	// 4000 keeps this a plain VARCHAR2 on Oracle, same convention as JobCircular's jobRequirement.
+	@Column(name = "params_json", length = 4000)
 	private String paramsJson;
 
 	@Column(name = "dedupe_key", length = 150)
