@@ -3,6 +3,7 @@ package com.bd.erecruitment.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -45,6 +46,7 @@ public class RecruiterApplication extends SequenceIdGenerator {
 	private String message;
 
 	@Column(nullable = false, length = 20)
+	@Builder.Default
 	private String status = "PENDING";
 
 	@Column(length = 500)

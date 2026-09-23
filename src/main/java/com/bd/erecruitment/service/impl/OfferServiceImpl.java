@@ -4,6 +4,7 @@ import com.bd.erecruitment.dto.req.CreateOfferReqDto;
 import com.bd.erecruitment.dto.req.OfferResponseReqDto;
 import com.bd.erecruitment.dto.res.OfferResDTO;
 import com.bd.erecruitment.entity.*;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.enums.NotificationType;
@@ -44,13 +45,15 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 	private final MailService mailService;
 	private final OnboardingServiceImpl onboardingService;
 	private final NotificationPublisher notificationPublisher;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
 	public OfferServiceImpl(OfferRepo offerRepo, ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
 			JobCircularRepo jobCircularRepo, UserRepo userRepo, StorageService storageService, HtmlToPdfRenderer pdfRenderer,
-			MailService mailService, OnboardingServiceImpl onboardingService, NotificationPublisher notificationPublisher) {
+			MailService mailService, OnboardingServiceImpl onboardingService, NotificationPublisher notificationPublisher,
+			ExceptionLogWriter exceptionLogWriter) {
 		super(offerRepo);
 		this.offerRepo = offerRepo;
 		this.applicationRepo = applicationRepo;
@@ -62,6 +65,7 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 		this.mailService = mailService;
 		this.onboardingService = onboardingService;
 		this.notificationPublisher = notificationPublisher;
+		this.exceptionLogWriter = exceptionLogWriter;
 	}
 
 	@Transactional
@@ -131,6 +135,7 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 						frontendBaseUrl + "/my/applications/" + application.getId());
 				} catch (Exception e) {
 					log.warn("Failed to send offer email for offer {}: {}", offer.getId(), e.getMessage());
+					exceptionLogWriter.log(e, 0, e.getMessage(), "OfferServiceImpl.send:" + offer.getId());
 				}
 			}
 		}
@@ -256,6 +261,7 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 				frontendBaseUrl + "/application-management/" + application.getId());
 		} catch (Exception e) {
 			log.warn("Failed to send offer-response email for offer {}: {}", offer.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "OfferServiceImpl.notifyResponse:" + offer.getId());
 		}
 	}
 

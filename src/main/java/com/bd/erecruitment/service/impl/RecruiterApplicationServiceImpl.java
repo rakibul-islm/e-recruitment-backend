@@ -9,6 +9,7 @@ import com.bd.erecruitment.entity.Company;
 import com.bd.erecruitment.entity.RecruiterApplication;
 import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.enums.NotificationType;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.notification.NotificationPublisher;
@@ -42,10 +43,11 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 	private final UserService<UserResDTO, UserReqDto> userService;
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	public RecruiterApplicationServiceImpl(RecruiterApplicationRepo recruiterApplicationRepo, UserRepo userRepo,
 			RoleRepo roleRepo, CompanyRepo companyRepo, UserService<UserResDTO, UserReqDto> userService, MailService mailService,
-			NotificationPublisher notificationPublisher) {
+			NotificationPublisher notificationPublisher, ExceptionLogWriter exceptionLogWriter) {
 		super(recruiterApplicationRepo);
 		this.recruiterApplicationRepo = recruiterApplicationRepo;
 		this.userRepo = userRepo;
@@ -54,6 +56,7 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		this.userService = userService;
 		this.mailService = mailService;
 		this.notificationPublisher = notificationPublisher;
+		this.exceptionLogWriter = exceptionLogWriter;
 	}
 
 	@Override
@@ -174,24 +177,27 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		try {
 			notificationPublisher.notifyAuthority(WRITE_AUTHORITY, NotificationType.RECRUITER_APPLICATION_SUBMITTED,
 				"/recruiter-applications/" + application.getId(), "companyName", application.getCompanyName(), "applicantName", application.getFullName());
-		} catch (Exception ignored) {
+		} catch (Exception e) {
 			// Never fail the submission because of a notification problem.
+			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.notifyReviewers:" + application.getId());
 		}
 	}
 
 	private void sendReceivedEmail(RecruiterApplication application) {
 		try {
 			mailService.sendRecruiterApplicationReceivedEmail(application.getEmail(), application.getFullName(), application.getCompanyName());
-		} catch (Exception ignored) {
+		} catch (Exception e) {
 			// Never fail the submission because of an email delivery problem.
+			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.sendReceivedEmail:" + application.getId());
 		}
 	}
 
 	private void sendRejectedEmail(RecruiterApplication application) {
 		try {
 			mailService.sendRecruiterApplicationRejectedEmail(application.getEmail(), application.getFullName(), application.getReviewNote());
-		} catch (Exception ignored) {
+		} catch (Exception e) {
 			// Never fail the rejection because of an email delivery problem.
+			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.sendRejectedEmail:" + application.getId());
 		}
 	}
 

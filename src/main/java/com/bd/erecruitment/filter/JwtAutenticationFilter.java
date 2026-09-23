@@ -2,12 +2,14 @@ package com.bd.erecruitment.filter;
 
 import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.util.JwtUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAutenticationFilter extends OncePerRequestFilter {
@@ -39,8 +42,12 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 			jwt = authorizationHeader.substring(7);
 			try {
 				username = jwtUtil.extractUsername(jwt);
+			} catch (ExpiredJwtException ex) {
+				log.debug("JWT expired: {}", ex.getMessage());
+				request.setAttribute(JWT_ERROR_ATTRIBUTE, "Session expired. Please log in again.");
 			} catch (JwtException | IllegalArgumentException ex) {
-				request.setAttribute(JWT_ERROR_ATTRIBUTE, ex.getMessage());
+				log.debug("JWT rejected: {}", ex.getMessage());
+				request.setAttribute(JWT_ERROR_ATTRIBUTE, "Authentication failed. Please log in again.");
 			}
 		}
 

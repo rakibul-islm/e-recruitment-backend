@@ -1,5 +1,6 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.repository.UserRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 public class GoogleAvatarFetcher {
 
 	private final UserRepo userRepo;
+	private final ExceptionLogWriter exceptionLogWriter;
 	private final RestTemplate restTemplate = buildRestTemplate();
 
 	// Runs off the login request thread so a slow/large Google avatar download never delays sign-in.
@@ -27,6 +29,7 @@ public class GoogleAvatarFetcher {
 			});
 		} catch (Exception e) {
 			log.warn("Failed to fetch Google avatar for user {}: {}", userId, e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "GoogleAvatarFetcher.fetchAndStore:" + userId);
 		}
 	}
 

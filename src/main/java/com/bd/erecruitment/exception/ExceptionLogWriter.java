@@ -28,6 +28,8 @@ import java.util.UUID;
 public class ExceptionLogWriter {
 
 	private static final String EXCEPTION_LOG_CONFIG_KEY = "EXCEPTION_LOG_TO_DB";
+	// stack_trace column is a bounded varchar(32600); truncate to avoid the insert itself failing.
+	private static final int STACK_TRACE_MAX_LENGTH = 32000;
 
 	private final SystemConfigServiceImpl systemConfigService;
 	private final ExceptionLogRepo exceptionLogRepo;
@@ -48,6 +50,10 @@ public class ExceptionLogWriter {
 
 			StringWriter sw = new StringWriter();
 			ex.printStackTrace(new PrintWriter(sw));
+			String stackTrace = sw.toString();
+			if (stackTrace.length() > STACK_TRACE_MAX_LENGTH) {
+				stackTrace = stackTrace.substring(0, STACK_TRACE_MAX_LENGTH) + "\n... truncated";
+			}
 
 			Date now = new Date();
 			String terminal = RequestUtils.getClientTerminal();
@@ -58,7 +64,7 @@ public class ExceptionLogWriter {
 					.setRequestUri(context)
 					.setCorrelationId(MDC.get(CorrelationIdFilter.MDC_KEY))
 					.setMessage(message)
-					.setStackTrace(sw.toString())
+					.setStackTrace(stackTrace)
 					.setCreatedBy("system").setCreatedOn(now).setCreatedTerminal(terminal)
 					.setUpdatedBy("system").setUpdatedOn(now).setUpdatedTerminal(terminal)
 					.setDeleted(false);

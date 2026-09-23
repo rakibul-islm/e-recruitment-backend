@@ -5,6 +5,7 @@ import com.bd.erecruitment.dto.req.ApplyReqDto;
 import com.bd.erecruitment.dto.res.ApplicationResDTO;
 import com.bd.erecruitment.dto.res.ApplicationStatusHistoryResDTO;
 import com.bd.erecruitment.entity.*;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.enums.NotificationType;
@@ -54,6 +55,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	private final StorageService storageService;
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
@@ -61,7 +63,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	public ApplicationServiceImpl(ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
 			JobCircularRepo jobCircularRepo, UserRepo userRepo, CandidateProfileRepo candidateProfileRepo,
 			GeneratedCvRepo generatedCvRepo, StorageService storageService, MailService mailService,
-			NotificationPublisher notificationPublisher) {
+			NotificationPublisher notificationPublisher, ExceptionLogWriter exceptionLogWriter) {
 		super(applicationRepo);
 		this.applicationRepo = applicationRepo;
 		this.historyRepo = historyRepo;
@@ -72,6 +74,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		this.storageService = storageService;
 		this.mailService = mailService;
 		this.notificationPublisher = notificationPublisher;
+		this.exceptionLogWriter = exceptionLogWriter;
 	}
 
 	@Transactional
@@ -258,6 +261,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 			mailService.sendApplicationReceivedEmail(candidate.getUsername(), null, job.getJobTitle(), candidateApplicationLink(application.getId()));
 		} catch (Exception e) {
 			log.warn("Failed to send application-received email for job {}: {}", job.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "ApplicationServiceImpl.notifyApplicationReceived:" + job.getId());
 		}
 	}
 
@@ -271,6 +275,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 			mailService.sendNewApplicationEmail(job.getCreatedBy(), job.getJobTitle(), candidateName, recruiterApplicationLink(application.getId()));
 		} catch (Exception e) {
 			log.warn("Failed to send new-application email for job {}: {}", job.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "ApplicationServiceImpl.notifyNewApplication:" + job.getId());
 		}
 	}
 
@@ -285,6 +290,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 				job.getJobTitle(), application.getStatus(), null, candidateApplicationLink(application.getId()));
 		} catch (Exception e) {
 			log.warn("Failed to send status-changed email for application {}: {}", application.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "ApplicationServiceImpl.notifyStatusChanged:" + application.getId());
 		}
 	}
 

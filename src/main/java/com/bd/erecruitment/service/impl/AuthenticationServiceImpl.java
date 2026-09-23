@@ -174,6 +174,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			} catch (Exception e) {
 				// Non-fatal: don't leak SMTP failures, or it'd reveal whether the email exists.
 				log.error("Failed to send OTP email to {}", user.getEmail(), e);
+				exceptionLogWriter.log(e, 0, e.getMessage(), "AuthenticationServiceImpl.forgotPassword:" + user.getEmail());
 			}
 		}
 		// Same message either way, to avoid leaking account existence.

@@ -7,6 +7,7 @@ import com.bd.erecruitment.dto.res.McqAssignmentQuestionReviewDto;
 import com.bd.erecruitment.dto.res.McqTestAssignmentResDTO;
 import com.bd.erecruitment.dto.res.McqTestAttemptQuestionDto;
 import com.bd.erecruitment.entity.*;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.enums.NotificationType;
@@ -57,6 +58,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 	private final UserRepo userRepo;
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
@@ -65,7 +67,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 			McqTestAssignmentQuestionRepo mcqTestAssignmentQuestionRepo, McqTestRepo mcqTestRepo,
 			McqQuestionRepo mcqQuestionRepo, ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
 			JobCircularRepo jobCircularRepo, UserRepo userRepo, MailService mailService,
-			NotificationPublisher notificationPublisher) {
+			NotificationPublisher notificationPublisher, ExceptionLogWriter exceptionLogWriter) {
 		super(mcqTestAssignmentRepo);
 		this.mcqTestAssignmentRepo = mcqTestAssignmentRepo;
 		this.mcqTestAssignmentQuestionRepo = mcqTestAssignmentQuestionRepo;
@@ -77,6 +79,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		this.userRepo = userRepo;
 		this.mailService = mailService;
 		this.notificationPublisher = notificationPublisher;
+		this.exceptionLogWriter = exceptionLogWriter;
 	}
 
 	@Transactional
@@ -117,6 +120,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 			} catch (Exception ex) {
 				skipped++;
 				log.warn("[McqTestAssignmentServiceImpl] bulk assign skipped application {}: {}", applicationId, ex.getMessage());
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentServiceImpl.bulkAssign:" + applicationId);
 			}
 		}
 
@@ -456,6 +460,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 				test.getName(), assignment.getScorePercent(), passed, frontendBaseUrl + "/my/applications/" + application.getId());
 		} catch (Exception e) {
 			log.warn("Failed to send MCQ result email for assignment {}: {}", assignment.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "McqTestAssignmentServiceImpl.recordAndNotifySubmission:" + assignment.getId());
 		}
 	}
 
@@ -471,6 +476,7 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 				test.getName(), test.getDurationMinutes(), frontendBaseUrl + "/my/applications/" + application.getId());
 		} catch (Exception e) {
 			log.warn("Failed to send MCQ test-assigned email for assignment {}: {}", assignment.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "McqTestAssignmentServiceImpl.notifyAssigned:" + assignment.getId());
 		}
 	}
 

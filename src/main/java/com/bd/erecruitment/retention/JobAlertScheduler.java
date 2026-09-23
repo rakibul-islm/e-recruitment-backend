@@ -5,6 +5,7 @@ import com.bd.erecruitment.entity.JobAlert;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.enums.NotificationType;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.notification.NotificationPublisher;
 import com.bd.erecruitment.repository.JobAlertRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
@@ -35,6 +36,7 @@ public class JobAlertScheduler {
 	private final UserRepo userRepo;
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
@@ -47,6 +49,7 @@ public class JobAlertScheduler {
 				processAlert(alert);
 			} catch (Exception ex) {
 				log.error("[JobAlertScheduler] alert {}: failed: {}", alert.getId(), ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "JobAlertScheduler:" + alert.getId());
 			}
 		}
 	}

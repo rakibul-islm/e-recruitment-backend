@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
 		Response<Object> res = new Response<>();
 		res.setCode(code);
 		res.setSuccess(false);
-		res.setMessage(userMessage + " (Trace ID: " + traceId + ")");
+		res.setMessage(userMessage);
 		res.setTraceId(traceId);
 		return ResponseEntity.status(code).body(res);
 	}

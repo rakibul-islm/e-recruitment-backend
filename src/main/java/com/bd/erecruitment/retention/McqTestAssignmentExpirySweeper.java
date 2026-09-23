@@ -1,6 +1,7 @@
 package com.bd.erecruitment.retention;
 
 import com.bd.erecruitment.entity.McqTestAssignment;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.repository.McqTestAssignmentRepo;
 import com.bd.erecruitment.service.impl.McqTestAssignmentServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class McqTestAssignmentExpirySweeper {
 
 	private final McqTestAssignmentRepo mcqTestAssignmentRepo;
 	private final McqTestAssignmentServiceImpl mcqTestAssignmentService;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Scheduled(cron = "0 * * * * *")
 	public void runSweep() {
@@ -34,6 +36,7 @@ public class McqTestAssignmentExpirySweeper {
 				mcqTestAssignmentService.autoSubmitExpired(assignment.getId());
 			} catch (Exception ex) {
 				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed: {}", assignment.getId(), ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.autoSubmitExpired:" + assignment.getId());
 			}
 		}
 
@@ -45,6 +48,7 @@ public class McqTestAssignmentExpirySweeper {
 				mcqTestAssignmentService.expireUnstarted(assignment.getId());
 			} catch (Exception ex) {
 				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed to expire: {}", assignment.getId(), ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.expireUnstarted:" + assignment.getId());
 			}
 		}
 
@@ -56,6 +60,7 @@ public class McqTestAssignmentExpirySweeper {
 				mcqTestAssignmentService.autoAdvanceOrSubmitIfQuestionExpired(assignment.getId());
 			} catch (Exception ex) {
 				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed to auto-advance: {}", assignment.getId(), ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.autoAdvanceOrSubmit:" + assignment.getId());
 			}
 		}
 	}
