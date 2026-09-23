@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.OnboardingTask;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 public class OnboardingTaskResDTO extends BaseResponseDTO<OnboardingTask> {
 
 	public OnboardingTaskResDTO(OnboardingTask task) {
-		new ModelMapper().map(task, this);
+		ModelMapperUtils.MAPPER.map(task, this);
 	}
 
 	private Long applicationId;

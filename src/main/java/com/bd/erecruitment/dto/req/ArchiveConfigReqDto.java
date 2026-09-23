@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.ArchiveConfig;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -25,7 +26,7 @@ public class ArchiveConfigReqDto extends BaseRequestDTO<ArchiveConfig> {
 	@Override
 	public ArchiveConfig getBean() {
 		ArchiveConfig c = new ArchiveConfig();
-		new ModelMapper().map(this, c);
+		ModelMapperUtils.MAPPER.map(this, c);
 		return c;
 	}
 }

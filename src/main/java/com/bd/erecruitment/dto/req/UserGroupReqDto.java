@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.UserGroup;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Set;
 
@@ -22,7 +23,7 @@ public class UserGroupReqDto extends BaseRequestDTO<UserGroup> {
 	@Override
 	public UserGroup getBean() {
 		UserGroup g = new UserGroup();
-		new ModelMapper().map(this, g);
+		ModelMapperUtils.MAPPER.map(this, g);
 		return g;
 	}
 }

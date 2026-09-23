@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.Interview;
 import com.bd.erecruitment.entity.InterviewFeedbackItem;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +18,7 @@ import java.util.List;
 public class InterviewResDTO extends BaseResponseDTO<Interview> {
 
 	public InterviewResDTO(Interview interview) {
-		new ModelMapper().map(interview, this);
+		ModelMapperUtils.MAPPER.map(interview, this);
 	}
 
 	private Long applicationId;

@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.McqTest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 public class McqTestResDTO extends BaseResponseDTO<McqTest> {
 
 	public McqTestResDTO(McqTest test) {
-		new ModelMapper().map(test, this);
+		ModelMapperUtils.MAPPER.map(test, this);
 		this.questionCount = test.getQuestionIds() != null ? test.getQuestionIds().size() : 0;
 	}
 

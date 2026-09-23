@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,7 @@ public class CandidateProfileReqDto extends BaseRequestDTO<CandidateProfile> {
 	@Override
 	public CandidateProfile getBean() {
 		CandidateProfile p = new CandidateProfile();
-		new ModelMapper().map(this, p);
+		ModelMapperUtils.MAPPER.map(this, p);
 		return p;
 	}
 }

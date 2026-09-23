@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Set;
 
@@ -23,7 +24,7 @@ public class RoleReqDto extends BaseRequestDTO<Role> {
 	@Override
 	public Role getBean() {
 		Role r = new Role();
-		new ModelMapper().map(this, r);
+		ModelMapperUtils.MAPPER.map(this, r);
 		return r;
 	}
 }

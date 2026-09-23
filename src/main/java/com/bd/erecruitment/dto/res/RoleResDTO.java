@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.Role;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,7 +21,7 @@ public class RoleResDTO extends BaseResponseDTO<Role> {
 	private Set<PermissionResDTO> permissions;
 
 	public RoleResDTO(Role role) {
-		new ModelMapper().map(role, this);
+		ModelMapperUtils.MAPPER.map(role, this);
 		if (role.getPermissions() != null)
 			this.permissions = role.getPermissions().stream()
 				.map(PermissionResDTO::new)

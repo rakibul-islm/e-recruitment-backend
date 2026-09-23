@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class UserSignupReqDto extends BaseRequestDTO<User> {
 	@Override
 	public User getBean() {
 		User u = new User();
-		new ModelMapper().map(this, u);
+		ModelMapperUtils.MAPPER.map(this, u);
 		return u;
 	}
 

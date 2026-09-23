@@ -222,6 +222,8 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return getSuccessResponse("Assignment found", toDto(assignment, null));
 	}
 
+	// @Transactional: toAttemptDto/toReviewDto read each row's lazy `options` element collection.
+	@Transactional
 	public Response<Object> getQuestions(Long id) {
 		McqTestAssignment assignment = getOwnedOrStaffAssignment(id);
 		MyUserDetail me = getLoggedInUserDetails();

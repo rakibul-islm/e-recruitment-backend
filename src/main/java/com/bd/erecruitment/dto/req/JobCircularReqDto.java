@@ -1,5 +1,7 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.JobCircular;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Temporal;
@@ -7,7 +9,6 @@ import jakarta.persistence.TemporalType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -45,7 +46,7 @@ public class JobCircularReqDto extends BaseRequestDTO<JobCircular> {
 	@Override
 	public JobCircular getBean() {
 		JobCircular u = new JobCircular();
-		new ModelMapper().map(this, u);
+		ModelMapperUtils.MAPPER.map(this, u);
 		return u;
 	}
 
