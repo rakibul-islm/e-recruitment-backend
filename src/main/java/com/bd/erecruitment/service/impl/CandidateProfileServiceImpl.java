@@ -41,6 +41,7 @@ public class CandidateProfileServiceImpl {
 	@Autowired
 	private CandidateProfileServiceImpl self;
 
+	@Transactional
 	public Response<CandidateProfileResDTO> getMyProfile() {
 		CandidateProfile profile = getOrCreateProfile(currentUserId());
 		return getSuccess("Profile found", new CandidateProfileResDTO(profile));

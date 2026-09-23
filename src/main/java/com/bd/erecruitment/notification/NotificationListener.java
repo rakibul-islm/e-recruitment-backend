@@ -1,5 +1,6 @@
 package com.bd.erecruitment.notification;
 
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.service.impl.NotificationServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class NotificationListener {
 
 	private final NotificationServiceImpl notificationService;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Async("notificationExecutor")
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -22,6 +24,7 @@ public class NotificationListener {
 			notificationService.create(event);
 		} catch (Exception e) {
 			log.warn("Failed to create {} notification: {}", event.type(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "NotificationListener.on:" + event.type());
 		}
 	}
 }

@@ -7,6 +7,7 @@ import com.bd.erecruitment.entity.McqTest;
 import com.bd.erecruitment.entity.McqTestAssignment;
 import com.bd.erecruitment.entity.OnboardingTask;
 import com.bd.erecruitment.enums.NotificationType;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.notification.NotificationEvent;
 import com.bd.erecruitment.repository.ApplicationRepo;
 import com.bd.erecruitment.repository.InterviewRepo;
@@ -48,6 +49,7 @@ public class NotificationReminderScheduler {
 	private final ApplicationRepo applicationRepo;
 	private final OnboardingTaskRepo onboardingTaskRepo;
 	private final NotificationServiceImpl notificationService;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Scheduled(cron = "0 */5 * * * *")
 	public void run() {
@@ -137,6 +139,7 @@ public class NotificationReminderScheduler {
 				action.accept(row);
 			} catch (Exception e) {
 				log.warn("[NotificationReminderScheduler] {} failed: {}", row.getClass().getSimpleName(), e.getMessage(), e);
+				exceptionLogWriter.log(e, 0, e.getMessage(), "NotificationReminderScheduler:" + row.getClass().getSimpleName());
 			}
 		}
 	}
@@ -146,6 +149,7 @@ public class NotificationReminderScheduler {
 			action.run();
 		} catch (Exception e) {
 			log.error("[NotificationReminderScheduler] {} reminders failed: {}", label, e.getMessage(), e);
+			exceptionLogWriter.log(e, 0, e.getMessage(), "NotificationReminderScheduler:" + label);
 		}
 	}
 

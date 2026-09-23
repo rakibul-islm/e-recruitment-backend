@@ -4,6 +4,7 @@ import com.bd.erecruitment.dto.req.InterviewFeedbackReqDto;
 import com.bd.erecruitment.dto.req.ScheduleInterviewReqDto;
 import com.bd.erecruitment.dto.res.InterviewResDTO;
 import com.bd.erecruitment.entity.*;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.enums.NotificationType;
@@ -43,13 +44,14 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 	private final UserRepo userRepo;
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
 	public InterviewServiceImpl(InterviewRepo interviewRepo, ApplicationRepo applicationRepo,
 			ApplicationStatusHistoryRepo historyRepo, JobCircularRepo jobCircularRepo, UserRepo userRepo,
-			MailService mailService, NotificationPublisher notificationPublisher) {
+			MailService mailService, NotificationPublisher notificationPublisher, ExceptionLogWriter exceptionLogWriter) {
 		super(interviewRepo);
 		this.interviewRepo = interviewRepo;
 		this.applicationRepo = applicationRepo;
@@ -58,6 +60,7 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		this.userRepo = userRepo;
 		this.mailService = mailService;
 		this.notificationPublisher = notificationPublisher;
+		this.exceptionLogWriter = exceptionLogWriter;
 	}
 
 	@Transactional
@@ -221,6 +224,7 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 				frontendBaseUrl + "/my/applications/" + application.getId());
 		} catch (Exception e) {
 			log.warn("Failed to send interview-scheduled email for interview {}: {}", interview.getId(), e.getMessage());
+			exceptionLogWriter.log(e, 0, e.getMessage(), "InterviewServiceImpl.notifyScheduled:" + interview.getId());
 		}
 	}
 }

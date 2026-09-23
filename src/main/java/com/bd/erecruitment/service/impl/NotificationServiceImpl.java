@@ -4,6 +4,7 @@ import com.bd.erecruitment.dto.res.NotificationPollResDTO;
 import com.bd.erecruitment.dto.res.NotificationResDTO;
 import com.bd.erecruitment.entity.Notification;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.exception.UnauthorizedException;
 import com.bd.erecruitment.model.MyUserDetail;
@@ -46,6 +47,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	private final NotificationRepo notificationRepo;
 	private final UserRepo userRepo;
 	private final SseEmitterRegistry sseEmitterRegistry;
+	private final ExceptionLogWriter exceptionLogWriter;
 	private final ObjectMapper paramsMapper = new ObjectMapper();
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -152,6 +154,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 		try {
 			return paramsMapper.writeValueAsString(trimmed);
 		} catch (JsonProcessingException e) {
+			exceptionLogWriter.log(e, 0, e.getMessage(), "NotificationServiceImpl.toJson");
 			return "{}";
 		}
 	}
@@ -165,6 +168,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 		try {
 			return paramsMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
 		} catch (JsonProcessingException e) {
+			exceptionLogWriter.log(e, 0, e.getMessage(), "NotificationServiceImpl.fromJson");
 			return Map.of();
 		}
 	}

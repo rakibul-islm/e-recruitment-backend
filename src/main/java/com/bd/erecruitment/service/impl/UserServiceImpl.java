@@ -11,6 +11,7 @@ import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.RoleRepo;
 import com.bd.erecruitment.repository.UserRepo;
@@ -49,6 +50,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	private final PasswordPolicyService passwordPolicyService;
 	private final MailService mailService;
 	private final OtpService otpService;
+	private final ExceptionLogWriter exceptionLogWriter;
 
 	@Value("${app.otp.expiry-minutes:10}")
 	private long otpExpiryMinutes;
@@ -60,7 +62,8 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	private long activationExpiryHours;
 
 	public UserServiceImpl(UserRepo userRepo, BCryptPasswordEncoder encoder, RoleRepo roleRepo,
-			PasswordPolicyService passwordPolicyService, MailService mailService, OtpService otpService) {
+			PasswordPolicyService passwordPolicyService, MailService mailService, OtpService otpService,
+			ExceptionLogWriter exceptionLogWriter) {
 		super(userRepo);
 		this.userRepo = userRepo;
 		this.encoder = encoder;
@@ -68,6 +71,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		this.passwordPolicyService = passwordPolicyService;
 		this.mailService = mailService;
 		this.otpService = otpService;
+		this.exceptionLogWriter = exceptionLogWriter;
 		// PropertyMap.skip() avoids ModelMapper triggering a lazy load of roles here.
 		modelMapper.addMappings(new PropertyMap<User, UserResDTO>() {
 			@Override
@@ -137,6 +141,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 			mailService.sendChangePasswordOtpEmail(user.getEmail(), user.getFullName(), otp, otpExpiryMinutes);
 		} catch (Exception e) {
 			log.error("Failed to send change-password OTP email to {}", user.getEmail(), e);
+			exceptionLogWriter.log(e, 0, e.getMessage(), "UserServiceImpl.requestChangePasswordOtp:" + user.getEmail());
 		}
 		return getSuccessResponse("An OTP has been sent to your email");
 	}
@@ -194,6 +199,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 			mailService.sendAccountSetupEmail(user.getEmail(), user.getFullName(), link, activationExpiryHours);
 		} catch (Exception e) {
 			log.error("Failed to send account setup email to {}", user.getEmail(), e);
+			exceptionLogWriter.log(e, 0, e.getMessage(), "UserServiceImpl.sendAccountSetupEmail:" + user.getEmail());
 		}
 	}
 
@@ -265,6 +271,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 			mailService.sendSignupOtpEmail(user.getEmail(), user.getFullName(), otp, otpExpiryMinutes);
 		} catch (Exception e) {
 			log.error("Failed to send signup OTP email to {}", user.getEmail(), e);
+			exceptionLogWriter.log(e, 0, e.getMessage(), "UserServiceImpl.sendSignupOtp:" + user.getEmail());
 		}
 	}
 
