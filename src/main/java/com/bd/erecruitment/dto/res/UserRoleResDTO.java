@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.Role;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -16,6 +17,6 @@ public class UserRoleResDTO extends BaseResponseDTO<Role> {
 	private String description;
 
 	public UserRoleResDTO(Role role) {
-		new ModelMapper().map(role, this);
+		ModelMapperUtils.MAPPER.map(role, this);
 	}
 }

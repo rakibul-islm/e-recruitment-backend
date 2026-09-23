@@ -105,11 +105,14 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		applicationRepo.save(application);
 	}
 
+	// @Transactional: InterviewResDTO reads the lazy `feedback`/`interviewerUserIds` element collections.
+	@Transactional
 	public Response<InterviewResDTO> find(Long id) {
 		Interview interview = getOwnedOrStaffInterview(id);
 		return getSuccessResponse("Interview found", toDto(interview, null, null));
 	}
 
+	@Transactional
 	public Response<InterviewResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		requireStaff("view interviews");
 		Specification<Interview> spec = com.bd.erecruitment.specification.GenericSpecification.build(filters);
@@ -121,6 +124,7 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
+	@Transactional
 	public Response<InterviewResDTO> findByApplication(Long applicationId) {
 		getOwnedOrStaffApplication(applicationId);
 		List<InterviewResDTO> list = interviewRepo.findAllByApplicationIdAndDeletedOrderByScheduledAtAsc(applicationId, false)

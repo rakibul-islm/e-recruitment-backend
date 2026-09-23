@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.JobAlert;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 public class JobAlertResDTO extends BaseResponseDTO<JobAlert> {
 
 	public JobAlertResDTO(JobAlert jobAlert) {
-		new ModelMapper().map(jobAlert, this);
+		ModelMapperUtils.MAPPER.map(jobAlert, this);
 	}
 
 	private String keyword;

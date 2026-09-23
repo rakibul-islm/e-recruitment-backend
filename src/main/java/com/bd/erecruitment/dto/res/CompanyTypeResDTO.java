@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.CompanyType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -12,7 +13,7 @@ import org.modelmapper.ModelMapper;
 public class CompanyTypeResDTO extends BaseResponseDTO<CompanyType> {
 
 	public CompanyTypeResDTO(CompanyType companyType) {
-		new ModelMapper().map(companyType, this);
+		ModelMapperUtils.MAPPER.map(companyType, this);
 	}
 
 	private String name;

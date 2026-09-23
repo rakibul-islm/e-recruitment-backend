@@ -1,12 +1,13 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.JobCircular;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -16,7 +17,7 @@ import java.util.Date;
 public class JobCircularResDTO extends BaseResponseDTO<JobCircular>{
 
 	public JobCircularResDTO(JobCircular jobCircular){
-		new ModelMapper().map(jobCircular, this);
+		ModelMapperUtils.MAPPER.map(jobCircular, this);
 	}
 
 	private String jobTitle;

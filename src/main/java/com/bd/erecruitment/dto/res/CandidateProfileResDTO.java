@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 public class CandidateProfileResDTO extends BaseResponseDTO<CandidateProfile> {
 
 	public CandidateProfileResDTO(CandidateProfile profile) {
-		new ModelMapper().map(profile, this);
+		ModelMapperUtils.MAPPER.map(profile, this);
 	}
 
 	private Long userId;

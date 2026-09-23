@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.User;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 public class UserProfileResDTO{
 
 	public UserProfileResDTO(User user){
-		new ModelMapper().map(user, this);
+		ModelMapperUtils.MAPPER.map(user, this);
 		if (user.getRoles() != null)
 			this.roles = user.getRoles().stream()
 				.map(UserRoleResDTO::new)

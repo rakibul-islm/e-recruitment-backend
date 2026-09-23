@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.McqTestAssignment;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -16,7 +17,7 @@ import java.util.Date;
 public class McqTestAssignmentResDTO extends BaseResponseDTO<McqTestAssignment> {
 
 	public McqTestAssignmentResDTO(McqTestAssignment assignment) {
-		new ModelMapper().map(assignment, this);
+		ModelMapperUtils.MAPPER.map(assignment, this);
 	}
 
 	private Long applicationId;

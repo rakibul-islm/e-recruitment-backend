@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.PasswordPolicy;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -24,7 +25,7 @@ public class PasswordPolicyReqDto extends BaseRequestDTO<PasswordPolicy> {
 	@Override
 	public PasswordPolicy getBean() {
 		PasswordPolicy p = new PasswordPolicy();
-		new ModelMapper().map(this, p);
+		ModelMapperUtils.MAPPER.map(this, p);
 		return p;
 	}
 }

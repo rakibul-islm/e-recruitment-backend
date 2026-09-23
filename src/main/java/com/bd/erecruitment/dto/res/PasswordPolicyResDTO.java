@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.PasswordPolicy;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -20,6 +21,6 @@ public class PasswordPolicyResDTO extends BaseResponseDTO<PasswordPolicy> {
 	private boolean disallowUserInfoInPassword;
 
 	public PasswordPolicyResDTO(PasswordPolicy policy) {
-		new ModelMapper().map(policy, this);
+		ModelMapperUtils.MAPPER.map(policy, this);
 	}
 }

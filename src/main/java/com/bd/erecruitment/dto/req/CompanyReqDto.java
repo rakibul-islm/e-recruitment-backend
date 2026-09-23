@@ -1,11 +1,12 @@
 package com.bd.erecruitment.dto.req;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.Company;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +27,7 @@ public class CompanyReqDto extends BaseRequestDTO<Company> {
 	@Override
 	public Company getBean() {
 		Company c = new Company();
-		new ModelMapper().map(this, c);
+		ModelMapperUtils.MAPPER.map(this, c);
 		return c;
 	}
 }

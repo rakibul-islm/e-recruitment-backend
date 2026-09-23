@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.Permission;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -18,6 +19,6 @@ public class PermissionResDTO extends BaseResponseDTO<Permission> {
 	private String module;
 
 	public PermissionResDTO(Permission p) {
-		new ModelMapper().map(p, this);
+		ModelMapperUtils.MAPPER.map(p, this);
 	}
 }

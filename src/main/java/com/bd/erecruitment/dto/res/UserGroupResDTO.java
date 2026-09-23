@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.UserGroup;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ public class UserGroupResDTO extends BaseResponseDTO<UserGroup> {
 	private Set<RoleResDTO> roles;
 
 	public UserGroupResDTO(UserGroup group) {
-		new ModelMapper().map(group, this);
+		ModelMapperUtils.MAPPER.map(group, this);
 		if (group.getRoles() != null)
 			this.roles = group.getRoles().stream()
 				.map(RoleResDTO::new)

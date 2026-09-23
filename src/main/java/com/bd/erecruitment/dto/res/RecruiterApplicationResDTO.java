@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.RecruiterApplication;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 public class RecruiterApplicationResDTO extends BaseResponseDTO<RecruiterApplication> {
 
 	public RecruiterApplicationResDTO(RecruiterApplication application) {
-		new ModelMapper().map(application, this);
+		ModelMapperUtils.MAPPER.map(application, this);
 	}
 
 	private String fullName;

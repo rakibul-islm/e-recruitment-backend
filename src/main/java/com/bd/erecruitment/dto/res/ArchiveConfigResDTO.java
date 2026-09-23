@@ -1,10 +1,11 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.ArchiveConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 @Data
 @NoArgsConstructor
@@ -21,6 +22,6 @@ public class ArchiveConfigResDTO extends BaseResponseDTO<ArchiveConfig> {
 	private String whereCondition;
 
 	public ArchiveConfigResDTO(ArchiveConfig config) {
-		new ModelMapper().map(config, this);
+		ModelMapperUtils.MAPPER.map(config, this);
 	}
 }

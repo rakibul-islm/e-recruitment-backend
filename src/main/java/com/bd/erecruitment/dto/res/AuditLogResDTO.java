@@ -1,12 +1,13 @@
 package com.bd.erecruitment.dto.res;
 
+import com.bd.erecruitment.util.ModelMapperUtils;
+
 import com.bd.erecruitment.entity.AuditLog;
 import com.bd.erecruitment.enums.AuditCategory;
 import com.bd.erecruitment.enums.AuditOutcome;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.modelmapper.ModelMapper;
 
 import java.util.Date;
 
@@ -30,6 +31,6 @@ public class AuditLogResDTO extends BaseResponseDTO<AuditLog> {
 	private Date createdOn;
 
 	public AuditLogResDTO(AuditLog log) {
-		new ModelMapper().map(log, this);
+		ModelMapperUtils.MAPPER.map(log, this);
 	}
 }

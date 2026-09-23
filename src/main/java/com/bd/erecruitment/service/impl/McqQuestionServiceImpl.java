@@ -28,6 +28,8 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 		super(mcqQuestionRepo);
 	}
 
+	// @Transactional: McqQuestionResDTO reads the lazy `options` element collection.
+	@Transactional
 	@Override
 	public Response<McqQuestionResDTO> find(Long id) {
 		McqQuestion question = findByIdOrThrow(id, "Question not found");
@@ -95,6 +97,7 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 		return getSuccessResponse("Removed successfully");
 	}
 
+	@Transactional
 	@Override
 	public Response<McqQuestionResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		if (isScopedRecruiter()) {

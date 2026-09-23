@@ -32,6 +32,8 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 		this.mcqQuestionRepo = mcqQuestionRepo;
 	}
 
+	// @Transactional: McqTestResDTO reads the lazy `questionIds` element collection.
+	@Transactional
 	@Override
 	public Response<McqTestResDTO> find(Long id) {
 		McqTest test = findByIdOrThrow(id, "Test not found");
@@ -94,6 +96,7 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 		return getSuccessResponse("Removed successfully");
 	}
 
+	@Transactional
 	@Override
 	public Response<McqTestResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		if (isScopedRecruiter()) {
