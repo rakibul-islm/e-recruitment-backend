@@ -9,6 +9,7 @@ import com.bd.erecruitment.dto.res.UserSessionResDTO;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.entity.UserSession;
 import com.bd.erecruitment.enums.AuditOutcome;
+import com.bd.erecruitment.notification.SseEmitterRegistry;
 import com.bd.erecruitment.repository.UserSessionRepo;
 import com.bd.erecruitment.service.BaseService;
 import com.bd.erecruitment.service.GuestSessionTracker;
@@ -40,6 +41,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 
 	@Autowired private GuestSessionTracker guestSessionTracker;
 	@Autowired private AuditLogWriter auditLogWriter;
+	@Autowired private SseEmitterRegistry sseEmitterRegistry;
 
 	private final UserSessionRepo userSessionRepo;
 
@@ -93,6 +95,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	public Response<Object> forceLogoutUser(Long userId) {
 		List<UserSession> sessions = userSessionRepo.findAllByUser_IdAndRevokedFalse(userId);
 		sessions.forEach(this::revoke);
+		notifyForceLogout(userId);
 		auditLogWriter.logSecurity(AuditAction.FORCE_LOGOUT, AuditOutcome.SUCCESS);
 		return getSuccessResponse("Logged out " + sessions.size() + " active session(s)");
 	}
@@ -102,6 +105,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	public Response<Object> forceLogoutAll() {
 		List<UserSession> sessions = userSessionRepo.findAllByRevokedFalseAndDeletedFalseAndExpiresAtAfter(new Date());
 		sessions.forEach(this::revoke);
+		sessions.stream().map(s -> s.getUser().getId()).distinct().forEach(this::notifyForceLogout);
 		auditLogWriter.logSecurity(AuditAction.FORCE_LOGOUT, AuditOutcome.SUCCESS);
 		return getSuccessResponse("Logged out " + sessions.size() + " active session(s)");
 	}
@@ -139,6 +143,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	public Response<UserSessionResDTO> remove(Long id) {
 		UserSession session = findByIdOrThrow(id, "Session not found");
 		revoke(session);
+		notifyForceLogout(session.getUser().getId());
 		return getSuccessResponse("Session logged out successfully", new UserSessionResDTO(session));
 	}
 
@@ -187,5 +192,10 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		session.setRevoked(true).setRevokedAt(new Date()).setRevokedBy(actor);
 		userSessionRepo.save(session);
 		revokedJtiCache.add(session.getJti());
+	}
+
+	// Not called from logoutCurrentSession - that's self-service, no push needed
+	private void notifyForceLogout(Long userId) {
+		sseEmitterRegistry.push(userId, "force-logout", Map.of("reason", "force-logout"));
 	}
 }

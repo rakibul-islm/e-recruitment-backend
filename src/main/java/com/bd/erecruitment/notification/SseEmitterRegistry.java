@@ -34,12 +34,16 @@ public class SseEmitterRegistry {
 	}
 
 	public void push(Long userId, Object payload) {
+		push(userId, "sync", payload);
+	}
+
+	public void push(Long userId, String eventName, Object payload) {
 		List<SseEmitter> emitters = emittersByUser.get(userId);
 		if (emitters == null || emitters.isEmpty()) return;
 
 		for (SseEmitter emitter : emitters) {
 			try {
-				emitter.send(SseEmitter.event().name("sync").data(payload));
+				emitter.send(SseEmitter.event().name(eventName).data(payload));
 			} catch (IOException | IllegalStateException e) {
 				emitter.complete();
 			}
