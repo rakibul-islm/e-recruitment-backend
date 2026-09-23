@@ -117,6 +117,8 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		return getSuccessResponse("Logged out successfully");
 	}
 
+	// @Transactional: UserSessionResDTO's constructor reads the lazy `user` association.
+	@Transactional
 	@Override
 	public Response<UserSessionResDTO> findByUser(Long userId) {
 		List<UserSessionResDTO> dtos = userSessionRepo.findAllByUser_IdOrderByIdDesc(userId).stream()
@@ -132,6 +134,8 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, distinctActiveUsers, guestSessionTracker.activeCount()));
 	}
 
+	// @Transactional: UserSessionResDTO's constructor reads the lazy `user` association.
+	@Transactional
 	@Override
 	public Response<UserSessionResDTO> find(Long id) {
 		if (id == null) returnErrorException("Id required");
@@ -151,6 +155,8 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	// status is a computed combination of revoked + expiresAt, and email lives on the related
 	// User — so both are pulled out of the generic filter map and applied as extra predicates
 	// instead of going through GenericSpecification's plain-column matching.
+	// @Transactional: UserSessionResDTO pulls userEmail/userFullName off the lazy `user` association.
+	@Transactional
 	@Override
 	public Response<UserSessionResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		Map<String, String> remaining = new HashMap<>(filters);

@@ -45,7 +45,7 @@ public class SseEmitterRegistry {
 			try {
 				emitter.send(SseEmitter.event().name(eventName).data(payload));
 			} catch (IOException | IllegalStateException e) {
-				emitter.complete();
+				completeQuietly(emitter);
 			}
 		}
 	}
@@ -55,8 +55,16 @@ public class SseEmitterRegistry {
 			try {
 				emitter.send(SseEmitter.event().comment("ping"));
 			} catch (IOException | IllegalStateException e) {
-				emitter.complete();
+				completeQuietly(emitter);
 			}
 		});
+	}
+
+	// complete() can throw on an already-errored emitter; that must not fail unrelated pushes.
+	private void completeQuietly(SseEmitter emitter) {
+		try {
+			emitter.complete();
+		} catch (IllegalStateException ignored) {
+		}
 	}
 }

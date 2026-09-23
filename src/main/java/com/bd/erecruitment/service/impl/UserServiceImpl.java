@@ -96,6 +96,8 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("User found", new UserResDTO(findByIdOrThrow(id, "User not found")));
 	}
 
+	// @Transactional: UserProfileResDTO's constructor reads the lazy `roles` association.
+	@Transactional
 	@Override
 	public Response<UserProfileResDTO> userProfile() {
 		User user = findByIdOrThrow(getLoggedInUserDetails().getId(), "User not found");
