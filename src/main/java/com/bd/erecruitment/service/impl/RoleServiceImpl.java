@@ -67,6 +67,8 @@ public class RoleServiceImpl extends AbstractBaseService<Role> implements BaseSe
 		return getSuccessResponse("Removed successfully");
 	}
 
+	// @Transactional: RoleResDTO pulls permissions off the lazy `permissions` association.
+	@Transactional
 	@Override
 	public Response<RoleResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		return genericFilter(filters, pageable, isPageable, RoleResDTO.class);
