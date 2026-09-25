@@ -37,8 +37,6 @@ public class CompanyTypeServiceImpl extends AbstractBaseService<CompanyType> imp
 		companyTypeRepo.findFirstByNameIgnoreCaseAndDeleted(reqDto.getName(), false)
 			.ifPresent(existing -> returnErrorException("This company type already exists"));
 
-		// POST /company-type is public (recruiter registration form's "add new type" dialog), so the
-		// caller may be anonymous - don't assume a logged-in actor like createEntity(entity) does.
 		CompanyType companyType = createEntity(reqDto.getBean(), currentActorOrSystem());
 		return getCreatedResponse("Company type saved successfully", new CompanyTypeResDTO(companyType));
 	}

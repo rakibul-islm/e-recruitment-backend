@@ -18,9 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-// A plain recruiter (isScopedRecruiter()) may only see/manage their own company's bank questions -
-// same rule and reasoning as JobCircularServiceImpl. Candidates never reach this service at all
-// (no mcq-question:* authority is granted to REGISTERED_USER - see RoleData).
 @Service
 public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> implements BaseService<McqQuestionResDTO, McqQuestionReqDto> {
 
@@ -28,7 +25,6 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 		super(mcqQuestionRepo);
 	}
 
-	// @Transactional: McqQuestionResDTO reads the lazy `options` element collection.
 	@Transactional
 	@Override
 	public Response<McqQuestionResDTO> find(Long id) {

@@ -28,8 +28,6 @@ public class ApplicationResDTO extends BaseResponseDTO<Application> {
 	private Date statusUpdatedOn;
 	private String statusUpdatedBy;
 
-	// Denormalized display fields, populated by ApplicationServiceImpl - avoids a second round
-	// trip from the frontend for the job title / candidate name shown on list & detail screens.
 	private String jobTitle;
 	private String candidateName;
 	private String candidateEmail;

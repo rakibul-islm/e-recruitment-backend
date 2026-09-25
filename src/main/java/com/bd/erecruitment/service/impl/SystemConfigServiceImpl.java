@@ -20,7 +20,6 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 
 	private final SystemConfigRepo systemConfigRepo;
 
-	// Lazily filled, kept in sync on every write below; caches Optional so a missing key is cached too.
 	private final Map<String, Optional<SystemConfig>> configCache = new ConcurrentHashMap<>();
 
 	SystemConfigServiceImpl(SystemConfigRepo systemConfigRepo) {

@@ -15,7 +15,6 @@ public interface ApplicationRepo extends ServiceRepository<Application> {
 
 	Optional<Application> findByJobCircularIdAndCandidateUserIdAndDeleted(Long jobCircularId, Long candidateUserId, boolean deleted);
 
-	// Used by AnalyticsServiceImpl for the recruitment funnel/summary.
 	List<Application> findAllByDeleted(boolean deleted);
 
 	List<Application> findAllByJobCircularIdAndDeleted(Long jobCircularId, boolean deleted);
@@ -27,7 +26,6 @@ public interface ApplicationRepo extends ServiceRepository<Application> {
 	@Query("SELECT a.status, COUNT(a) FROM Application a WHERE a.deleted = false GROUP BY a.status")
 	List<Object[]> countGroupByStatus();
 
-	// Batches the job-posting report's applicant count instead of one query per job row.
 	@Query("SELECT a.jobCircularId, COUNT(a) FROM Application a WHERE a.jobCircularId IN :jobCircularIds AND a.deleted = false GROUP BY a.jobCircularId")
 	List<Object[]> countGroupByJobCircularIdIn(List<Long> jobCircularIds);
 }

@@ -23,23 +23,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.Date;
 import java.util.concurrent.Executor;
 
-/**
- * Central point for persisting audit events to the AUDIT_LOG table, gated by the
- * AUDIT_LOG_ENABLED system config (Y/N). Entity-CRUD writes are captured on the calling thread
- * (request-scoped context isn't available in the background) but the actual DB write is deferred
- * to a bounded executor and only submitted after the enclosing transaction commits, so auditing
- * never adds request latency and rolled-back changes never produce an audit row. Hard delete is
- * the one exception, written synchronously via {@link #logEntitySync}, because an irreversible
- * action can't be fire-and-forget.
- * <p>
- * {@code systemConfigService} is {@code @Lazy}: every {@code AbstractBaseService} subclass
- * (including {@code SystemConfigServiceImpl} itself) holds a reference to this writer, so an
- * eager dependency back on {@code SystemConfigServiceImpl} would form a cycle — and Spring Boot
- * disables circular-reference resolution by default. {@code @Lazy} injects a deferred proxy
- * instead, resolved on first actual use, which breaks the cycle at startup. Declared on an
- * explicit constructor (not Lombok's @RequiredArgsConstructor) since Lombok's field-to-parameter
- * annotation copying isn't reliable for @Lazy.
- */
 @Slf4j
 @Component
 public class AuditLogWriter {
@@ -50,6 +33,7 @@ public class AuditLogWriter {
 	private final AuditLogRepo auditLogRepo;
 	private final Executor auditLogExecutor;
 
+	// @Lazy breaks the AbstractBaseService -> AuditLogWriter -> SystemConfigServiceImpl cycle; explicit constructor because Lombok does not reliably copy it.
 	public AuditLogWriter(@Lazy SystemConfigServiceImpl systemConfigService,
 						   AuditLogRepo auditLogRepo,
 						   @Qualifier("auditLogExecutor") Executor auditLogExecutor) {
@@ -68,16 +52,10 @@ public class AuditLogWriter {
 		capture(AuditCategory.ENTITY, action, entityType, entityId, currentActor(), outcome, changedFields).run();
 	}
 
-	/** For security events fired in an already-authenticated context (logout, force-logout). */
 	public void logSecurity(String action, AuditOutcome outcome) {
 		logSecurity(action, currentActor(), outcome);
 	}
 
-	/**
-	 * For security events with no established SecurityContext yet (login, OTP, password
-	 * reset/set) — the actor is whichever email/username the request itself named, not
-	 * necessarily one that ever authenticates.
-	 */
 	public void logSecurity(String action, String actorEmail, AuditOutcome outcome) {
 		if (!enabled()) return;
 		String actor = StringUtils.isNotBlank(actorEmail) ? actorEmail : "unknown";

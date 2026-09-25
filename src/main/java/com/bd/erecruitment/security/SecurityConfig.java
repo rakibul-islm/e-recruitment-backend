@@ -36,7 +36,7 @@ public class SecurityConfig {
 		http
 				.cors(cors -> cors.configure(http))
 				.csrf(csrf -> csrf.disable())
-				.headers(headers -> headers.frameOptions(fo -> fo.disable())) // for H2 console
+				.headers(headers -> headers.frameOptions(fo -> fo.disable()))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(
 								"/authenticate/**",
@@ -49,17 +49,9 @@ public class SecurityConfig {
 								"/h2-console/**"
 						).permitAll()
 						.requestMatchers("/actuator/**").permitAll()
-						// Public job portal browsing: job/company listing is above, detail views below (single
-						// path segment only, so this never opens /job-circular/delete/{id} etc.).
 						.requestMatchers(HttpMethod.GET, "/job-circular/*", "/company/*").permitAll()
-						// Public recruiter/employer access request form - submission only, everything else
-						// on this controller (list/approve/reject) stays behind authentication plus the
-						// service's own recruiter-application:read/write permission check.
 						.requestMatchers(HttpMethod.POST, "/recruiter-application").permitAll()
-						// The recruiter registration form is itself public and needs to both list and add
-						// company types (its "add new type" dialog) before the visitor has an account.
 						.requestMatchers(HttpMethod.POST, "/company-type").permitAll()
-						// Needed by unauthenticated flows (account setup, password reset) for the requirements checklist.
 						.requestMatchers(HttpMethod.GET, "/password-policy").permitAll()
 						.requestMatchers(AUTH_WHITELIST).permitAll()
 						.anyRequest().authenticated()

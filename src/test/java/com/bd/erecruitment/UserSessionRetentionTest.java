@@ -17,8 +17,6 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Proves GenericArchiveEngine, driven by the seeded USER_SESSION archive config (date column
-// expires_at), archives then removes only sessions expired past retention - never one still valid.
 @SpringBootTest
 class UserSessionRetentionTest {
 

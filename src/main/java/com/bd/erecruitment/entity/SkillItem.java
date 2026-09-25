@@ -11,6 +11,5 @@ public class SkillItem {
 
 	private String name;
 
-	// Free text (e.g. "Beginner"/"Intermediate"/"Expert") - kept simple, no enum.
 	private String level;
 }

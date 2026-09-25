@@ -20,11 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-// A plain recruiter (isScopedRecruiter(), from AbstractBaseService) may only see/manage job
-// postings that belong to their own company (User.companyId) - same rule and same reasoning as
-// CompanyServiceImpl. The company fields on a scoped recruiter's job posting are always
-// re-derived from their actual Company row server-side, never trusted from the request, so a
-// tampered/disabled frontend field can't post a job under a different company.
 @Service
 public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> implements BaseService<JobCircularResDTO, JobCircularReqDto> {
 
@@ -98,14 +93,11 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		if (isScopedRecruiter()) {
 			MyUserDetail me = getLoggedInUserDetails();
 			filters = new HashMap<>(filters);
-			// No company linked - an unrestricted filter would otherwise show every job posting.
 			filters.put("companyId", me.getCompanyId() == null ? "-1" : String.valueOf(me.getCompanyId()));
 		}
 		return genericFilter(filters, pageable, isPageable, JobCircularResDTO.class);
 	}
 
-	// Re-derives companyId/companyName/companyAddress/companyWebsite/companyPhone/companyEmail
-	// from the recruiter's own Company row, overriding whatever the request sent for them.
 	private void applyOwnCompany(JobCircularReqDto reqDto) {
 		MyUserDetail me = getLoggedInUserDetails();
 		if (me.getCompanyId() == null) throw new ForbiddenException("Your account isn't linked to a company yet");

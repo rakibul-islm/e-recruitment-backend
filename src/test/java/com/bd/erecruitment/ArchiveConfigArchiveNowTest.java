@@ -14,7 +14,6 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Proves the manual "archive now" trigger runs the same job as the scheduler, on demand, for one config.
 @SpringBootTest
 class ArchiveConfigArchiveNowTest {
 

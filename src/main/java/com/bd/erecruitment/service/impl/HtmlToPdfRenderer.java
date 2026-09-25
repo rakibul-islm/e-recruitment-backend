@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 
-// Shared HTML -> PDF rendering, used by both CvGenerationServiceImpl and OfferServiceImpl (offer
-// letters). The renderer requires well-formed XML input (it parses via TRaX), not just valid
-// HTML - callers must build markup with escaped text and no unescaped named entities (e.g. use
-// the literal "·" character rather than "&middot;").
+// Input must be well-formed XML: escape text and use literal characters (e.g. "·"), not named entities like &middot;.
 @Component
 public class HtmlToPdfRenderer {
 

@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-// In-memory, single-instance registry of open SSE connections. If this app is ever scaled to multiple
-// backend instances without sticky sessions, a push triggered on instance A won't reach a user connected
-// to instance B - would need a shared pub/sub (e.g. Redis) at that point.
 @Component
 public class SseEmitterRegistry {
 
@@ -60,7 +57,6 @@ public class SseEmitterRegistry {
 		});
 	}
 
-	// complete() can throw on an already-errored emitter; that must not fail unrelated pushes.
 	private void completeQuietly(SseEmitter emitter) {
 		try {
 			emitter.complete();

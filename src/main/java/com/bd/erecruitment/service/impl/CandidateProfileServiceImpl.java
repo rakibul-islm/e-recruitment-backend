@@ -34,9 +34,7 @@ public class CandidateProfileServiceImpl {
 	private final CvGenerationService cvGenerationService;
 	private final StorageService storageService;
 
-	// Self-injected proxy so createProfile()'s REQUIRES_NEW actually takes effect when called from
-	// within this same class (a plain `this.createProfile(...)` call bypasses Spring's transactional
-	// proxy entirely).
+	// Self-proxy so createProfile()'s REQUIRES_NEW applies; a plain this.createProfile() bypasses the transactional proxy.
 	@Lazy
 	@Autowired
 	private CandidateProfileServiceImpl self;
@@ -75,8 +73,6 @@ public class CandidateProfileServiceImpl {
 		return getSuccess("Profile updated successfully", new CandidateProfileResDTO(profile));
 	}
 
-	// Only the latest generation is kept - regenerating replaces the previous CV rather than
-	// accumulating a growing history of them.
 	@Transactional
 	public Response<GeneratedCvResDTO> generateCv() {
 		Long userId = currentUserId();
@@ -107,9 +103,6 @@ public class CandidateProfileServiceImpl {
 		return getSuccess(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
-	// Downloads are only ever the requesting candidate's own generated CV - see the "recruiter
-	// views an applicant's CV" flow instead, which goes through ApplicationService (scoped to
-	// applications the recruiter is actually allowed to see) rather than this raw-by-id lookup.
 	public StoredFile downloadMyCv(Long generatedCvId) {
 		Long userId = currentUserId();
 		CandidateProfile profile = getOrCreateProfile(userId);
@@ -121,18 +114,11 @@ public class CandidateProfileServiceImpl {
 		return storageService.retrieve(cv.getStoredFileId());
 	}
 
-	// find-then-insert isn't atomic - two concurrent requests for the same user (two tabs, a page
-	// firing profile-fetch and CV-generate at once, a double-click) can both find nothing and both
-	// try to insert, tripping the unique constraint on user_id. createProfile() runs the insert in
-	// its own transaction so a lost race rolls back cleanly there; the catch here (deliberately
-	// outside that transaction, on the caller's own untouched persistence context) then just
-	// re-reads the row the winning request committed. Catching inside createProfile itself doesn't
-	// work: Hibernate auto-flushes the still-pending failed insert on the very next query in that
-	// same session, so a same-transaction recovery read re-throws the identical error.
 	private CandidateProfile getOrCreateProfile(Long userId) {
 		return candidateProfileRepo.findByUserIdAndDeleted(userId, false).orElseGet(() -> {
 			try {
 				return self.createProfile(userId);
+			// Lost a concurrent insert race on user_id: re-read the winner's row here, outside createProfile's transaction.
 			} catch (DataIntegrityViolationException e) {
 				return candidateProfileRepo.findByUserIdAndDeleted(userId, false).orElseThrow(() -> e);
 			}

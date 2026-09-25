@@ -16,17 +16,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Exercises the phase-3 read API: the audit-log:read permission gate (proves the seeded
- * permission is actually enforced, not silently bypassed like an unregistered one would be), and
- * that every write path is hard-blocked (501) regardless of who's calling, since the trail must
- * stay append-only.
- * <p>
- * The two permission-check requests set {@code .servletPath(...)} explicitly: PermissionInterceptor
- * derives the resource from {@code request.getServletPath()}, which MockMvc otherwise leaves empty
- * for a root ("/") mapped DispatcherServlet — real Tomcat returns the full path here (verified
- * manually against the running app), so this makes the simulated request match reality.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuditLogControllerIntegrationTest {

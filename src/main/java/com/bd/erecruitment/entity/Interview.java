@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-// One interview round for an Application. status: SCHEDULED, COMPLETED, CANCELLED - plain String,
-// same convention as Application.status/JobCircular.status.
 @Data
 @Entity
 @SuperBuilder
@@ -34,10 +32,8 @@ public class Interview extends SequenceIdGenerator {
 
 	private Integer durationMinutes;
 
-	// ONSITE | PHONE | VIDEO - plain String.
 	private String mode;
 
-	// Address for ONSITE, dial-in for PHONE, meeting link for VIDEO.
 	@Column(length = 500)
 	private String location;
 

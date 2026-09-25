@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-// Header-only view of an attempt - safe to return to both the candidate and staff. Never carries
-// per-question detail (see McqTestAttemptQuestionDto / McqAssignmentQuestionReviewDto for that).
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -41,7 +39,6 @@ public class McqTestAssignmentResDTO extends BaseResponseDTO<McqTestAssignment> 
 	private Integer totalCount;
 	private Boolean passed;
 
-	// Denormalized, populated by McqTestAssignmentServiceImpl.
 	private String testName;
 	private String jobTitle;
 	private String candidateName;

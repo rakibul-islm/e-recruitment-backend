@@ -13,8 +13,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.Date;
 
-// One row per candidate profile at a time - CandidateProfileServiceImpl.generateCv() soft-deletes
-// any prior generation before creating a new one, so regenerating replaces rather than accumulates.
 @Data
 @Entity
 @SuperBuilder
@@ -30,7 +28,6 @@ public class GeneratedCv extends SequenceIdGenerator {
 	@Column(name = "template_key", nullable = false, length = 50)
 	private String templateKey;
 
-	// References StoredFile.id - no JPA relation, same convention as User.userGroupId.
 	@Column(name = "stored_file_id", nullable = false)
 	private Long storedFileId;
 

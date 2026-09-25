@@ -11,11 +11,6 @@ import lombok.experimental.SuperBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-// A named test blueprint/pool built from APPROVED McqQuestion rows. status: DRAFT|ACTIVE|ARCHIVED
-// - only ACTIVE tests may be assigned. questionSelectionCount null means "use the whole pool";
-// otherwise a random subset of that size is drawn per candidate at assignment time. questionIds
-// is flat/unordered/equal-weight pool membership - actual per-candidate order/subset is computed
-// and frozen onto McqTestAssignmentQuestion, not stored here.
 @Data
 @Entity
 @SuperBuilder
@@ -43,10 +38,6 @@ public class McqTest extends SequenceIdGenerator {
 	@Column(name = "question_selection_count")
 	private Integer questionSelectionCount;
 
-	// Optional, opt-in per-question pacing - null means "no per-question limit", the original
-	// whole-test-countdown-only behavior. When set, each question additionally auto-advances (or
-	// auto-submits, on the last question) once its own countdown runs out, on top of the existing
-	// whole-attempt durationMinutes safety net.
 	@Column(name = "seconds_per_question")
 	private Integer secondsPerQuestion;
 

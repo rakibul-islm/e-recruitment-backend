@@ -26,11 +26,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Exercises the AbstractBaseService -> AuditLogWriter hook wired in phase 1: entity-CRUD audit
- * rows deferred to after the enclosing transaction commits, and hard-delete's synchronous
- * same-transaction write.
- */
 @SpringBootTest
 class AuditLogWriterIntegrationTest {
 

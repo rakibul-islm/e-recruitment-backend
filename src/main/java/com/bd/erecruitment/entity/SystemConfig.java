@@ -27,5 +27,5 @@ public class SystemConfig extends SequenceIdGenerator {
 	private String description;
 
 	@Column(name = "expected_values")
-	private String expectedValues; // comma-separated allowed values, e.g. "Y,N" — drives a dropdown instead of free text on the frontend
+	private String expectedValues;
 }

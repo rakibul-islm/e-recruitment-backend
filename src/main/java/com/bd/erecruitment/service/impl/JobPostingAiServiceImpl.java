@@ -26,9 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Uses Google Gemini's free-tier API to draft job posting content from a job title + whatever
-// other fields the recruiter has already filled in. Called through the backend (rather than from
-// Angular directly) so the API key never reaches the browser.
 @Slf4j
 @Service
 public class JobPostingAiServiceImpl {

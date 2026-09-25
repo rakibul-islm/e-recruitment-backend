@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-// Same per-company scoping rule as McqQuestionServiceImpl/JobCircularServiceImpl.
 @Service
 public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements BaseService<McqTestResDTO, McqTestReqDto> {
 
@@ -32,7 +31,6 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 		this.mcqQuestionRepo = mcqQuestionRepo;
 	}
 
-	// @Transactional: McqTestResDTO reads the lazy `questionIds` element collection.
 	@Transactional
 	@Override
 	public Response<McqTestResDTO> find(Long id) {

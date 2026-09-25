@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-// Off the "/user" prefix so self-service profile access doesn't require admin "user:*" authorities.
 @RestApiController
 @RequestMapping("/profile")
 @Tag(name = "2.1 My Profile", description = "Self-service access to the logged-in user's own profile")

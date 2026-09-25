@@ -66,7 +66,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		return getSuccessResponse("Application found", new RecruiterApplicationResDTO(findByIdOrThrow(id, "Application not found")));
 	}
 
-	// The public submission entry point (POST /recruiter-application, exposed by AbstractBaseController.save()).
 	@Transactional
 	@Override
 	public Response<RecruiterApplicationResDTO> save(RecruiterApplicationReqDto reqDto) {
@@ -75,7 +74,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		recruiterApplicationRepo.findFirstByEmailAndStatusAndDeleted(reqDto.getEmail(), "PENDING", false)
 			.ifPresent(existing -> returnErrorException("A request for this email is already pending review"));
 
-		// Anonymous submission: no logged-in actor to attribute createdBy/On to, same as candidate self-signup.
 		RecruiterApplication application = createNormalUser(reqDto.getBean());
 		notifyReviewers(application);
 		sendReceivedEmail(application);
@@ -121,8 +119,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 
 		Company company = resolveOrCreateCompany(application);
 
-		// Reuses the same admin-invite path /users/create already goes through: inactive account,
-		// activation token, "set your password" email - no duplicated logic here.
 		UserReqDto userReqDto = new UserReqDto();
 		userReqDto.setFullName(application.getFullName());
 		userReqDto.setEmail(application.getEmail());
@@ -149,11 +145,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		return getSuccessResponse("Application rejected", new RecruiterApplicationResDTO(application));
 	}
 
-	// The recruiter's company needs to exist (and be linked via User.companyId) for them to view/
-	// manage once approved - reuse a matching-by-name company if one already exists, otherwise
-	// create it from the details they gave at registration. Saved directly via the repo (rather
-	// than createEntity(), which AbstractBaseService types to this class's own entity,
-	// RecruiterApplication, not Company).
 	private Company resolveOrCreateCompany(RecruiterApplication application) {
 		return companyRepo.findFirstByNameIgnoreCaseAndDeleted(application.getCompanyName(), false)
 			.orElseGet(() -> {
@@ -178,7 +169,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 			notificationPublisher.notifyAuthority(WRITE_AUTHORITY, NotificationType.RECRUITER_APPLICATION_SUBMITTED,
 				"/recruiter-applications/" + application.getId(), "companyName", application.getCompanyName(), "applicantName", application.getFullName());
 		} catch (Exception e) {
-			// Never fail the submission because of a notification problem.
 			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.notifyReviewers:" + application.getId());
 		}
 	}
@@ -187,7 +177,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		try {
 			mailService.sendRecruiterApplicationReceivedEmail(application.getEmail(), application.getFullName(), application.getCompanyName());
 		} catch (Exception e) {
-			// Never fail the submission because of an email delivery problem.
 			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.sendReceivedEmail:" + application.getId());
 		}
 	}
@@ -196,7 +185,6 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		try {
 			mailService.sendRecruiterApplicationRejectedEmail(application.getEmail(), application.getFullName(), application.getReviewNote());
 		} catch (Exception e) {
-			// Never fail the rejection because of an email delivery problem.
 			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.sendRejectedEmail:" + application.getId());
 		}
 	}

@@ -25,7 +25,6 @@ public class JobAlertServiceImpl {
 
 	@Transactional
 	public Response<JobAlertResDTO> save(JobAlertReqDto reqDto) {
-		// Trimmed so a stray trailing space from a mobile keyboard can't make the alert un-matchable.
 		String keyword = StringUtils.trimToNull(reqDto.getKeyword());
 		String location = StringUtils.trimToNull(reqDto.getLocation());
 		String category = StringUtils.trimToNull(reqDto.getCategory());

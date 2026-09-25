@@ -16,5 +16,5 @@ public class LoggedInUserDetails {
 	private boolean enabled;
 	private boolean locked;
 	private Date expiryDate;
-	private List<String> authorities; // authority codes for Angular AccessGuard
+	private List<String> authorities;
 }

@@ -35,9 +35,6 @@ public class MailServiceImpl implements MailService {
 	private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
 	private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
 
-	// Bounded connect/read timeouts so a slow or unreachable Gmail API can never hang a thread
-	// indefinitely - callers invoke these methods from within @Transactional blocks, and an
-	// unbounded HTTP call there would hold the DB connection for as long as Gmail takes to respond.
 	private final RestClient restClient = RestClient.builder().requestFactory(timeoutRequestFactory()).build();
 	private final ReentrantLock tokenLock = new ReentrantLock();
 	private final Map<String, String> templateCache = new ConcurrentHashMap<>();
@@ -169,8 +166,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
-	// Deliberately NOT @Async, unlike the other senders: JobAlertScheduler only advances an alert's
-	// lastNotifiedOn after this returns, so it must see a Gmail failure as an exception.
+	// Deliberately not @Async: JobAlertScheduler must see send failures before advancing lastNotifiedOn.
 	@Override
 	public void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs) {
 		sendTemplateEmail(toEmail, "job-alert-digest-email.html", Map.of(
@@ -259,7 +255,6 @@ public class MailServiceImpl implements MailService {
 	@Async("notificationExecutor")
 	@Override
 	public void sendAdminMessageEmail(String toEmail, String fullName, String title, String message) {
-		// message is rich-text HTML from the broadcast form's editor, so it must not be escaped like the other values.
 		sendTemplateEmail(toEmail, "admin-message-email.html", Map.of(
 			"greetingName", greetingName(fullName),
 			"title", title,

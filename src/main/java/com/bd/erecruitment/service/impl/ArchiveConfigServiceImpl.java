@@ -27,10 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig> implements BaseService<ArchiveConfigResDTO, ArchiveConfigReqDto> {
 
-	// The config table itself is never a sensible archive source.
 	private static final String EXCLUDED_TABLE = "ARCHIVE_CONFIG";
 
-	// Catalog/system schemas an admin would never pick as an archive destination.
 	private static final Set<String> SYSTEM_SCHEMAS = Set.of(
 			"INFORMATION_SCHEMA", "PG_CATALOG", "PG_TOAST", "PG_TOAST_TEMP_1", "PG_TEMP_1", "SYS", "SYSTEM");
 
@@ -48,7 +46,6 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 	private final JdbcTemplate jdbcTemplate;
 	private final GenericArchiveEngine archiveEngine;
 
-	// Lazily filled, like PasswordPolicyServiceImpl's cachedPolicy - the schema doesn't change while running.
 	private volatile List<String> cachedSourceTables;
 	private volatile List<String> cachedArchiveSchemas;
 	private final Map<String, List<String>> cachedDateColumnsByTable = new ConcurrentHashMap<>();
@@ -61,12 +58,10 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 		this.archiveEngine = archiveEngine;
 	}
 
-	// Read directly from the repository (no caching) - the scheduler only calls this once per run.
 	public List<ArchiveConfig> findEnabled() {
 		return archiveConfigRepo.findAllByEnabledTrueAndDeletedFalse();
 	}
 
-	// Lists tables in the app's default schema via JDBC metadata, so the dropdown reflects reality, not a hardcoded list.
 	public List<String> listSourceTables() {
 		List<String> cached = cachedSourceTables;
 		if (cached != null) return cached;
@@ -86,7 +81,6 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 		return loaded;
 	}
 
-	// Lists real DB schemas (minus catalog/system ones) via JDBC metadata, for the archive schema dropdown.
 	public List<String> listArchiveSchemas() {
 		List<String> cached = cachedArchiveSchemas;
 		if (cached != null) return cached;
@@ -106,11 +100,6 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 		return loaded;
 	}
 
-	// Lists a source table's own date/timestamp columns, for the date column dropdown - cached per
-	// table for the same reason as listSourceTables(): the schema doesn't change while running.
-	// Table/schema are matched case-insensitively in Java, not passed as exact-case metadata
-	// patterns - H2/Oracle fold unquoted identifiers to uppercase but Postgres folds to lowercase,
-	// so a literal uppercase table name would silently match nothing there (see GenericArchiveEngine#tableExists).
 	public List<String> listDateColumns(String sourceTable) {
 		String table = GenericArchiveEngine.requireValidIdentifier(sourceTable, "source table");
 		return cachedDateColumnsByTable.computeIfAbsent(table.toUpperCase(), key -> jdbcTemplate.execute((ConnectionCallback<List<String>>) connection -> {
@@ -127,7 +116,6 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 		}));
 	}
 
-	// Lists every column of a source table, for the where-condition builder's field dropdown.
 	public List<ArchiveConfigColumnDTO> listColumns(String sourceTable) {
 		String table = GenericArchiveEngine.requireValidIdentifier(sourceTable, "source table");
 		return cachedColumnsByTable.computeIfAbsent(table.toUpperCase(), key -> jdbcTemplate.execute((ConnectionCallback<List<ArchiveConfigColumnDTO>>) connection -> {
@@ -199,7 +187,6 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 		return genericFilter(filters, pageable, isPageable, ArchiveConfigResDTO.class);
 	}
 
-	// Runs this config's archive job immediately, regardless of its enabled flag (that only gates the scheduler).
 	@Transactional
 	public Response<Integer> archiveNow(Long id) {
 		ArchiveConfig config = findByIdOrThrow(id, "Archive config not found");
@@ -207,7 +194,6 @@ public class ArchiveConfigServiceImpl extends AbstractBaseService<ArchiveConfig>
 		return getSuccessResponse(archived + " row(s) archived", archived);
 	}
 
-	// Read-only browse of this config's archive table, for the "View Archived Data" page.
 	public Response<ArchivedDataResDTO> findArchivedData(Long id, int page, int size) {
 		ArchiveConfig config = findByIdOrThrow(id, "Archive config not found");
 		int clampedSize = Math.min(Math.max(size, 1), 100);

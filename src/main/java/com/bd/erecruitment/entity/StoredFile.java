@@ -11,8 +11,6 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-// Generic blob storage (resumes, generated CVs, offer letters, ...). DB-backed for now via
-// StorageService - see StorageService for why, and how to swap in an object-storage backend later.
 @Data
 @Entity
 @SuperBuilder

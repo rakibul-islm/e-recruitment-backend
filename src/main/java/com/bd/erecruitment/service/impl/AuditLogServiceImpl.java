@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-// Read-only, append-only: save/update/delete/remove are blocked at the controller (501). Retention archiving lives in ArchiveScheduler/GenericArchiveEngine.
 @Service
 public class AuditLogServiceImpl extends AbstractBaseService<AuditLog> implements BaseService<AuditLogResDTO, AuditLogReqDto> {
 

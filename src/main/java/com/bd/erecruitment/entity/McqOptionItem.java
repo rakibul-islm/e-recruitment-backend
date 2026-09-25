@@ -6,9 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-// One answer option on a bank McqQuestion. Correctness lives per-option (not a parent
-// correctOptionIndex) and displayOrder is an explicit column - this codebase never uses
-// @OrderColumn, so an @ElementCollection bag gives no reload-order guarantee otherwise.
 @Data
 @Embeddable
 @NoArgsConstructor

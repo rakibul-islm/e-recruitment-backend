@@ -15,7 +15,6 @@ import java.util.Date;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-// Proves the optional where condition further narrows which past-retention rows get archived, and that unsafe text is rejected.
 @SpringBootTest
 class ArchiveConfigWhereConditionTest {
 

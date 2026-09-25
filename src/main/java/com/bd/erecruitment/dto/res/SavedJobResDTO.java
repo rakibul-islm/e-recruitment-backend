@@ -21,7 +21,6 @@ public class SavedJobResDTO extends BaseResponseDTO<SavedJob> {
 	private Long jobCircularId;
 	private Date savedOn;
 
-	// Denormalized, populated by SavedJobServiceImpl.
 	private String jobTitle;
 	private String companyName;
 	private String jobStatus;

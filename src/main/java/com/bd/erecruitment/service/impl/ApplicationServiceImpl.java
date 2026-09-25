@@ -36,11 +36,6 @@ import java.util.stream.Collectors;
 @Service
 public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
-	// Staff (recruiter/admin) actions beyond a candidate's own applications are gated on this
-	// authority as a pragmatic stand-in for "has recruiting/admin access" - PermissionInterceptor
-	// only enforces one resource:action pair per whole controller, so distinguishing "my
-	// applications" (any candidate) from "all applications" (staff only) under the same
-	// "application" resource has to happen here, not at the interceptor.
 	private static final String STAFF_AUTHORITY = "job-circular:write";
 	private static final Set<String> VALID_STATUSES = Set.of(
 		"APPLIED", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED", "WITHDRAWN"
@@ -138,7 +133,6 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
-	// Resolves candidateName_like/candidateEmail_like (not real Application columns) to a User-based candidateUserId_in filter.
 	private Map<String, String> resolveCandidateFilters(Map<String, String> filters) {
 		String candidateName = filters.get("candidateName_like");
 		String candidateEmail = filters.get("candidateEmail_like");
@@ -154,7 +148,6 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
 		List<Long> matchingUserIds = userRepo.findAll(GenericSpecification.<User>build(userFilters))
 			.stream().map(User::getId).toList();
-		// Empty match: force an impossible id instead of dropping the filter and matching everyone.
 		effectiveFilters.put("candidateUserId_in", matchingUserIds.isEmpty()
 			? "-1"
 			: matchingUserIds.stream().map(String::valueOf).collect(Collectors.joining(",")));

@@ -41,10 +41,6 @@ public class PermissionSeeder implements DataSeeder {
 				permissionRepo.save(p);
 				inserted++;
 			} else if (existing.isDeleted()) {
-				// authority is unique, so a soft-deleted permission can never be re-created through
-				// the UI, and findByAuthority ignores the deleted flag, so it would otherwise stay
-				// hidden forever instead of ever being re-seeded - heal it back to the canonical
-				// definition rather than leaving admins with a permanently missing permission.
 				existing.setName(def.name())
 					.setModule(def.module())
 					.setRouteName(def.routeName())

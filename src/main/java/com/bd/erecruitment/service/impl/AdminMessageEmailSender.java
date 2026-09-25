@@ -10,9 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-// Split out from NotificationBroadcastServiceImpl so @Async actually applies (a method can't be
-// proxied via self-invocation from within the same class) - mirrors NotificationPublisher/NotificationListener's
-// trigger/async-worker split.
 @Slf4j
 @Component
 @RequiredArgsConstructor

@@ -15,9 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-// Self-service only, off "/candidate-profile" like ProfileController is off "/profile" - a
-// candidate always manages their own profile/CV, never someone else's, so ownership is enforced
-// in the service by the logged-in user's id rather than a path {id}.
 @RestApiController
 @RequestMapping("/candidate-profile")
 @RequiredArgsConstructor

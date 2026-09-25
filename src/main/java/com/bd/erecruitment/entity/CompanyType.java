@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
-// Lookup list for Company.industry - stored as a managed, database-backed option list (rather
-// than free text) so the dropdown can offer existing values and grow as recruiters add new ones.
 @Data
 @Entity
 @SuperBuilder

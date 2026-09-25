@@ -21,7 +21,6 @@ public class Company extends SequenceIdGenerator {
 	@Column(nullable = false, length = 200)
 	private String name;
 
-	// References StoredFile.id - no JPA relation, same convention as User.userGroupId.
 	@Column(name = "logo_file_id")
 	private Long logoFileId;
 

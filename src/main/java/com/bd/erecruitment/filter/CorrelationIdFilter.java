@@ -11,13 +11,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.UUID;
 
-/**
- * Assigns every request a correlation id (reusing the caller's X-Correlation-Id header if
- * present), puts it in MDC for the console log pattern, echoes it back as a response header, and
- * leaves it available for AuditLogWriter/ExceptionLogWriter to tag their rows with — so one
- * request's audit row, exception row, and raw logs can all be tied together. Registered before
- * JwtAutenticationFilter so even 401s get one.
- */
 @Component
 public class CorrelationIdFilter extends OncePerRequestFilter {
 

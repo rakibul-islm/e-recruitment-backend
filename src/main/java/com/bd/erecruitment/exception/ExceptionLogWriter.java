@@ -16,30 +16,18 @@ import java.io.StringWriter;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * Central point for persisting caught exceptions to the EXCEPTION_LOG table, gated by the
- * EXCEPTION_LOG_TO_DB system config (Y/N). Used both by {@link GlobalExceptionHandler} and by
- * try/catch blocks elsewhere in the codebase that handle an exception without letting it
- * propagate to the controller boundary.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ExceptionLogWriter {
 
 	private static final String EXCEPTION_LOG_CONFIG_KEY = "EXCEPTION_LOG_TO_DB";
-	// stack_trace column is a bounded varchar(32600); truncate to avoid the insert itself failing.
+	// stack_trace is a bounded varchar(32600); truncate so the insert itself cannot fail.
 	private static final int STACK_TRACE_MAX_LENGTH = 32000;
 
 	private final SystemConfigServiceImpl systemConfigService;
 	private final ExceptionLogRepo exceptionLogRepo;
 
-	/**
-	 * @param statusCode the HTTP status ultimately returned to the caller, or 0 when the
-	 *                    exception was fully handled/swallowed and never surfaced as a response
-	 * @param context     request URI, or another short description of where the exception was caught
-	 * @return a generated trace id, useful for correlating with logs regardless of whether persistence is enabled
-	 */
 	public String log(Exception ex, int statusCode, String message, String context) {
 		String traceId = UUID.randomUUID().toString();
 		log.error("[{}] {}: {} ({})", traceId, ex.getClass().getSimpleName(), message, context, ex);

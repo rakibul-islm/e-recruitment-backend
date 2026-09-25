@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 @Service
 public class JwtUtil {
 
-	// Must be at least 32 bytes (256 bits) for HS256
 	private static final String SECRET_STRING = "404E63526655664r54757hj585gh9012";
 	private static final SecretKey SECRET = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
 
@@ -64,7 +63,7 @@ public class JwtUtil {
 
 		LoggedInUserDetails liud = new LoggedInUserDetails();
 		BeanUtils.copyProperties(mud, liud);
-		liud.setAuthorities(authorityList); // set as plain strings for JSON
+		liud.setAuthorities(authorityList);
 
 		Map<String, Object> claims = new HashMap<>();
 		claims.put("userDetails", liud);

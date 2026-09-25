@@ -32,6 +32,5 @@ public class McqTestResDTO extends BaseResponseDTO<McqTest> {
 	private String status;
 	private List<Long> questionIds = new ArrayList<>();
 
-	// Denormalized, populated from McqTest.questionIds.size() by the constructor above.
 	private int questionCount;
 }

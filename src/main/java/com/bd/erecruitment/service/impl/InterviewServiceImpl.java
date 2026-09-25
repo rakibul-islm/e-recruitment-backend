@@ -34,7 +34,6 @@ import java.util.Map;
 @Service
 public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 
-	// Same pragmatic "is staff" proxy as ApplicationServiceImpl.
 	private static final String STAFF_AUTHORITY = "job-circular:write";
 
 	private final InterviewRepo interviewRepo;
@@ -86,8 +85,6 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		interview = createEntity(interview);
 		notifyScheduled(interview, application);
 
-		// Recorded into ApplicationStatusHistory too (not just the Application row) so the pipeline
-		// trail and time-to-hire/funnel analytics see "moved to interview" alongside manual status changes.
 		if (!"INTERVIEW".equals(application.getStatus())) {
 			String actor = getLoggedInUserDetails().getUsername();
 			application.setStatus("INTERVIEW").setStatusUpdatedOn(new Date()).setStatusUpdatedBy(actor);
@@ -98,14 +95,10 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		return getCreatedResponse("Interview scheduled successfully", toDto(interview, null, null));
 	}
 
-	// Interview entities are managed here, but Application's audit/updatedBy bookkeeping still
-	// needs AbstractBaseService's own instance state (auditSnapshots) - simplest to just persist
-	// directly here rather than re-deriving an AbstractBaseService<Application>.
 	private void updateEntityApplication(Application application) {
 		applicationRepo.save(application);
 	}
 
-	// @Transactional: InterviewResDTO reads the lazy `feedback`/`interviewerUserIds` element collections.
 	@Transactional
 	public Response<InterviewResDTO> find(Long id) {
 		Interview interview = getOwnedOrStaffInterview(id);

@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-// A frozen copy of one McqOptionItem, captured onto McqTestAssignmentQuestion at assignment time
-// so a later edit to the bank question can never change an in-flight or completed attempt.
 @Data
 @Embeddable
 @NoArgsConstructor

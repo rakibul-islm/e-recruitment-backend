@@ -9,7 +9,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Proves the archive-schema and date-column dropdown sources read real DB metadata, not a hardcoded list.
 @SpringBootTest
 class ArchiveConfigSchemaAndDateColumnTest {
 

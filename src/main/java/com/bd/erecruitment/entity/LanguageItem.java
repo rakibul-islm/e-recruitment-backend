@@ -11,6 +11,5 @@ public class LanguageItem {
 
 	private String name;
 
-	// Free text (e.g. "Native"/"Fluent"/"Conversational") - kept simple, no enum.
 	private String proficiency;
 }

@@ -10,11 +10,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Configuration
 public class AsyncConfig {
 
-	/**
-	 * Dedicated, bounded executor for audit-log persistence. Deliberately not the default
-	 * (unbounded) @Async executor: a full queue falls back to CallerRunsPolicy (synchronous on
-	 * the calling thread) instead of growing without limit or silently dropping audit events.
-	 */
 	@Bean(name = "auditLogExecutor")
 	public Executor auditLogExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

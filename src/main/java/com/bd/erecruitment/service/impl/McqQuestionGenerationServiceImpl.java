@@ -29,12 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Reuses the same free-tier Google Gemini integration as JobPostingAiServiceImpl (same api-key/
-// model config, same retry/parsing shape) rather than adding a new paid AI dependency. Generated
-// questions land as DRAFT/AI_GENERATED, requiring explicit recruiter review/approval before
-// they're usable in a test - never auto-published. Extends AbstractBaseService<McqQuestion>
-// purely to reuse its createEntity() (audit-stamped fields + free audit-diff logging), not
-// because this service owns full CRUD for McqQuestion (McqQuestionServiceImpl does that).
 @Slf4j
 @Service
 public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQuestion> {

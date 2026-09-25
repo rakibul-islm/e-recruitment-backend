@@ -16,10 +16,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-// A plain recruiter (isScopedRecruiter(), from AbstractBaseService) is scoped to their own
-// company via User.companyId, set when their RecruiterApplication is approved. Every entry point
-// re-checks this server-side - the frontend disabling/pre-filling the company field is a UX
-// nicety, not the actual access boundary.
 @Service
 public class CompanyServiceImpl extends AbstractBaseService<Company> implements BaseService<CompanyResDTO, CompanyReqDto> {
 
@@ -77,7 +73,6 @@ public class CompanyServiceImpl extends AbstractBaseService<Company> implements 
 		if (isScopedRecruiter()) {
 			MyUserDetail me = getLoggedInUserDetails();
 			filters = new HashMap<>(filters);
-			// No company linked - an unrestricted filter would otherwise show every company.
 			filters.put("id", me.getCompanyId() == null ? "-1" : String.valueOf(me.getCompanyId()));
 		}
 		return genericFilter(filters, pageable, isPageable, CompanyResDTO.class);

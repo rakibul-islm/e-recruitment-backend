@@ -5,7 +5,7 @@ import lombok.Getter;
 
 import java.util.Date;
 
-// Field names must match mcq-result-report.jrxml's <field> declarations exactly.
+// Field names must match mcq-result-report.jrxml <field> declarations exactly.
 @Getter
 @AllArgsConstructor
 public class McqResultReportRow {

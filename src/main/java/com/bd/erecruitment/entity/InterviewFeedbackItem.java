@@ -19,7 +19,6 @@ public class InterviewFeedbackItem {
 	private Long interviewerUserId;
 	private String interviewerName;
 
-	// 1-5, free-form (no @Min/@Max - kept simple, same convention as other embeddables here).
 	private Integer rating;
 
 	@Column(length = 2000)

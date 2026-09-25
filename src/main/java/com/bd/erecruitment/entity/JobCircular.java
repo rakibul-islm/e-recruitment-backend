@@ -27,8 +27,6 @@ public class JobCircular extends SequenceIdGenerator{
 	private String companyWebsite;
 	private String companyBusiness;
 
-	// References Company.id - no JPA relation, same convention as User.userGroupId. Free-text
-	// company* fields above are kept for backward compatibility / circulars with no linked Company.
 	@Column(name = "company_id")
 	private Long companyId;
 
@@ -41,7 +39,6 @@ public class JobCircular extends SequenceIdGenerator{
 	private Integer salaryMax;
 	private String jobLocation;
 
-	// Rich text (HTML) from the job posting form's editor - long enough for formatted lists, not just plain sentences.
 	@Column(length = 4000)
 	private String jobRequirement;
 
@@ -53,20 +50,16 @@ public class JobCircular extends SequenceIdGenerator{
 	private String workPlace;
 	private String employmentStatus;
 
-	// Comma-separated tags/skills, e.g. "java,spring boot,sql". Simple free-text list, no separate table.
 	@Column(length = 500)
 	private String skills;
 
 	private String category;
 
-	// DRAFT | PUBLISHED | CLOSED | EXPIRED - plain String, same convention as employmentStatus/workPlace.
 	@Column(nullable = false, length = 20)
 	@Builder.Default
 	private String status = "DRAFT";
 
-	// Set each time the circular moves into PUBLISHED (first publish or a reopen), never on plain edits -
-	// JobAlertScheduler keys off this so editing a live job doesn't re-announce it. Rows published before
-	// this column existed have it null; the scheduler falls back to createdOn for those.
+	// Set on each move into PUBLISHED, not on plain edits; null on legacy rows (scheduler falls back to createdOn).
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date publishedOn;
 }

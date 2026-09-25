@@ -17,7 +17,6 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Proves GenericArchiveEngine, driven by the seeded AUDIT_LOG archive config, archives then removes only rows past retention.
 @SpringBootTest
 class AuditLogRetentionTest {
 

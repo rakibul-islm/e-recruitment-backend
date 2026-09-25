@@ -23,8 +23,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-// Daily digest for saved job-search alerts (JobAlert). Mirrors ArchiveScheduler's single-cron,
-// per-row-try/catch shape so one broken alert/email doesn't block the rest of the run.
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -55,13 +53,7 @@ public class JobAlertScheduler {
 		}
 	}
 
-	// No @Transactional: it was never applied (self-invocation bypasses the proxy) and there is no DB
-	// work here that should roll back with the send. Ordering is what makes this safe: the window
-	// (since, upTo] is processed, the email goes out, and only then does lastNotifiedOn move to upTo.
-	// If the send throws, lastNotifiedOn is untouched and the next run retries the same window.
 	private void processAlert(JobAlert alert) {
-		// upTo trails "now" so a job whose publishedOn was stamped just before its transaction committed
-		// is still picked up by the next run instead of falling in a gap between two windows.
 		Date upTo = new Date(System.currentTimeMillis() - SETTLE_MARGIN_MS);
 		Date since = windowStart(alert);
 
@@ -79,12 +71,11 @@ public class JobAlertScheduler {
 			}
 		}
 
+		// Advanced only after the send succeeds, so a failed send retries the same window next run.
 		alert.setLastNotifiedOn(upTo);
 		jobAlertRepo.save(alert);
 	}
 
-	// Never look back further than the default window, so an alert whose emails keep failing can't
-	// accumulate an ever-growing digest.
 	private Date windowStart(JobAlert alert) {
 		Date floor = defaultLookback();
 		Date last = alert.getLastNotifiedOn();
@@ -100,8 +91,6 @@ public class JobAlertScheduler {
 			deadline, frontendBaseUrl + "/jobs/" + job.getId());
 	}
 
-	// Needles are trimmed here as well as on save, so alerts stored before save() started trimming
-	// still match.
 	private boolean matches(JobCircular job, JobAlert alert) {
 		String keyword = StringUtils.trimToNull(alert.getKeyword());
 		String location = StringUtils.trimToNull(alert.getLocation());
@@ -122,8 +111,6 @@ public class JobAlertScheduler {
 		return StringUtils.isNotBlank(haystack) && haystack.toLowerCase().contains(needle.toLowerCase());
 	}
 
-	// A never-notified alert only picks up jobs published in the last 30 days, not the platform's
-	// entire history.
 	private Date defaultLookback() {
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.DAY_OF_MONTH, -30);

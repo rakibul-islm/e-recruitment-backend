@@ -18,12 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Exercises the phase-2 security-event audit path end to end through the real filter chain:
- * CorrelationIdFilter assigns a correlation id, AuthenticationServiceImpl.generateToken audits
- * the failed login with the attempted (never-authenticated) email as actor, and the two are
- * tied together via correlation_id.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 class AuthenticationAuditIntegrationTest {

@@ -30,13 +30,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
 	private static final String SUPER_ADMIN = "SUPER_ADMIN";
 	private static final String PERMISSION_READ = "permission:read";
 
-	// Every authenticated account always has profile and password-policy-read access, regardless of role.
-	// candidate-profile:*, saved-job:*, job-alert:* and notification:* are likewise unconditional: ownership
-	// (own profile/CVs, own bookmarks, own alerts, own notifications) is enforced in the respective service by the logged-in
-	// user's id, the same pattern /profile uses. job-circular:read and company:read are public job
-	// portal browsing - SecurityConfig already permitAll()s GET on both for anonymous visitors, so
-	// this keeps a logged-in candidate (who lacks those authorities) from losing access an anonymous
-	// visitor still has.
+	// Self-service and public-browse authorities; ownership is enforced per user id in each service.
 	private static final Set<String> ALWAYS_ALLOWED = Set.of(
 		PERMISSION_READ, "profile:read", "profile:write", "password-policy:read",
 		"candidate-profile:read", "candidate-profile:write",
@@ -48,7 +42,6 @@ public class PermissionInterceptor implements HandlerInterceptor {
 
 	private final PermissionRepo permissionRepo;
 
-	// Cached authorities avoid a DB hit per request; cleared on write/delete.
 	private final Set<String> authorityCache = ConcurrentHashMap.newKeySet();
 	private volatile boolean cacheFilled = false;
 
@@ -69,7 +62,6 @@ public class PermissionInterceptor implements HandlerInterceptor {
 
 		if (ALWAYS_ALLOWED.contains(required)) return true;
 
-		// If the authority is not registered in the Permission table, bypass enforcement.
 		if (!isRegistered(required)) return true;
 
 		if (auth.getAuthorities().stream().noneMatch(a -> required.equals(a.getAuthority())))

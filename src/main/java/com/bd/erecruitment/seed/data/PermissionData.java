@@ -15,7 +15,6 @@ public class PermissionData {
 			new PermissionDef("Edit User Email",        "user:email-write",     "USER_MANAGEMENT",  "user-email-edit"),
 			new PermissionDef("Delete Users",           "user:delete",          "USER_MANAGEMENT",  "user-delete"),
 
-			// routeName left null: profile access is unconditional in the account menu, not admin-menu-gated.
 			new PermissionDef("View My Profile",        "profile:read",         "PROFILE",          null),
 			new PermissionDef("Update My Profile",      "profile:write",        "PROFILE",          null),
 
@@ -42,14 +41,9 @@ public class PermissionData {
 			new PermissionDef("Manage Companies",       "company:write",        "JOB_MANAGEMENT",   "company-manage"),
 			new PermissionDef("Delete Companies",       "company:delete",       "JOB_MANAGEMENT",   null),
 
-			// Self-service only (own profile/CVs) - unconditional for any authenticated account, see PermissionInterceptor.ALWAYS_ALLOWED.
 			new PermissionDef("View My Candidate Profile",   "candidate-profile:read",  "PROFILE", null),
 			new PermissionDef("Update My Candidate Profile", "candidate-profile:write", "PROFILE", null),
 
-			// routeName left null on write: both candidates (apply) and staff (status change) hold
-			// application:write, so it can't distinguish them for Angular route gating - the recruiter
-			// application-management list route instead gates on job-circular-manage (staff-only), the
-			// same "is staff" proxy ApplicationServiceImpl uses server-side.
 			new PermissionDef("View Applications",      "application:read",     "JOB_MANAGEMENT",   "application-list"),
 			new PermissionDef("Manage Applications",    "application:write",    "JOB_MANAGEMENT",   null),
 
@@ -67,9 +61,6 @@ public class PermissionData {
 			new PermissionDef("Manage MCQ Tests",       "mcq-test:write",      "JOB_MANAGEMENT",   "mcq-test-manage"),
 			new PermissionDef("Delete MCQ Tests",       "mcq-test:delete",     "JOB_MANAGEMENT",   null),
 
-			// routeName left null: assignment is an inline panel inside application-management (staff)
-			// and a plain AuthGuard-only route (candidate), same as application:write's reasoning -
-			// both roles hold these, so it can't gate a single Angular route either way.
 			new PermissionDef("View Test Assignments",   "mcq-test-assignment:read",   "JOB_MANAGEMENT", null),
 			new PermissionDef("Manage Test Assignments", "mcq-test-assignment:write",  "JOB_MANAGEMENT", null),
 			new PermissionDef("Delete Test Assignments", "mcq-test-assignment:delete", "JOB_MANAGEMENT", null),
@@ -84,8 +75,6 @@ public class PermissionData {
 			new PermissionDef("View MCQ Result Report",  "report:mcq-result-read",  "JOB_MANAGEMENT", "report-mcq-result-list"),
 			new PermissionDef("View Audit Log Report",   "report:audit-log-read",  "JOB_MANAGEMENT", "report-audit-log-list"),
 
-			// Self-service only (own saved jobs/alerts) - unconditional for any authenticated account,
-			// same as candidate-profile:* - see PermissionInterceptor.ALWAYS_ALLOWED.
 			new PermissionDef("Manage My Saved Jobs",   "saved-job:read",       "PROFILE",           null),
 			new PermissionDef("Save/Unsave Jobs",       "saved-job:write",      "PROFILE",           null),
 			new PermissionDef("Manage My Job Alerts",   "job-alert:read",       "PROFILE",           null),
@@ -104,7 +93,6 @@ public class PermissionData {
 			new PermissionDef("View Exception Logs",    "exception-log:read",   "SYSTEM_CONFIG",  "exception-log-list"),
 			new PermissionDef("Delete Exception Logs",  "exception-log:delete", "SYSTEM_CONFIG",  "exception-log-delete"),
 
-			// No write/delete counterpart: the audit trail is append-only, enforced at the controller (501).
 			new PermissionDef("View Audit Logs",        "audit-log:read",       "SYSTEM_CONFIG",  "audit-log-list"),
 
 			new PermissionDef("View Archive Config",    "archive-config:read",   "SYSTEM_CONFIG",  "archive-config-list"),
@@ -114,10 +102,7 @@ public class PermissionData {
 			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
 			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete"),
 
-			// Deliberately scoped under /notification-broadcast, not /notification: notification:read/write/delete
-			// are unconditionally allowed for any authenticated user (PermissionInterceptor.ALWAYS_ALLOWED, own
-			// notifications only) - a POST under /notification/* would be caught by that same bucket and bypass
-			// this permission entirely.
+			// Kept under /notification-broadcast, not /notification, whose authorities are unconditionally allowed in PermissionInterceptor.
 			new PermissionDef("View Notification Broadcast", "notification-broadcast:read",  "NOTIFICATION", "notification-broadcast-list"),
 			new PermissionDef("Send Notification Broadcast", "notification-broadcast:write", "NOTIFICATION", "notification-broadcast-manage")
 		);
