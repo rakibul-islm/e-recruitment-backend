@@ -1,10 +1,8 @@
 package com.bd.erecruitment.security;
 
-import com.bd.erecruitment.service.GuestSessionTracker;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -13,13 +11,12 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.UUID;
 
 @Component
-@RequiredArgsConstructor
 public class GuestTrackingInterceptor implements HandlerInterceptor {
+
+	public static final String GUEST_ID_ATTRIBUTE = "guestId";
 
 	private static final String COOKIE_NAME = "GSID";
 	private static final int COOKIE_MAX_AGE_SECONDS = 30 * 60;
-
-	private final GuestSessionTracker guestSessionTracker;
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -35,7 +32,7 @@ public class GuestTrackingInterceptor implements HandlerInterceptor {
 			cookie.setMaxAge(COOKIE_MAX_AGE_SECONDS);
 			response.addCookie(cookie);
 		}
-		guestSessionTracker.track(guestId);
+		request.setAttribute(GUEST_ID_ATTRIBUTE, guestId);
 		return true;
 	}
 

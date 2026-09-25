@@ -46,6 +46,7 @@ public class SecurityConfig {
 								"/job-circular/filter",
 								"/company/filter",
 								"/company-type/filter",
+								"/presence/guest-stream",
 								"/h2-console/**"
 						).permitAll()
 						.requestMatchers("/actuator/**").permitAll()

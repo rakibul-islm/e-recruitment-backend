@@ -9,11 +9,13 @@ import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestApiController
 @RequestMapping("/session")
@@ -31,6 +33,12 @@ public class UserSessionController extends AbstractBaseController<UserSessionRes
 	@GetMapping("/summary")
 	public ResponseEntity<Response<SessionSummaryResDTO>> summary() {
 		return respond(sessionService.getSummary());
+	}
+
+	@Operation(summary = "Live stream of the online user and guest counts (SSE)")
+	@GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public SseEmitter stream() {
+		return sessionService.watchSummary();
 	}
 
 	@Operation(summary = "List sessions for a specific user")

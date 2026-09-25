@@ -12,7 +12,6 @@ import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.notification.SseEmitterRegistry;
 import com.bd.erecruitment.repository.UserSessionRepo;
 import com.bd.erecruitment.service.BaseService;
-import com.bd.erecruitment.service.GuestSessionTracker;
 import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.specification.GenericSpecification;
 import com.bd.erecruitment.util.RequestUtils;
@@ -25,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -38,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @AuditExempt
 public class UserSessionServiceImpl extends AbstractBaseService<UserSession> implements UserSessionService, BaseService<UserSessionResDTO, UserSessionReqDto> {
 
-	@Autowired private GuestSessionTracker guestSessionTracker;
 	@Autowired private AuditLogWriter auditLogWriter;
 	@Autowired private SseEmitterRegistry sseEmitterRegistry;
 
@@ -127,8 +126,14 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	public Response<SessionSummaryResDTO> getSummary() {
 		Date now = new Date();
 		long activeSessions = userSessionRepo.countByRevokedFalseAndDeletedFalseAndExpiresAtAfter(now);
-		long distinctActiveUsers = userSessionRepo.countDistinctActiveUsers(now);
-		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, distinctActiveUsers, guestSessionTracker.activeCount()));
+		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, sseEmitterRegistry.onlineUserCount(), sseEmitterRegistry.onlineGuestCount()));
+	}
+
+	@Override
+	public SseEmitter watchSummary() {
+		SseEmitter emitter = sseEmitterRegistry.registerWatcher();
+		sseEmitterRegistry.pushToWatchers(getSummary().getObj());
+		return emitter;
 	}
 
 	@Transactional
