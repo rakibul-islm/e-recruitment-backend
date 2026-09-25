@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestApiController
 @RequestMapping("/organization-type")
-@Tag(name = "3.1a Organization Type", description = "Managed lookup list for Organization.sector")
+@Tag(name = "3.1a Organization Type", description = "Managed lookup list for Organization.organizationType")
 public class OrganizationTypeController extends AbstractBaseController<OrganizationTypeResDTO, OrganizationTypeReqDto> {
 
 	public OrganizationTypeController(BaseService<OrganizationTypeResDTO, OrganizationTypeReqDto> service) {

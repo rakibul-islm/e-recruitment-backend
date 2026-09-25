@@ -153,7 +153,7 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 				Organization organization = new Organization()
 					.setName(application.getOrganizationName())
 					.setWebsite(application.getOrganizationWebsite())
-					.setSector(application.getOrganizationSector())
+					.setOrganizationType(application.getOrganizationType())
 					.setSize(application.getOrganizationSize())
 					.setAddress(application.getOrganizationAddress())
 					.setPhone(application.getOrganizationPhone())
@@ -194,7 +194,7 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		if (StringUtils.isBlank(reqDto.getEmail())) returnErrorException("Work email required");
 		if (StringUtils.isBlank(reqDto.getPhone())) returnErrorException("Mobile required");
 		if (StringUtils.isBlank(reqDto.getOrganizationName())) returnErrorException("Organization name required");
-		if (StringUtils.isBlank(reqDto.getOrganizationSector())) returnErrorException("Organization sector required");
+		if (StringUtils.isBlank(reqDto.getOrganizationType())) returnErrorException("Organization type required");
 		if (StringUtils.isBlank(reqDto.getOrganizationAddress())) returnErrorException("Organization address required");
 		if (StringUtils.isBlank(reqDto.getOrganizationPhone())) returnErrorException("Organization phone required");
 		if (StringUtils.isBlank(reqDto.getOrganizationEmail())) returnErrorException("Organization email required");

@@ -19,7 +19,7 @@ public class OrganizationResDTO extends BaseResponseDTO<Organization> {
 	private String name;
 	private Long logoFileId;
 	private String website;
-	private String sector;
+	private String organizationType;
 	private String phone;
 	private String email;
 	private String description;

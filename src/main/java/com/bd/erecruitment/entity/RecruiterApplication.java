@@ -33,7 +33,7 @@ public class RecruiterApplication extends SequenceIdGenerator {
 	@Column(name = "company_website")
 	private String organizationWebsite;
 	@Column(name = "company_industry")
-	private String organizationSector;
+	private String organizationType;
 	@Column(name = "company_size")
 	private String organizationSize;
 	@Column(name = "company_address")

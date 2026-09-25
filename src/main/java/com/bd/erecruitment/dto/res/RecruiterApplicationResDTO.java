@@ -23,7 +23,7 @@ public class RecruiterApplicationResDTO extends BaseResponseDTO<RecruiterApplica
 	private String phone;
 	private String organizationName;
 	private String organizationWebsite;
-	private String organizationSector;
+	private String organizationType;
 	private String organizationSize;
 	private String organizationAddress;
 	private String organizationPhone;

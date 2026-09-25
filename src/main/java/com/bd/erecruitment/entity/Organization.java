@@ -27,7 +27,7 @@ public class Organization extends SequenceIdGenerator {
 
 	private String website;
 	@Column(name = "industry")
-	private String sector;
+	private String organizationType;
 	private String phone;
 	private String email;
 
