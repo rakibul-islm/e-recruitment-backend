@@ -13,9 +13,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.Date;
 
-// status: DRAFT, SENT, ACCEPTED, DECLINED, EXPIRED, WITHDRAWN - plain String, same convention as
-// Application.status. Offer letter is a PDF generated via the same HTML->PDF pipeline CvGenerationService
-// uses (see OfferLetterGenerationService), stored via StorageService.
 @Data
 @Entity
 @SuperBuilder
@@ -40,7 +37,6 @@ public class Offer extends SequenceIdGenerator {
 	@Column(nullable = false, length = 20)
 	private String status;
 
-	// References StoredFile.id - no JPA relation, same convention as User.userGroupId.
 	@Column(name = "offer_letter_file_id")
 	private Long offerLetterFileId;
 

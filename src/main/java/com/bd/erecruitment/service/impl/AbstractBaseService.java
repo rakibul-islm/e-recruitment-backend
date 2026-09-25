@@ -53,12 +53,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	// Pre-mutation field snapshots, captured at fetch time (see captureSnapshot) and diffed
-	// against the post-save state in audit(). Keyed by object identity (not equals/hashCode,
-	// which is id-based and unreliable pre-save) and thread-local since services are singletons
-	// shared across requests. Entries are removed both on use and via a transaction-completion
-	// synchronization, so a request that throws between fetch and save never leaks an entry.
-	// Values are either a String (scalar/to-one field) or a List<String> (entity collection field).
+	// Identity-keyed and thread-local: services are singletons and equals/hashCode is id-based, unreliable pre-save.
 	private final ThreadLocal<Map<Object, Map<String, Object>>> auditSnapshots = ThreadLocal.withInitial(IdentityHashMap::new);
 
 	protected AbstractBaseService(ServiceRepository<E> repository) {
@@ -79,12 +74,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return captureSnapshot(entity);
 	}
 
-	/**
-	 * Records this entity's current diffable field values so a later update() can diff old vs.
-	 * new. Called automatically by findByIdOrThrow; call explicitly for fetches that bypass it
-	 * (e.g. PasswordPolicyServiceImpl's own "first non-deleted row" finder). Never allowed to
-	 * fail the fetch it's piggybacking on — worst case is a skipped diff, not a broken read.
-	 */
 	protected E captureSnapshot(E entity) {
 		if (entity == null) return null;
 		try {
@@ -107,8 +96,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return genericFilter(GenericSpecification.build(filters), pageable, isPageable, responseClass);
 	}
 
-	// For services that need to layer extra predicates (e.g. a computed "active" status, or a
-	// join to a related entity) on top of - or instead of - the generic filter map.
 	protected <R> Response<R> genericFilter(Specification<E> spec, Pageable pageable, Boolean isPageable, Class<R> responseClass) {
 		if (Boolean.TRUE.equals(isPageable)) {
 			Page<E> page = repository.findAll(spec, pageable);
@@ -141,8 +128,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return createEntity(entity, getLoggedInUserDetails().getUsername());
 	}
 
-	// For services reachable from a permitAll endpoint, where the caller may be anonymous and
-	// must supply its own actor (e.g. "system") instead of assuming a logged-in user.
 	protected E createEntity(E entity, String actor) {
 		String terminal = RequestUtils.getClientTerminal();
 		Date now = new Date();
@@ -182,7 +167,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	}
 
 	protected void deleteEntity(E entity) {
-		// Synchronous, same transaction: an irreversible action can't be fire-and-forget.
 		auditSync(AuditAction.HARD_DELETE, entity);
 		repository.delete(entity);
 	}
@@ -203,9 +187,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return principal instanceof MyUserDetail mud ? mud : null;
 	}
 
-	// A plain RECRUITER (not also Manager/Editor/Viewer/Super Admin - those keep unrestricted
-	// access) is scoped to their own company (User.companyId). Shared by any service that owns
-	// company-scoped data (Company itself, JobCircular, ...) so the rule stays in one place.
 	private static final java.util.Set<String> UNRESTRICTED_ROLE_CODES = java.util.Set.of("MANAGER", "EDITOR", "VIEWER");
 
 	protected boolean isScopedRecruiter() {
@@ -224,7 +205,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 
 	private void auditSync(String action, E entity) {
 		if (isAuditExempt()) return;
-		// Hard delete removes the row entirely — nothing meaningful to diff.
 		auditLogWriter.logEntitySync(action, entity.getClass().getSimpleName(), extractId(entity), AuditOutcome.SUCCESS, null);
 	}
 
@@ -242,7 +222,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		}
 	}
 
-	// A diffing bug must never fail (or roll back) the business operation it's describing.
 	private String buildChangedFieldsJson(String action, E entity) {
 		try {
 			Map<String, Object> newSnapshot = extractDiffableFields(entity);
@@ -251,8 +230,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 				oldSnapshot = Map.of();
 			} else {
 				oldSnapshot = auditSnapshots.get().remove(entity);
-				// No pre-mutation snapshot means we can't safely diff — showing every current
-				// value as "changed" would be misleading, so skip rather than guess.
 				if (oldSnapshot == null) return null;
 			}
 
@@ -279,10 +256,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		}
 	}
 
-	// Git-style: items in both old and new stay "unchanged", items only in the old list are
-	// "removed", items only in the new list are "added" — rather than flattening both sides into
-	// a single before/after string, which made a partial change to a large set (e.g. adding one
-	// permission to a role that already had ten) unreadable.
 	private void appendCollectionChange(List<Map<String, Object>> changes, String fieldName, Object oldValue, Object newValue) {
 		List<String> oldList = asStringList(oldValue);
 		List<String> newList = asStringList(newValue);
@@ -305,12 +278,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return value instanceof List<?> list ? list.stream().map(String::valueOf).toList() : List.of();
 	}
 
-	// Only the leaf entity class's own declared fields — inherited BaseEntity/SequenceIdGenerator
-	// housekeeping fields (id, createdBy/On, updatedBy/On, deleted) are deliberately excluded, since
-	// updatedBy/updatedOn change on every save and would otherwise show up as noise on every diff.
-	// Relation fields (a to-one @Entity reference, or a collection of them, e.g. User.roles,
-	// Role.permissions) are rendered as their related entities' display names so reassigning
-	// roles/permissions/groups shows up in the diff, not just plain scalar column changes.
 	private Map<String, Object> extractDiffableFields(E entity) {
 		Map<String, Object> values = new LinkedHashMap<>();
 		for (Field field : entity.getClass().getDeclaredFields()) {
@@ -332,13 +299,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		return values;
 	}
 
-	// Dates are formatted to match the app's own display convention (dd-MM-yyyy [HH:mm:ss]),
-	// the same pattern used everywhere a date is rendered in the UI, so the diff table reads
-	// naturally instead of showing Java's raw Date#toString(). A @Temporal(DATE) column (e.g.
-	// User.expiryDate) only has calendar-date precision in the database, so it's formatted
-	// date-only — that also washes out the time-of-day noise a request's Date round-trip
-	// (JSON parse, timezone) can introduce, which would otherwise show up as a false "changed"
-	// diff for a field the caller never actually touched.
 	private String describeScalar(Field field, Object value) {
 		if (value instanceof Date date) {
 			jakarta.persistence.Temporal temporal = field.getAnnotation(jakarta.persistence.Temporal.class);
@@ -374,8 +334,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 				.toList();
 	}
 
-	// Prefers a human-readable name/code over the raw id, since that's what shows up meaningfully
-	// in a diff (e.g. "Admin, Recruiter" rather than "#3, #7").
 	private String describeEntity(Object entity) {
 		for (String getter : new String[] { "getName", "getCode" }) {
 			try {

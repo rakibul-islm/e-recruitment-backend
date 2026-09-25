@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-// Single scheduled entry point for every table's retention archiving, driven by ArchiveConfig rows.
 @Slf4j
 @Component
 public class ArchiveScheduler {
@@ -32,7 +31,6 @@ public class ArchiveScheduler {
 				int archived = archiveEngine.archive(config);
 				if (archived > 0) log.info("[ArchiveScheduler] {}: archived and purged {} row(s)", config.getSourceTable(), archived);
 			} catch (Exception ex) {
-				// One misconfigured/missing archive table must not block the rest of this run.
 				log.error("[ArchiveScheduler] {}: archiving failed: {}", config.getSourceTable(), ex.getMessage(), ex);
 				exceptionLogWriter.log(ex, 0, ex.getMessage(), "ArchiveScheduler:" + config.getSourceTable());
 			}

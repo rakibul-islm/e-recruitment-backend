@@ -9,7 +9,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Proves listSourceTables() reads real tables from the schema rather than a hardcoded list.
 @SpringBootTest
 class ArchiveConfigSourceTablesTest {
 

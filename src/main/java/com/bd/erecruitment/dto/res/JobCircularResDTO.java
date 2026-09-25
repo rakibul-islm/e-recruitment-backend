@@ -21,13 +21,13 @@ public class JobCircularResDTO extends BaseResponseDTO<JobCircular>{
 	}
 
 	private String jobTitle;
-	private String companyName;
-	private String companyAddress;
-	private String companyPhone;
-	private String companyEmail;
-	private String companyWebsite;
-	private String companyBusiness;
-	private Long companyId;
+	private String organizationName;
+	private String organizationAddress;
+	private String organizationPhone;
+	private String organizationEmail;
+	private String organizationWebsite;
+	private String organizationBusiness;
+	private Long organizationId;
 	@Temporal(TemporalType.DATE)
 	private Date applicationDeadLine;
 	private Integer vacancy;

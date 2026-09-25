@@ -2,7 +2,7 @@ package com.bd.erecruitment.seed.data;
 
 import java.util.List;
 
-public class CompanyTypeData {
+public class OrganizationTypeData {
 
 	public static List<String> get() {
 		return List.of(

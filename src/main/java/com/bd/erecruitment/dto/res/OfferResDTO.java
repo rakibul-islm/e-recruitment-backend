@@ -28,7 +28,6 @@ public class OfferResDTO extends BaseResponseDTO<Offer> {
 	private String notes;
 	private Date respondedOn;
 
-	// Denormalized, populated by OfferServiceImpl.
 	private String jobTitle;
 	private String candidateName;
 }

@@ -28,7 +28,6 @@ public interface UserRepo extends ServiceRepository<User> {
 		   "(LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
 	List<User> searchActiveByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-	// Fetches roles eagerly to avoid a separate lazy-load query from audit diffing or response mapping.
 	@Override
 	@EntityGraph(attributePaths = { "roles" })
 	Optional<User> findByIdAndDeleted(Long id, boolean deleted);
@@ -37,7 +36,6 @@ public interface UserRepo extends ServiceRepository<User> {
 		   "WHERE u.deleted = false AND u.active = true AND r.deleted = false AND p.authority IN :authorities")
 	List<Long> findActiveIdsByAnyAuthority(@Param("authorities") Collection<String> authorities);
 
-	// Loads user with all permission data for Spring Security authority building
 	@Query("SELECT DISTINCT u FROM User u " +
 		   "LEFT JOIN FETCH u.roles ur LEFT JOIN FETCH ur.permissions " +
 		   "WHERE u.email = :login AND u.deleted = false")

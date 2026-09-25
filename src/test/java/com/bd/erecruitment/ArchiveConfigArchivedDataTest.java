@@ -14,7 +14,6 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Proves findArchivedData reads back rows GenericArchiveEngine already moved, with working pagination.
 @SpringBootTest
 class ArchiveConfigArchivedDataTest {
 

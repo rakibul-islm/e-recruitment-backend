@@ -56,9 +56,7 @@ class ReportDateTimeTest {
 	void timestampsFollowTheZoneTheCallerSends() throws Exception {
 		stubAuditLogAt("2030-03-04T20:30:45Z");
 
-		// Dhaka is UTC+6, so 20:30:45 UTC rolls over to the next day.
 		assertThat(auditText("Asia/Dhaka")).contains("05-03-2030 02:30:45 AM").doesNotContain("20:30:45");
-		// New York is on EST (UTC-5) on that date.
 		assertThat(auditText("America/New_York")).contains("04-03-2030 03:30:45 PM").doesNotContain("20:30:45");
 		assertThat(auditText("UTC")).contains("04-03-2030 08:30:45 PM");
 	}
@@ -86,7 +84,6 @@ class ReportDateTimeTest {
 				.setApplicationDeadLine(Date.from(Instant.parse("2030-01-15T00:00:00Z")));
 		when(jobCircularRepo.findAll(any(Specification.class))).thenReturn(List.of(job));
 
-		// Los Angeles is UTC-8: formatting the UTC-midnight deadline there would give 14-01-2030.
 		String text = pdfText(reportService.generate("job-posting", "PDF", Map.of(), "America/Los_Angeles"));
 
 		assertThat(text).contains("15-01-2030").doesNotContain("14-01-2030");

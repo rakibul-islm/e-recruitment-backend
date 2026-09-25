@@ -68,6 +68,9 @@ app:
   otp:
     expiry-minutes: 10
     max-attempts: 5
+  presence:
+    max-guest-streams: 2000
+    max-streams-per-client: 50
   frontend:
     base-url: ${FRONTEND_BASE_URL}
   account-setup:

@@ -20,7 +20,7 @@ public class McqQuestionResDTO extends BaseResponseDTO<McqQuestion> {
 		ModelMapperUtils.MAPPER.map(question, this);
 	}
 
-	private Long companyId;
+	private Long organizationId;
 	private String questionText;
 	private String skillTag;
 	private String difficulty;

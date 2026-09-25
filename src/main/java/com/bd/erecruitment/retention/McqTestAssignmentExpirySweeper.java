@@ -12,10 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.List;
 
-// Fallback for a candidate whose timer ran out without the client-side auto-submit firing (lost
-// connection, closed tab). Every minute - not JobAlertScheduler's daily cadence - since exam
-// deadlines need much finer granularity. Mirrors JobAlertScheduler's single-cron, per-row
-// try/catch shape so one broken assignment doesn't block the rest of the sweep.
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -40,7 +36,6 @@ public class McqTestAssignmentExpirySweeper {
 			}
 		}
 
-		// Scheduled exams whose "not after" start window closed while the candidate never started.
 		List<McqTestAssignment> missedWindow = mcqTestAssignmentRepo
 			.findAllByStatusAndScheduledEndAtBeforeAndDeleted("ASSIGNED", now, false);
 		for (McqTestAssignment assignment : missedWindow) {
@@ -52,7 +47,6 @@ public class McqTestAssignmentExpirySweeper {
 			}
 		}
 
-		// Per-question timers that ran out without the client-side auto-advance firing.
 		List<McqTestAssignment> expiredQuestions = mcqTestAssignmentRepo
 			.findAllByStatusAndCurrentQuestionDeadlineAtBeforeAndDeleted("IN_PROGRESS", now, false);
 		for (McqTestAssignment assignment : expiredQuestions) {

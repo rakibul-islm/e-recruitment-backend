@@ -10,23 +10,24 @@ import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@Entity
+// entity and column names deliberately keep "company" so the existing tables, columns and id sequence stay valid
+@Entity(name = "Company")
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
 @Table(name = "COMPANY")
 @EqualsAndHashCode(callSuper = true)
-public class Company extends SequenceIdGenerator {
+public class Organization extends SequenceIdGenerator {
 
 	@Column(nullable = false, length = 200)
 	private String name;
 
-	// References StoredFile.id - no JPA relation, same convention as User.userGroupId.
 	@Column(name = "logo_file_id")
 	private Long logoFileId;
 
 	private String website;
-	private String industry;
+	@Column(name = "industry")
+	private String sector;
 	private String phone;
 	private String email;
 

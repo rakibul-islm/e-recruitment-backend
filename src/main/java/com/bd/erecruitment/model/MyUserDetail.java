@@ -30,7 +30,7 @@ public class MyUserDetail implements UserDetails {
 	private boolean locked;
 	private Date expiryDate;
 	private List<GrantedAuthority> authorities;
-	private Long companyId;
+	private Long organizationId;
 	private Set<String> roleCodes;
 
 	public MyUserDetail(User user) {
@@ -43,7 +43,7 @@ public class MyUserDetail implements UserDetails {
 		this.enabled = user.isActive();
 		this.locked = user.isLocked();
 		this.expiryDate = user.getExpiryDate();
-		this.companyId = user.getCompanyId();
+		this.organizationId = user.getOrganizationId();
 
 		Set<GrantedAuthority> auths = new HashSet<>();
 

@@ -22,9 +22,9 @@ public class Permission extends SequenceIdGenerator {
 	private String name;
 
 	@Column(unique = true, nullable = false)
-	private String authority; // used by Spring Security + Angular AccessGuard
+	private String authority;
 
-	private String routeName; // matched by Angular AccessGuard to the current route
+	private String routeName;
 
 	private String description;
 

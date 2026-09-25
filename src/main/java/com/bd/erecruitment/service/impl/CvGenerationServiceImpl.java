@@ -15,8 +15,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-// Single built-in layout for now ("classic") - see CvGenerationService. templateKey is recorded
-// per generation so more layouts can be added later without touching the schema.
 @Service
 @RequiredArgsConstructor
 public class CvGenerationServiceImpl implements CvGenerationService {
@@ -58,9 +56,6 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 	private String buildHtml(User user, CandidateProfile profile) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><head><meta charset='UTF-8'/><style>")
-			// @page margin reserves the footer's strip as part of the page box itself, and the
-			// @bottom-center margin box lays out the running(footer) element inside it - unlike a
-			// plain position:fixed overlay, content can never flow underneath it.
 			.append("@page{margin:30px 30px 55px 30px;@bottom-center{content:element(footer);}}")
 			.append("body{font-family:'Helvetica',sans-serif;color:#1f2937;font-size:11px;margin:0;line-height:1.5;}")
 			.append("h1{font-size:25px;margin:0 0 4px 0;color:#032967;letter-spacing:0.2px;}")
@@ -70,10 +65,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			.append(".cv-header-text{overflow:hidden;}")
 			.append(".contact{font-size:10px;color:#4b5563;margin-top:2px;}")
 			.append(".contact span{display:inline-block;margin:0 14px 4px 0;}")
-			// break-after avoid keeps a heading from being stranded alone at the bottom of a page.
 			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.8px;color:#032967;border-left:3px solid #032967;border-bottom:1px solid #e2e8f5;padding:0 0 6px 8px;margin-top:22px;margin-bottom:12px;page-break-after:avoid;break-after:avoid;}")
-			// break-inside avoid keeps a single entry from being split across two pages - if it
-			// doesn't fit in the remaining space, the whole entry moves to the next page instead.
 			.append(".item{overflow:hidden;margin-bottom:13px;padding-left:12px;border-left:2px solid #e2e8f5;page-break-inside:avoid;break-inside:avoid;}")
 			.append(".item-title{font-weight:bold;font-size:12px;color:#111827;}")
 			.append(".item-sub{color:#5b6b85;font-size:10.5px;margin-top:1px;}")
@@ -85,9 +77,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			.append(".cv-footer-link{color:#9ca3af;text-decoration:none;}")
 			.append("</style></head><body>");
 
-		// A running() element only takes effect on pages laid out after its point in document
-		// order, so it has to appear before the first page's content - not trailing at the end -
-		// or the first page renders with no footer at all.
+		// A running() element only applies to pages after it, so it must precede the content or page 1 has no footer.
 		sb.append("<div class='cv-footer'>Powered by <span class='cv-footer-brand'>E-RECRUITMENT</span>");
 		if (StringUtils.isNotBlank(frontendBaseUrl)) {
 			sb.append(" · <a class='cv-footer-link' href='").append(esc(frontendBaseUrl)).append("'>").append(esc(displayUrl(frontendBaseUrl))).append("</a>");
@@ -102,8 +92,6 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			sb.append("<div class='headline'>").append(esc(profile.getHeadline())).append("</div>");
 		}
 		sb.append("<div class='contact'>");
-		// Phone/address are account-level data (inherited from the User, not the CV-specific
-		// CandidateProfile) - mobile is treated as the primary number, phone as secondary.
 		List<String> contactParts = List.of(
 			StringUtils.defaultString(user.getEmail()),
 			StringUtils.defaultString(user.getMobile()),
@@ -128,7 +116,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 				sb.append("<div class='item'>")
 					.append("<span class='item-dates'>").append(dateRange(w.getStartDate(), w.getEndDate(), w.isCurrent())).append("</span>")
 					.append("<div class='item-title'>").append(esc(w.getTitle())).append("</div>")
-					.append("<div class='item-sub'>").append(esc(joinNonBlank(w.getCompanyName(), w.getLocation()))).append("</div>");
+					.append("<div class='item-sub'>").append(esc(joinNonBlank(w.getOrganizationName(), w.getLocation()))).append("</div>");
 				if (StringUtils.isNotBlank(w.getDescription())) sb.append("<div class='item-desc'>").append(esc(w.getDescription())).append("</div>");
 				sb.append("</div>");
 			}

@@ -12,7 +12,6 @@ import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.notification.SseEmitterRegistry;
 import com.bd.erecruitment.repository.UserSessionRepo;
 import com.bd.erecruitment.service.BaseService;
-import com.bd.erecruitment.service.GuestSessionTracker;
 import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.specification.GenericSpecification;
 import com.bd.erecruitment.util.RequestUtils;
@@ -25,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -34,18 +34,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-// Retention archiving lives in ArchiveScheduler/GenericArchiveEngine, not this class.
 @Service
-@AuditExempt // session churn on every login shouldn't flood the entity-audit path; session events are covered explicitly instead (phase 2)
+@AuditExempt
 public class UserSessionServiceImpl extends AbstractBaseService<UserSession> implements UserSessionService, BaseService<UserSessionResDTO, UserSessionReqDto> {
 
-	@Autowired private GuestSessionTracker guestSessionTracker;
 	@Autowired private AuditLogWriter auditLogWriter;
 	@Autowired private SseEmitterRegistry sseEmitterRegistry;
 
 	private final UserSessionRepo userSessionRepo;
 
-	// Checked on every request; preloaded at startup, re-synced hourly, updated instantly by revoke().
 	private final Set<String> revokedJtiCache = ConcurrentHashMap.newKeySet();
 
 	UserSessionServiceImpl(UserSessionRepo userSessionRepo) {
@@ -117,7 +114,6 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		return getSuccessResponse("Logged out successfully");
 	}
 
-	// @Transactional: UserSessionResDTO's constructor reads the lazy `user` association.
 	@Transactional
 	@Override
 	public Response<UserSessionResDTO> findByUser(Long userId) {
@@ -130,11 +126,16 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	public Response<SessionSummaryResDTO> getSummary() {
 		Date now = new Date();
 		long activeSessions = userSessionRepo.countByRevokedFalseAndDeletedFalseAndExpiresAtAfter(now);
-		long distinctActiveUsers = userSessionRepo.countDistinctActiveUsers(now);
-		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, distinctActiveUsers, guestSessionTracker.activeCount()));
+		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, sseEmitterRegistry.onlineUserCount(), sseEmitterRegistry.onlineGuestCount()));
 	}
 
-	// @Transactional: UserSessionResDTO's constructor reads the lazy `user` association.
+	@Override
+	public SseEmitter watchSummary() {
+		SseEmitter emitter = sseEmitterRegistry.registerWatcher();
+		sseEmitterRegistry.pushToWatchers(getSummary().getObj());
+		return emitter;
+	}
+
 	@Transactional
 	@Override
 	public Response<UserSessionResDTO> find(Long id) {
@@ -151,11 +152,6 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		return getSuccessResponse("Session logged out successfully", new UserSessionResDTO(session));
 	}
 
-	// "status" (ACTIVE/REVOKED/EXPIRED) and "userEmail_like" aren't real UserSession columns —
-	// status is a computed combination of revoked + expiresAt, and email lives on the related
-	// User — so both are pulled out of the generic filter map and applied as extra predicates
-	// instead of going through GenericSpecification's plain-column matching.
-	// @Transactional: UserSessionResDTO pulls userEmail/userFullName off the lazy `user` association.
 	@Transactional
 	@Override
 	public Response<UserSessionResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
@@ -200,7 +196,6 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		revokedJtiCache.add(session.getJti());
 	}
 
-	// Not called from logoutCurrentSession - that's self-service, no push needed
 	private void notifyForceLogout(Long userId) {
 		sseEmitterRegistry.push(userId, "force-logout", Map.of("reason", "force-logout"));
 	}

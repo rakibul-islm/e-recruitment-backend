@@ -10,6 +10,5 @@ public interface ApplicationStatusHistoryRepo extends ServiceRepository<Applicat
 
 	List<ApplicationStatusHistory> findAllByApplicationIdAndDeletedOrderByChangedOnAsc(Long applicationId, boolean deleted);
 
-	// Used by AnalyticsServiceImpl to compute average time-to-hire.
 	List<ApplicationStatusHistory> findAllByStatusAndDeleted(String status, boolean deleted);
 }

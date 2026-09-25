@@ -21,7 +21,6 @@ import java.util.List;
 public class NotificationBroadcastServiceImpl extends CommonFunctionsImpl {
 
 	private static final int MAX_TITLE_LENGTH = 150;
-	// Leaves margin in Notification.paramsJson (length 4000) for the JSON wrapper and escaping.
 	private static final int MAX_MESSAGE_LENGTH = 3000;
 	private static final int USER_SEARCH_LIMIT = 20;
 
@@ -53,7 +52,6 @@ public class NotificationBroadcastServiceImpl extends CommonFunctionsImpl {
 		if (req.getTargetType() == null) {
 			returnErrorException("Target type is required");
 		}
-		// Reject overlong messages instead of truncating - abbreviate() would risk cutting mid-tag.
 		if (req.getMessage().trim().length() > MAX_MESSAGE_LENGTH) {
 			returnErrorException("Message is too long");
 		}

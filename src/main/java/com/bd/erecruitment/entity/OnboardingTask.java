@@ -13,8 +13,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.Date;
 
-// A single post-hire checklist item for an Application. Seeded with a default set on offer
-// acceptance (see OnboardingServiceImpl.seedDefaultTasks), and staff can add custom ones.
 @Data
 @Entity
 @SuperBuilder

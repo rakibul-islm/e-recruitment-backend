@@ -22,9 +22,6 @@ public interface UserSessionRepo extends ServiceRepository<UserSession> {
 
 	long countByRevokedFalseAndDeletedFalseAndExpiresAtAfter(Date now);
 
-	@Query("SELECT COUNT(DISTINCT s.user.id) FROM UserSession s WHERE s.revoked = false AND s.deleted = false AND s.expiresAt > :now")
-	long countDistinctActiveUsers(@Param("now") Date now);
-
 	@Query("SELECT s.jti FROM UserSession s WHERE s.revoked = true AND s.expiresAt > :now")
 	List<String> findRevokedJtisNotExpired(@Param("now") Date now);
 }

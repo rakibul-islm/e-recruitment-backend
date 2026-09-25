@@ -18,9 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-// A plain recruiter (isScopedRecruiter()) may only see/manage their own company's bank questions -
-// same rule and reasoning as JobCircularServiceImpl. Candidates never reach this service at all
-// (no mcq-question:* authority is granted to REGISTERED_USER - see RoleData).
 @Service
 public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> implements BaseService<McqQuestionResDTO, McqQuestionReqDto> {
 
@@ -28,12 +25,11 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 		super(mcqQuestionRepo);
 	}
 
-	// @Transactional: McqQuestionResDTO reads the lazy `options` element collection.
 	@Transactional
 	@Override
 	public Response<McqQuestionResDTO> find(Long id) {
 		McqQuestion question = findByIdOrThrow(id, "Question not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(question.getCompanyId())) returnNotFoundException("Question not found");
+		if (isScopedRecruiter() && !organizationMatchesCaller(question.getOrganizationId())) returnNotFoundException("Question not found");
 		return getSuccessResponse("Question found", new McqQuestionResDTO(question));
 	}
 
@@ -44,7 +40,7 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 		McqQuestion bean = reqDto.getBean();
 		if (StringUtils.isBlank(bean.getStatus())) bean.setStatus("APPROVED");
 		bean.setSource("MANUAL");
-		if (isScopedRecruiter()) bean.setCompanyId(getLoggedInUserDetails().getCompanyId());
+		if (isScopedRecruiter()) bean.setOrganizationId(getLoggedInUserDetails().getOrganizationId());
 		McqQuestion question = createEntity(bean);
 		return getCreatedResponse("Question saved successfully", new McqQuestionResDTO(question));
 	}
@@ -53,8 +49,8 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 	@Override
 	public Response<McqQuestionResDTO> update(McqQuestionReqDto reqDto) {
 		McqQuestion existing = findByIdOrThrow(reqDto.getId(), "Question not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(existing.getCompanyId()))
-			throw new ForbiddenException("You may only manage your own company's questions");
+		if (isScopedRecruiter() && !organizationMatchesCaller(existing.getOrganizationId()))
+			throw new ForbiddenException("You may only manage your own organization's questions");
 		validateForm(reqDto);
 
 		existing.setQuestionText(reqDto.getQuestionText())
@@ -81,8 +77,8 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 	@Override
 	public Response<McqQuestionResDTO> delete(Long id) {
 		McqQuestion question = findByIdOrThrow(id, "Question not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(question.getCompanyId()))
-			throw new ForbiddenException("You may only manage your own company's questions");
+		if (isScopedRecruiter() && !organizationMatchesCaller(question.getOrganizationId()))
+			throw new ForbiddenException("You may only manage your own organization's questions");
 		deleteEntity(question);
 		return getSuccessResponse("Deleted successfully");
 	}
@@ -91,8 +87,8 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 	@Override
 	public Response<McqQuestionResDTO> remove(Long id) {
 		McqQuestion question = findByIdOrThrow(id, "Question not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(question.getCompanyId()))
-			throw new ForbiddenException("You may only manage your own company's questions");
+		if (isScopedRecruiter() && !organizationMatchesCaller(question.getOrganizationId()))
+			throw new ForbiddenException("You may only manage your own organization's questions");
 		removeEntity(question);
 		return getSuccessResponse("Removed successfully");
 	}
@@ -103,14 +99,14 @@ public class McqQuestionServiceImpl extends AbstractBaseService<McqQuestion> imp
 		if (isScopedRecruiter()) {
 			MyUserDetail me = getLoggedInUserDetails();
 			filters = new HashMap<>(filters);
-			filters.put("companyId", me.getCompanyId() == null ? "-1" : String.valueOf(me.getCompanyId()));
+			filters.put("organizationId", me.getOrganizationId() == null ? "-1" : String.valueOf(me.getOrganizationId()));
 		}
 		return genericFilter(filters, pageable, isPageable, McqQuestionResDTO.class);
 	}
 
-	private boolean companyMatchesCaller(Long companyId) {
+	private boolean organizationMatchesCaller(Long organizationId) {
 		MyUserDetail me = getLoggedInUserDetails();
-		return me != null && me.getCompanyId() != null && me.getCompanyId().equals(companyId);
+		return me != null && me.getOrganizationId() != null && me.getOrganizationId().equals(organizationId);
 	}
 
 	private void validateForm(McqQuestionReqDto reqDto) {

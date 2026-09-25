@@ -20,7 +20,7 @@ public class McqTestResDTO extends BaseResponseDTO<McqTest> {
 		this.questionCount = test.getQuestionIds() != null ? test.getQuestionIds().size() : 0;
 	}
 
-	private Long companyId;
+	private Long organizationId;
 	private String name;
 	private String description;
 	private Integer durationMinutes;
@@ -32,6 +32,5 @@ public class McqTestResDTO extends BaseResponseDTO<McqTest> {
 	private String status;
 	private List<Long> questionIds = new ArrayList<>();
 
-	// Denormalized, populated from McqTest.questionIds.size() by the constructor above.
 	private int questionCount;
 }

@@ -72,7 +72,6 @@ public class UserGroupServiceImpl extends AbstractBaseService<UserGroup> impleme
 		return getSuccessResponse("Removed successfully");
 	}
 
-	// @Transactional: UserGroupResDTO pulls roles off the lazy `roles` association.
 	@Transactional
 	@Override
 	public Response<UserGroupResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {

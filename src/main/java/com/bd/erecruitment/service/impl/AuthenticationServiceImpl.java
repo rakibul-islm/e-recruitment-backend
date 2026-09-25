@@ -100,7 +100,7 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			exceptionLogWriter.log(e, 401, "Invalid Google token", "loginWithGoogle");
 			auditLogWriter.logSecurity(AuditAction.LOGIN_FAILURE, "unknown", AuditOutcome.FAILURE);
 			returnUnauthorizedException("Invalid Google token");
-			return null; // unreachable, satisfies compiler
+			return null;
 		}
 
 		String email = (String) tokenInfo.get("email");
@@ -172,12 +172,10 @@ public class AuthenticationServiceImpl extends AbstractBaseService<User> impleme
 			try {
 				mailService.sendOtpEmail(user.getEmail(), user.getFullName(), otp, otpExpiryMinutes);
 			} catch (Exception e) {
-				// Non-fatal: don't leak SMTP failures, or it'd reveal whether the email exists.
 				log.error("Failed to send OTP email to {}", user.getEmail(), e);
 				exceptionLogWriter.log(e, 0, e.getMessage(), "AuthenticationServiceImpl.forgotPassword:" + user.getEmail());
 			}
 		}
-		// Same message either way, to avoid leaking account existence.
 		return getSuccessResponse("If an account exists for this email, an OTP has been sent");
 	}
 

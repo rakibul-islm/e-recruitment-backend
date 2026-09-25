@@ -53,6 +53,7 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+			// Tokens issued before session tracking carry no jti and count as active.
 			String jti = extractJtiSafely(jwt);
 			boolean sessionRevoked = jti != null && !userSessionService.isActive(jti);
 			if (!sessionRevoked && Boolean.TRUE.equals(jwtUtil.validateToken(jwt, userDetails))) {
@@ -66,7 +67,6 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 		filterChain.doFilter(request, response);
 	}
 
-	// Tokens issued before session tracking existed carry no jti claim; treat those as always active.
 	private String extractJtiSafely(String token) {
 		try {
 			return jwtUtil.extractJti(token);

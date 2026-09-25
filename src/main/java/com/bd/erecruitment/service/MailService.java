@@ -29,7 +29,7 @@ public interface MailService {
 
 	void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs);
 
-	void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName);
+	void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String organizationName);
 
 	void sendRecruiterApplicationRejectedEmail(String toEmail, String fullName, String note);
 

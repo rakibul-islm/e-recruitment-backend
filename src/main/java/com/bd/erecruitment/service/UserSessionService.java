@@ -6,6 +6,7 @@ import com.bd.erecruitment.dto.res.UserSessionResDTO;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.entity.UserSession;
 import com.bd.erecruitment.util.Response;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Date;
 
@@ -24,4 +25,6 @@ public interface UserSessionService extends BaseService<UserSessionResDTO, UserS
 	Response<UserSessionResDTO> findByUser(Long userId);
 
 	Response<SessionSummaryResDTO> getSummary();
+
+	SseEmitter watchSummary();
 }

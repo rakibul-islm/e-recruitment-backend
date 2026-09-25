@@ -16,6 +16,8 @@ import com.bd.erecruitment.service.MailService;
 import com.bd.erecruitment.service.StorageService;
 import com.bd.erecruitment.specification.GenericSpecification;
 import com.bd.erecruitment.util.Response;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -36,11 +38,6 @@ import java.util.stream.Collectors;
 @Service
 public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
-	// Staff (recruiter/admin) actions beyond a candidate's own applications are gated on this
-	// authority as a pragmatic stand-in for "has recruiting/admin access" - PermissionInterceptor
-	// only enforces one resource:action pair per whole controller, so distinguishing "my
-	// applications" (any candidate) from "all applications" (staff only) under the same
-	// "application" resource has to happen here, not at the interceptor.
 	private static final String STAFF_AUTHORITY = "job-circular:write";
 	private static final Set<String> VALID_STATUSES = Set.of(
 		"APPLIED", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED", "WITHDRAWN"
@@ -130,6 +127,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	public Response<ApplicationResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		requireStaff("view all applications");
 		Specification<Application> spec = GenericSpecification.build(resolveCandidateFilters(filters));
+		if (isScopedRecruiter()) spec = spec.and(forOwnOrganizationJobs(getLoggedInUserDetails().getOrganizationId()));
 		if (Boolean.TRUE.equals(isPageable)) {
 			Page<Application> page = applicationRepo.findAll(spec, pageable);
 			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(a -> toDto(a, null, null)));
@@ -138,7 +136,6 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
-	// Resolves candidateName_like/candidateEmail_like (not real Application columns) to a User-based candidateUserId_in filter.
 	private Map<String, String> resolveCandidateFilters(Map<String, String> filters) {
 		String candidateName = filters.get("candidateName_like");
 		String candidateEmail = filters.get("candidateEmail_like");
@@ -154,7 +151,6 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
 		List<Long> matchingUserIds = userRepo.findAll(GenericSpecification.<User>build(userFilters))
 			.stream().map(User::getId).toList();
-		// Empty match: force an impossible id instead of dropping the filter and matching everyone.
 		effectiveFilters.put("candidateUserId_in", matchingUserIds.isEmpty()
 			? "-1"
 			: matchingUserIds.stream().map(String::valueOf).collect(Collectors.joining(",")));
@@ -174,6 +170,9 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		}
 		Application application = findByIdOrThrow(id, "Application not found");
 		MyUserDetail me = getLoggedInUserDetails();
+		if (isScopedRecruiter() && !belongsToOwnOrganization(application)) {
+			throw new ForbiddenException("You may only manage applications for your own organization's job postings");
+		}
 
 		application.setStatus(reqDto.getStatus())
 			.setStatusUpdatedOn(new Date())
@@ -204,10 +203,30 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	private Application getOwnedOrStaffApplication(Long id) {
 		Application application = findByIdOrThrow(id, "Application not found");
 		MyUserDetail me = getLoggedInUserDetails();
-		if (!application.getCandidateUserId().equals(me.getId()) && !isStaff(me)) {
-			throw new ForbiddenException("Access denied");
-		}
+		if (application.getCandidateUserId().equals(me.getId())) return application;
+		if (!isStaff(me)) throw new ForbiddenException("Access denied");
+		if (isScopedRecruiter() && !belongsToOwnOrganization(application)) returnNotFoundException("Application not found");
 		return application;
+	}
+
+	private boolean belongsToOwnOrganization(Application application) {
+		Long organizationId = getLoggedInUserDetails().getOrganizationId();
+		if (organizationId == null) return false;
+		return jobCircularRepo.findById(application.getJobCircularId())
+			.map(job -> organizationId.equals(job.getOrganizationId()))
+			.orElse(false);
+	}
+
+	private Specification<Application> forOwnOrganizationJobs(Long organizationId) {
+		return (root, query, cb) -> {
+			if (organizationId == null) return cb.disjunction();
+			Subquery<Long> ownJobs = query.subquery(Long.class);
+			Root<JobCircular> job = ownJobs.from(JobCircular.class);
+			ownJobs.select(job.get("id")).where(
+				cb.equal(job.get("organizationId"), organizationId),
+				cb.equal(job.get("id"), root.get("jobCircularId")));
+			return cb.exists(ownJobs);
+		};
 	}
 
 	private void requireStaff(String action) {

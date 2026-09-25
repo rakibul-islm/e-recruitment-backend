@@ -6,9 +6,6 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-// Candidate-facing view of one assigned question. Deliberately never carries option correctness,
-// even after submission - only the aggregate score/pass on McqTestAssignmentResDTO is shown to
-// the candidate, so answers can't leak to later test-takers.
 @Data
 @NoArgsConstructor
 public class McqTestAttemptQuestionDto {

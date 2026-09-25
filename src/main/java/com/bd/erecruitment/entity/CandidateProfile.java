@@ -11,8 +11,6 @@ import lombok.experimental.SuperBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-// 1:1 with User (userId, no JPA relation - same convention as User.userGroupId). Holds the
-// structured data CvGenerationService renders into a downloadable CV/resume PDF.
 @Data
 @Entity
 @SuperBuilder

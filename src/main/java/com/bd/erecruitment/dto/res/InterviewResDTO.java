@@ -31,7 +31,6 @@ public class InterviewResDTO extends BaseResponseDTO<Interview> {
 	private List<Long> interviewerUserIds = new ArrayList<>();
 	private List<InterviewFeedbackItem> feedback = new ArrayList<>();
 
-	// Denormalized, populated by InterviewServiceImpl.
 	private String jobTitle;
 	private String candidateName;
 }

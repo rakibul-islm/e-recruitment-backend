@@ -32,7 +32,7 @@ public class UserProfileResDTO{
 	private String phone;
 	private String mobile;
 	private String imageBase64;
-	private Long companyId;
+	private Long organizationId;
 
 	private Set<UserRoleResDTO> roles;
 

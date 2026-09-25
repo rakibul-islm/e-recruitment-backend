@@ -13,8 +13,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.Date;
 
-// A candidate's saved search; JobAlertScheduler runs daily, emails a digest of jobs published
-// since lastNotifiedOn matching keyword/location/category, and advances lastNotifiedOn.
 @Data
 @Entity
 @SuperBuilder

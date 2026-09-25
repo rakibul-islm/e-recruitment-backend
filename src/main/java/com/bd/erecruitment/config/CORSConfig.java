@@ -9,7 +9,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CORSConfig implements WebMvcConfigurer {
 
-	// Concrete origin + allowCredentials required for the guest-session cookie to round-trip cross-origin.
 	@Value("${app.frontend.base-url:http://localhost:4200}")
 	private String frontendBaseUrl;
 
@@ -23,6 +22,7 @@ public class CORSConfig implements WebMvcConfigurer {
 						.allowedMethods("GET", "POST", "PUT", "DELETE")
 						.allowedHeaders("*")
 						.allowedOriginPatterns(frontendBaseUrl)
+						// Credentials need a concrete origin (no wildcard) for the guest-session cookie to round-trip cross-origin.
 						.allowCredentials(true);
 			}
 		};

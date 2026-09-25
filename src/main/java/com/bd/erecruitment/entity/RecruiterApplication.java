@@ -27,18 +27,24 @@ public class RecruiterApplication extends SequenceIdGenerator {
 
 	private String phone;
 
-	@Column(nullable = false, length = 200)
-	private String companyName;
+	@Column(name = "company_name", nullable = false, length = 200)
+	private String organizationName;
 
-	private String companyWebsite;
-	private String companyIndustry;
-	private String companySize;
-	private String companyAddress;
-	private String companyPhone;
-	private String companyEmail;
+	@Column(name = "company_website")
+	private String organizationWebsite;
+	@Column(name = "company_industry")
+	private String organizationSector;
+	@Column(name = "company_size")
+	private String organizationSize;
+	@Column(name = "company_address")
+	private String organizationAddress;
+	@Column(name = "company_phone")
+	private String organizationPhone;
+	@Column(name = "company_email")
+	private String organizationEmail;
 
-	@Column(length = 2000)
-	private String companyDescription;
+	@Column(name = "company_description", length = 2000)
+	private String organizationDescription;
 
 	private String jobTitle;
 

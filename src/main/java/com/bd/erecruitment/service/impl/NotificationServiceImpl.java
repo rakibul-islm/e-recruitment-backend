@@ -40,7 +40,6 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	private static final String SUPER_ADMIN = "SUPER_ADMIN";
 	private static final int MAX_PAGE_SIZE = 50;
 	private static final int MAX_PARAM_LENGTH = 200;
-	// "message" is rich-text HTML, so it skips the short abbreviate() applied to other params.
 	private static final String MESSAGE_PARAM_KEY = "message";
 	private static final int MAX_MESSAGE_PARAM_LENGTH = 3500;
 
@@ -72,9 +71,6 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 		return getSuccessResponse("OK", pollPayload(currentUser().getId()));
 	}
 
-	// Every existing and future NotificationType gets live SSE push for free through this one hook in
-	// create() - no per-type code needed. On (re)connect the same payload is sent immediately so a
-	// client is always correct regardless of events missed while disconnected.
 	public SseEmitter stream() {
 		Long userId = currentUser().getId();
 		SseEmitter emitter = sseEmitterRegistry.register(userId);

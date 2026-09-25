@@ -19,7 +19,6 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 
 	private final PasswordPolicyRepo passwordPolicyRepo;
 
-	// Lazily filled, kept in sync by update() so validatePassword() avoids a DB hit each call.
 	private volatile PasswordPolicy cachedPolicy;
 
 	PasswordPolicyServiceImpl(PasswordPolicyRepo passwordPolicyRepo) {
@@ -96,7 +95,6 @@ public class PasswordPolicyServiceImpl extends AbstractBaseService<PasswordPolic
 		if (reqDto.getMaxLength() < reqDto.getMinLength()) returnErrorException("Maximum length must be greater than or equal to minimum length");
 	}
 
-	// A missing row means PasswordPolicySeeder didn't run — surface it rather than fabricating one.
 	private PasswordPolicy findPolicyOrThrow() {
 		return passwordPolicyRepo.findFirstByDeletedFalseOrderByIdAsc()
 			.orElseThrow(() -> new com.bd.erecruitment.exception.NotFoundException("Password policy not found"));

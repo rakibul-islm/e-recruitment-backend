@@ -16,7 +16,7 @@
 	<parameter name="frontendBaseUrl" class="java.lang.String"/>
 
 	<field name="jobTitle" class="java.lang.String"/>
-	<field name="companyName" class="java.lang.String"/>
+	<field name="organizationName" class="java.lang.String"/>
 	<field name="status" class="java.lang.String"/>
 	<field name="vacancy" class="java.lang.Integer"/>
 	<field name="applicationDeadLine" class="java.lang.String"/>
@@ -68,7 +68,7 @@
 				<reportElement x="170" y="0" width="130" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
-				<text><![CDATA[Company]]></text>
+				<text><![CDATA[Organization]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="300" y="0" width="80" height="22" forecolor="#032967"/>
@@ -125,7 +125,7 @@
 				<reportElement x="170" y="0" width="130" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
-				<textFieldExpression><![CDATA[$F{companyName}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{organizationName}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="300" y="0" width="80" height="20" forecolor="#1F2937"/>

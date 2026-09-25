@@ -38,8 +38,6 @@ public class OnboardingServiceImpl extends AbstractBaseService<OnboardingTask> {
 		this.applicationRepo = applicationRepo;
 	}
 
-	// Called from OfferServiceImpl.respond() when a candidate accepts an offer. Runs in that
-	// caller's transaction - no @Transactional here to avoid nesting a separate one.
 	public void seedDefaultTasks(Long applicationId, String actor) {
 		if (!onboardingTaskRepo.findAllByApplicationIdAndDeletedOrderByDueDateAsc(applicationId, false).isEmpty()) return;
 

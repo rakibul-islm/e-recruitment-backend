@@ -18,7 +18,6 @@ public class GoogleAvatarFetcher {
 	private final ExceptionLogWriter exceptionLogWriter;
 	private final RestTemplate restTemplate = buildRestTemplate();
 
-	// Runs off the login request thread so a slow/large Google avatar download never delays sign-in.
 	@Async
 	public void fetchAndStore(Long userId, String pictureUrl) {
 		try {

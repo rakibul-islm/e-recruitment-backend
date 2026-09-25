@@ -26,10 +26,23 @@ public class PermissionSeeder implements DataSeeder {
 		Date now = new Date();
 		int inserted = 0;
 		int restored = 0;
+		int renamed = 0;
 
 		for (PermissionData.PermissionDef def : PermissionData.get()) {
 			Permission existing = permissionRepo.findByAuthority(def.authority());
 			if (existing == null) {
+				Permission legacy = permissionRepo.findByAuthority(legacyAuthority(def.authority()));
+				if (legacy != null) {
+					legacy.setName(def.name())
+						.setAuthority(def.authority())
+						.setModule(def.module())
+						.setRouteName(def.routeName())
+						.setUpdatedBy("system").setUpdatedOn(now)
+						.setDeleted(false);
+					permissionRepo.save(legacy);
+					renamed++;
+					continue;
+				}
 				Permission p = new Permission();
 				p.setName(def.name())
 					.setAuthority(def.authority())
@@ -41,10 +54,6 @@ public class PermissionSeeder implements DataSeeder {
 				permissionRepo.save(p);
 				inserted++;
 			} else if (existing.isDeleted()) {
-				// authority is unique, so a soft-deleted permission can never be re-created through
-				// the UI, and findByAuthority ignores the deleted flag, so it would otherwise stay
-				// hidden forever instead of ever being re-seeded - heal it back to the canonical
-				// definition rather than leaving admins with a permanently missing permission.
 				existing.setName(def.name())
 					.setModule(def.module())
 					.setRouteName(def.routeName())
@@ -55,7 +64,11 @@ public class PermissionSeeder implements DataSeeder {
 			}
 		}
 
-		if (inserted == 0 && restored == 0) log.info("[PermissionSeeder] already seeded, skipping");
-		else log.info("[PermissionSeeder] inserted {} permissions, restored {} soft-deleted permissions", inserted, restored);
+		if (inserted == 0 && restored == 0 && renamed == 0) log.info("[PermissionSeeder] already seeded, skipping");
+		else log.info("[PermissionSeeder] inserted {} permissions, restored {} soft-deleted permissions, renamed {} legacy permissions", inserted, restored, renamed);
+	}
+
+	private String legacyAuthority(String authority) {
+		return authority.replace("organization", "company");
 	}
 }

@@ -37,11 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// Assign/start/answer/submit for one candidate's attempt at an McqTest, plus the recruiter's
-// assign/review actions. Staff-vs-candidate access is manual (same STAFF_AUTHORITY proxy pattern
-// as InterviewServiceImpl/ApplicationServiceImpl) - start/answer/submit are candidate-own ONLY
-// (no staff bypass, unlike read access), since a recruiter must never be able to drive a
-// candidate's own timed attempt.
 @Slf4j
 @Service
 public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAssignment> {
@@ -134,11 +129,9 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return response;
 	}
 
-	// Shared by assign() and bulkAssign() - freezes/randomizes the question set, persists the
-	// assignment + its frozen question rows, bumps the application into screening, and notifies.
 	private McqTestAssignment doAssign(Application application, McqTest test, Date scheduledAt, Date scheduledEndAt, String actor) {
-		if (isScopedRecruiter() && !companyMatchesCaller(test.getCompanyId()))
-			throw new ForbiddenException("You may only assign your own company's tests");
+		if (isScopedRecruiter() && !organizationMatchesCaller(test.getOrganizationId()))
+			throw new ForbiddenException("You may only assign your own organization's tests");
 
 		List<Long> selected = selectQuestionIds(test);
 		if (selected.isEmpty()) returnErrorException("This test has no questions to assign");
@@ -222,7 +215,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return getSuccessResponse("Assignment found", toDto(assignment, null));
 	}
 
-	// @Transactional: toAttemptDto/toReviewDto read each row's lazy `options` element collection.
 	@Transactional
 	public Response<Object> getQuestions(Long id) {
 		McqTestAssignment assignment = getOwnedOrStaffAssignment(id);
@@ -254,8 +246,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		if (assignment.getScheduledAt() != null && now.before(assignment.getScheduledAt())) {
 			returnErrorException("This test opens at " + assignment.getScheduledAt());
 		}
-		// Defense-in-depth: the sweep normally flips a missed window to EXPIRED before this is ever
-		// reached, but a candidate could race the sweep in the same minute the window closes.
 		if (assignment.getScheduledEndAt() != null && now.after(assignment.getScheduledEndAt())) {
 			returnErrorException("The window to start this test has closed");
 		}
@@ -290,8 +280,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		McqTestAssignmentQuestion row = mcqTestAssignmentQuestionRepo
 			.findByIdAndAssignmentIdAndDeleted(reqDto.getAssignmentQuestionId(), id, false)
 			.orElseThrow(() -> new NotFoundException("Question not found"));
-		// Server-enforced forward-only lock: a candidate (or a direct API call bypassing the UI)
-		// can only ever write an answer to the current question, never one already advanced past.
 		int currentIndex = assignment.getCurrentQuestionIndex() != null ? assignment.getCurrentQuestionIndex() : 0;
 		if (row.getDisplayOrder() != currentIndex) {
 			returnErrorException("You can only answer the current question");
@@ -304,11 +292,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return getSuccessResponse("Answer saved", toAttemptDto(row));
 	}
 
-	// Moves the candidate to the next question - the only way currentQuestionIndex changes, and it
-	// only ever increases (clamped to the last question), never regresses. A page reload restores
-	// currentIndex from this server value (see toDto()/start()), so an earlier question can never be
-	// shown - let alone re-answered - again, closing the gap a purely client-side "currentIndex"
-	// would leave open on reload.
 	@Transactional
 	public Response<McqTestAssignmentResDTO> advance(Long id) {
 		McqTestAssignment assignment = findByIdOrThrow(id, "Assignment not found");
@@ -318,11 +301,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return getSuccessResponse("Advanced", toDto(assignment, null));
 	}
 
-	// Called by the sweeper for a candidate whose per-question timer expired without the
-	// client-side auto-advance firing (lost connection, closed tab). If there's a next question,
-	// advances to it (with a fresh per-question deadline); if this was the last question, submits
-	// the whole attempt instead - same "system" actor / direct-repository-save pattern as
-	// autoSubmitExpired/expireUnstarted.
 	@Transactional
 	public void autoAdvanceOrSubmitIfQuestionExpired(Long id) {
 		McqTestAssignment assignment = findByIdOrThrow(id, "Assignment not found");
@@ -371,10 +349,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return getSuccessResponse("Test submitted", toDto(saved, null));
 	}
 
-	// Called by McqTestAssignmentExpirySweeper for a candidate who let the timer run out without
-	// the client-side auto-submit firing (lost connection, closed tab). No security context is
-	// active on a scheduled job, so grading is stamped as "system" and persisted directly via the
-	// repository rather than through updateEntity (which needs a logged-in user).
 	@Transactional
 	public void autoSubmitExpired(Long id) {
 		McqTestAssignment assignment = findByIdOrThrow(id, "Assignment not found");
@@ -382,10 +356,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		doSubmit(assignment, "AUTO", "system", true);
 	}
 
-	// Called by McqTestAssignmentExpirySweeper for a scheduled exam whose "not after" start window
-	// closed while the candidate never opened it at all (still ASSIGNED). No grading involved -
-	// this is a pure status flip, same "system" actor / direct-repository-save pattern as
-	// autoSubmitExpired since no security context is active on a scheduled job.
 	@Transactional
 	public void expireUnstarted(Long id) {
 		McqTestAssignment assignment = findByIdOrThrow(id, "Assignment not found");
@@ -482,9 +452,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		}
 	}
 
-	// Random subset (when questionSelectionCount is set) is always picked via shuffle, independent
-	// of shuffleQuestions - that flag controls display ORDER only. If a subset was picked but
-	// shuffleQuestions is off, the subset is restored to original pool order for display.
 	private List<Long> selectQuestionIds(McqTest test) {
 		List<Long> pool = new ArrayList<>(test.getQuestionIds());
 		List<Long> selected;
@@ -505,8 +472,6 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 		return selected;
 	}
 
-	// Options are copied in original order, then handed a (possibly shuffled) displayOrder - the
-	// optionKey/correct identity never moves, only where it renders.
 	private List<McqAssignmentOptionItem> freezeOptions(McqQuestion question, boolean shuffleOptions) {
 		List<McqOptionItem> source = question.getOptions().stream()
 			.sorted(Comparator.comparingInt(McqOptionItem::getDisplayOrder))
@@ -625,8 +590,8 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 			STAFF_AUTHORITY.equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
 	}
 
-	private boolean companyMatchesCaller(Long companyId) {
+	private boolean organizationMatchesCaller(Long organizationId) {
 		MyUserDetail me = getLoggedInUserDetails();
-		return me != null && me.getCompanyId() != null && me.getCompanyId().equals(companyId);
+		return me != null && me.getOrganizationId() != null && me.getOrganizationId().equals(organizationId);
 	}
 }

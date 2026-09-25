@@ -20,17 +20,21 @@ import java.util.Date;
 public class JobCircular extends SequenceIdGenerator{
 
 	private String jobTitle;
-	private String companyName;
-	private String companyAddress;
-	private String companyPhone;
-	private String companyEmail;
-	private String companyWebsite;
-	private String companyBusiness;
+	@Column(name = "company_name")
+	private String organizationName;
+	@Column(name = "company_address")
+	private String organizationAddress;
+	@Column(name = "company_phone")
+	private String organizationPhone;
+	@Column(name = "company_email")
+	private String organizationEmail;
+	@Column(name = "company_website")
+	private String organizationWebsite;
+	@Column(name = "company_business")
+	private String organizationBusiness;
 
-	// References Company.id - no JPA relation, same convention as User.userGroupId. Free-text
-	// company* fields above are kept for backward compatibility / circulars with no linked Company.
 	@Column(name = "company_id")
-	private Long companyId;
+	private Long organizationId;
 
 	@Temporal(TemporalType.DATE)
 	private Date applicationDeadLine;
@@ -41,7 +45,6 @@ public class JobCircular extends SequenceIdGenerator{
 	private Integer salaryMax;
 	private String jobLocation;
 
-	// Rich text (HTML) from the job posting form's editor - long enough for formatted lists, not just plain sentences.
 	@Column(length = 4000)
 	private String jobRequirement;
 
@@ -53,14 +56,16 @@ public class JobCircular extends SequenceIdGenerator{
 	private String workPlace;
 	private String employmentStatus;
 
-	// Comma-separated tags/skills, e.g. "java,spring boot,sql". Simple free-text list, no separate table.
 	@Column(length = 500)
 	private String skills;
 
 	private String category;
 
-	// DRAFT | PUBLISHED | CLOSED | EXPIRED - plain String, same convention as employmentStatus/workPlace.
 	@Column(nullable = false, length = 20)
 	@Builder.Default
 	private String status = "DRAFT";
+
+	// Set on each move into PUBLISHED, not on plain edits; null on legacy rows (scheduler falls back to createdOn).
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date publishedOn;
 }

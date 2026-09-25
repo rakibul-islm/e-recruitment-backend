@@ -13,7 +13,6 @@ public interface UserGroupRepo extends ServiceRepository<UserGroup> {
 
 	Optional<UserGroup> findByNameAndDeletedFalse(String name);
 
-	// Fetches roles eagerly to avoid a separate lazy-load query from audit diffing or response mapping.
 	@Override
 	@EntityGraph(attributePaths = { "roles" })
 	Optional<UserGroup> findByIdAndDeleted(Long id, boolean deleted);

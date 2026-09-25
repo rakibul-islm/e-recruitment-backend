@@ -35,9 +35,6 @@ public class MailServiceImpl implements MailService {
 	private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
 	private static final Duration READ_TIMEOUT = Duration.ofSeconds(10);
 
-	// Bounded connect/read timeouts so a slow or unreachable Gmail API can never hang a thread
-	// indefinitely - callers invoke these methods from within @Transactional blocks, and an
-	// unbounded HTTP call there would hold the DB connection for as long as Gmail takes to respond.
 	private final RestClient restClient = RestClient.builder().requestFactory(timeoutRequestFactory()).build();
 	private final ReentrantLock tokenLock = new ReentrantLock();
 	private final Map<String, String> templateCache = new ConcurrentHashMap<>();
@@ -169,7 +166,7 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
-	@Async("notificationExecutor")
+	// Deliberately not @Async: JobAlertScheduler must see send failures before advancing lastNotifiedOn.
 	@Override
 	public void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs) {
 		sendTemplateEmail(toEmail, "job-alert-digest-email.html", Map.of(
@@ -189,10 +186,10 @@ public class MailServiceImpl implements MailService {
 				.append("<a href=\"").append(escape(job.jobLink())).append("\" style=\"display:block;margin:0 0 4px;color:#1d4ed8;font-size:15px;font-weight:600;text-decoration:none;\">")
 				.append(escape(job.jobTitle())).append("</a>");
 
-			String companyLine = StringUtils.join(java.util.stream.Stream.of(job.companyName(), job.jobLocation())
+			String organizationLine = StringUtils.join(java.util.stream.Stream.of(job.organizationName(), job.jobLocation())
 				.filter(StringUtils::isNotBlank).toList(), " · ");
-			if (StringUtils.isNotBlank(companyLine)) {
-				html.append("<p style=\"margin:0 0 10px;color:#6b7280;font-size:13px;\">").append(escape(companyLine)).append("</p>");
+			if (StringUtils.isNotBlank(organizationLine)) {
+				html.append("<p style=\"margin:0 0 10px;color:#6b7280;font-size:13px;\">").append(escape(organizationLine)).append("</p>");
 			}
 
 			if (StringUtils.isNotBlank(job.employmentType()) || StringUtils.isNotBlank(job.applicationDeadline())) {
@@ -214,10 +211,10 @@ public class MailServiceImpl implements MailService {
 
 	@Async("notificationExecutor")
 	@Override
-	public void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName) {
+	public void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String organizationName) {
 		sendTemplateEmail(toEmail, "recruiter-application-received-email.html", Map.of(
 			"greetingName", greetingName(fullName),
-			"companyName", companyName
+			"organizationName", organizationName
 		));
 	}
 
@@ -258,7 +255,6 @@ public class MailServiceImpl implements MailService {
 	@Async("notificationExecutor")
 	@Override
 	public void sendAdminMessageEmail(String toEmail, String fullName, String title, String message) {
-		// message is rich-text HTML from the broadcast form's editor, so it must not be escaped like the other values.
 		sendTemplateEmail(toEmail, "admin-message-email.html", Map.of(
 			"greetingName", greetingName(fullName),
 			"title", title,

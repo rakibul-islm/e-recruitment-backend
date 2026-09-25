@@ -72,7 +72,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		this.mailService = mailService;
 		this.otpService = otpService;
 		this.exceptionLogWriter = exceptionLogWriter;
-		// PropertyMap.skip() avoids ModelMapper triggering a lazy load of roles here.
+		// skip() avoids ModelMapper triggering a lazy load of roles.
 		modelMapper.addMappings(new PropertyMap<User, UserResDTO>() {
 			@Override
 			protected void configure() {
@@ -96,7 +96,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("User found", new UserResDTO(findByIdOrThrow(id, "User not found")));
 	}
 
-	// @Transactional: UserProfileResDTO's constructor reads the lazy `roles` association.
 	@Transactional
 	@Override
 	public Response<UserProfileResDTO> userProfile() {
@@ -107,7 +106,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("User found", new UserProfileResDTO(user));
 	}
 
-	// Always targets the logged-in user's own record — id/roles/userGroup are never taken from the request.
 	@Transactional
 	@Override
 	public Response<UserResDTO> updateProfile(UserReqDto reqDto) {
@@ -119,11 +117,10 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		if (StringUtils.isNotBlank(reqDto.getPassword()))
 			passwordPolicyService.validatePassword(reqDto.getPassword(), reqDto.getEmail(), reqDto.getFullName());
 		reqDto.setPassword(StringUtils.isBlank(reqDto.getPassword()) ? exUser.getPassword() : encoder.encode(reqDto.getPassword()));
-		// The profile form doesn't send these, so an unguarded map() would wipe them with UserReqDto's defaults.
 		reqDto.setActive(exUser.isActive());
 		reqDto.setLocked(exUser.isLocked());
 		reqDto.setExpiryDate(exUser.getExpiryDate());
-		reqDto.setCompanyId(exUser.getCompanyId());
+		reqDto.setOrganizationId(exUser.getOrganizationId());
 		modelMapper.map(reqDto, exUser);
 		exUser.setFileData(StringUtils.isBlank(reqDto.getImageBase64()) ? exUser.getFileData() : Base64.getDecoder().decode(reqDto.getImageBase64()));
 		return getSuccessResponse("Profile updated successfully", new UserResDTO(updateEntity(exUser)));
@@ -178,7 +175,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("Password changed successfully");
 	}
 
-	// Admin-created accounts start inactive with an emailed activation link; the admin never sets/knows the password.
 	@Transactional
 	@Override
 	public Response<UserResDTO> save(UserReqDto reqDto) {
@@ -215,7 +211,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		User user;
 		if (existing != null) {
 			if (existing.isActive()) returnErrorException("Email address already exists");
-			// Pending, unverified signup — refresh details and resend a fresh OTP instead of erroring.
 			existing.setFullName(reqDto.getFullName())
 					.setMobile(reqDto.getMobile())
 					.setExpiryDate(getDefaultExpiryDate())
@@ -261,7 +256,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		if (user != null && !user.isActive()) {
 			sendSignupOtp(user);
 		}
-		// Same message either way, to avoid leaking account state.
 		return getSuccessResponse("If a pending signup exists for this email, a new OTP has been sent");
 	}
 
@@ -289,7 +283,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 	public Response<UserResDTO> update(UserReqDto reqDto) {
 		validateForUpdate(reqDto);
 		User exUser = findByIdOrThrow(reqDto.getId(), "User not found");
-		// Password can only be set via the OTP-verified self-service change-password flow.
 		reqDto.setPassword(exUser.getPassword());
 		modelMapper.map(reqDto, exUser);
 		exUser.setFileData(StringUtils.isBlank(reqDto.getImageBase64()) ? exUser.getFileData() : Base64.getDecoder().decode(reqDto.getImageBase64()));
@@ -304,7 +297,6 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		return getSuccessResponse("Deleted successfully");
 	}
 
-	// Soft delete keeps the row, so email/googleId (both unique) must be freed here or the
 	@Transactional
 	@Override
 	public Response<UserResDTO> remove(Long id) {

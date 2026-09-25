@@ -11,7 +11,6 @@ import com.bd.erecruitment.repository.JobAlertRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.MailService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,8 +23,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-// Daily digest for saved job-search alerts (JobAlert). Mirrors ArchiveScheduler's single-cron,
-// per-row-try/catch shape so one broken alert/email doesn't block the rest of the run.
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -37,6 +34,8 @@ public class JobAlertScheduler {
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
 	private final ExceptionLogWriter exceptionLogWriter;
+
+	private static final long SETTLE_MARGIN_MS = 60_000;
 
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
@@ -54,27 +53,33 @@ public class JobAlertScheduler {
 		}
 	}
 
-	@Transactional
-	void processAlert(JobAlert alert) {
-		Date since = alert.getLastNotifiedOn() != null ? alert.getLastNotifiedOn() : defaultLookback();
-		List<JobCircular> candidates = jobCircularRepo.findAllByStatusAndUpdatedOnAfterAndDeleted("PUBLISHED", since, false);
+	private void processAlert(JobAlert alert) {
+		Date upTo = new Date(System.currentTimeMillis() - SETTLE_MARGIN_MS);
+		Date since = windowStart(alert);
 
-		List<JobAlertItemDto> matches = candidates.stream()
+		List<JobAlertItemDto> matches = jobCircularRepo.findPublishedBetween(since, upTo).stream()
 			.filter(job -> matches(job, alert))
 			.map(this::toJobAlertItem)
 			.toList();
 
-		alert.setLastNotifiedOn(new Date());
+		if (!matches.isEmpty()) {
+			User user = userRepo.findByIdAndDeleted(alert.getUserId(), false).orElse(null);
+			if (user != null) {
+				mailService.sendJobAlertDigestEmail(user.getEmail(), user.getFullName(), matches);
+				notificationPublisher.notifyUser(user.getId(), NotificationType.JOB_ALERT_MATCH, "/jobs", "count", matches.size());
+				log.info("[JobAlertScheduler] alert {}: sent digest of {} job(s) to {}", alert.getId(), matches.size(), user.getEmail());
+			}
+		}
+
+		// Advanced only after the send succeeds, so a failed send retries the same window next run.
+		alert.setLastNotifiedOn(upTo);
 		jobAlertRepo.save(alert);
+	}
 
-		if (matches.isEmpty()) return;
-
-		User user = userRepo.findByIdAndDeleted(alert.getUserId(), false).orElse(null);
-		if (user == null) return;
-
-		notificationPublisher.notifyUser(user.getId(), NotificationType.JOB_ALERT_MATCH, "/jobs", "count", matches.size());
-		mailService.sendJobAlertDigestEmail(user.getEmail(), user.getFullName(), matches);
-		log.info("[JobAlertScheduler] alert {}: sent digest of {} job(s) to {}", alert.getId(), matches.size(), user.getEmail());
+	private Date windowStart(JobAlert alert) {
+		Date floor = defaultLookback();
+		Date last = alert.getLastNotifiedOn();
+		return last != null && last.after(floor) ? last : floor;
 	}
 
 	private JobAlertItemDto toJobAlertItem(JobCircular job) {
@@ -82,19 +87,21 @@ public class JobAlertScheduler {
 		String deadline = job.getApplicationDeadLine() != null
 			? new SimpleDateFormat("dd MMM yyyy").format(job.getApplicationDeadLine())
 			: null;
-		return new JobAlertItemDto(job.getJobTitle(), job.getCompanyName(), job.getJobLocation(), employmentType,
+		return new JobAlertItemDto(job.getJobTitle(), job.getOrganizationName(), job.getJobLocation(), employmentType,
 			deadline, frontendBaseUrl + "/jobs/" + job.getId());
 	}
 
 	private boolean matches(JobCircular job, JobAlert alert) {
-		if (StringUtils.isNotBlank(alert.getKeyword()) && !containsIgnoreCase(job.getJobTitle(), alert.getKeyword())
-				&& !containsIgnoreCase(job.getSkills(), alert.getKeyword())) {
+		String keyword = StringUtils.trimToNull(alert.getKeyword());
+		String location = StringUtils.trimToNull(alert.getLocation());
+		String category = StringUtils.trimToNull(alert.getCategory());
+		if (keyword != null && !containsIgnoreCase(job.getJobTitle(), keyword) && !containsIgnoreCase(job.getSkills(), keyword)) {
 			return false;
 		}
-		if (StringUtils.isNotBlank(alert.getLocation()) && !containsIgnoreCase(job.getJobLocation(), alert.getLocation())) {
+		if (location != null && !containsIgnoreCase(job.getJobLocation(), location)) {
 			return false;
 		}
-		if (StringUtils.isNotBlank(alert.getCategory()) && !containsIgnoreCase(job.getCategory(), alert.getCategory())) {
+		if (category != null && !containsIgnoreCase(job.getCategory(), category)) {
 			return false;
 		}
 		return true;
@@ -104,8 +111,6 @@ public class JobAlertScheduler {
 		return StringUtils.isNotBlank(haystack) && haystack.toLowerCase().contains(needle.toLowerCase());
 	}
 
-	// A never-notified alert only picks up jobs published in the last 30 days, not the platform's
-	// entire history.
 	private Date defaultLookback() {
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.DAY_OF_MONTH, -30);

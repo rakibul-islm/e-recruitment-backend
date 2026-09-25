@@ -50,12 +50,10 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-// One .jrxml template + row-building method per report key.
 @Service
 @RequiredArgsConstructor
 public class ReportServiceImpl {
 
-	// Used when the caller sends no (or an unrecognised) time zone.
 	private static final ZoneId DEFAULT_REPORT_ZONE = ZoneId.of("Asia/Dhaka");
 	private static final DateTimeFormatter DEADLINE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneOffset.UTC);
 	private static final List<String> REPORT_KEYS = List.of("job-posting", "application", "mcq-result", "audit-log");
@@ -70,7 +68,6 @@ public class ReportServiceImpl {
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
-	// Compiled once per report key, reused across requests.
 	private final Map<String, JasperReport> compiledReports = new ConcurrentHashMap<>();
 
 	public byte[] generate(String reportKey, String format, Map<String, String> filters, String timeZone) {
@@ -87,7 +84,6 @@ public class ReportServiceImpl {
 		try {
 			Map<String, Object> params = new HashMap<>();
 			params.put("frontendBaseUrl", frontendBaseUrl);
-			// Dates render in the caller's zone with English AM/PM regardless of JVM default zone/locale (storage stays UTC).
 			params.put(JRParameter.REPORT_TIME_ZONE, TimeZone.getTimeZone(resolveZone(timeZone)));
 			params.put(JRParameter.REPORT_LOCALE, Locale.ENGLISH);
 
@@ -99,7 +95,6 @@ public class ReportServiceImpl {
 		}
 	}
 
-	// DATE columns are stored as UTC midnight, so the calendar date is read in UTC.
 	private String deadlineText(Date deadline) {
 		return deadline == null ? "" : DEADLINE_FORMAT.format(Instant.ofEpochMilli(deadline.getTime()));
 	}
@@ -151,7 +146,7 @@ public class ReportServiceImpl {
 
 		return jobs.stream()
 			.map(job -> new JobPostingReportRow(
-				job.getJobTitle(), job.getCompanyName(), job.getStatus(), job.getVacancy(),
+				job.getJobTitle(), job.getOrganizationName(), job.getStatus(), job.getVacancy(),
 				deadlineText(job.getApplicationDeadLine()), job.getJobLocation(), job.getEmploymentStatus(),
 				applicantCounts.getOrDefault(job.getId(), 0L).intValue()
 			))
@@ -179,7 +174,6 @@ public class ReportServiceImpl {
 			.toList();
 	}
 
-	// Skips ungraded assignments (no score yet).
 	private List<McqResultReportRow> buildMcqResultRows(Map<String, String> filters) {
 		List<McqTestAssignment> assignments = mcqTestAssignmentRepo.findAll(GenericSpecification.<McqTestAssignment>build(filters)).stream()
 			.filter(a -> a.getScorePercent() != null)

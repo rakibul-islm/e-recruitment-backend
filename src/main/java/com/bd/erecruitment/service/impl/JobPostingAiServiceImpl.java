@@ -26,9 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Uses Google Gemini's free-tier API to draft job posting content from a job title + whatever
-// other fields the recruiter has already filled in. Called through the backend (rather than from
-// Angular directly) so the API key never reaches the browser.
 @Slf4j
 @Service
 public class JobPostingAiServiceImpl {
@@ -139,7 +136,7 @@ public class JobPostingAiServiceImpl {
 		sb.append("You are helping a recruiter draft a job posting. Based on the context below, generate ")
 				.append("job posting content as JSON matching the given schema.\n\n")
 				.append("Job title: ").append(req.getJobTitle()).append("\n");
-		appendIfPresent(sb, "Company", req.getCompanyName());
+		appendIfPresent(sb, "Organization", req.getOrganizationName());
 		appendIfPresent(sb, "Location", req.getJobLocation());
 		appendIfPresent(sb, "Employment type (already set, keep it unchanged)", req.getEmploymentStatus());
 		appendIfPresent(sb, "Experience (already set, keep it unchanged)", req.getExperience());
