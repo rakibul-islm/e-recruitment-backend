@@ -33,7 +33,7 @@ class RecruiterApplicationRequiredFieldsTest {
 		assertRejected(f -> f.setEmail(null), "Work email required");
 		assertRejected(f -> f.setPhone(""), "Mobile required");
 		assertRejected(f -> f.setOrganizationName(null), "Organization name required");
-		assertRejected(f -> f.setOrganizationSector(null), "Organization sector required");
+		assertRejected(f -> f.setOrganizationType(null), "Organization type required");
 		assertRejected(f -> f.setOrganizationAddress(" "), "Organization address required");
 		assertRejected(f -> f.setOrganizationPhone(""), "Organization phone required");
 		assertRejected(f -> f.setOrganizationEmail(null), "Organization email required");
@@ -65,7 +65,7 @@ class RecruiterApplicationRequiredFieldsTest {
 		form.setEmail("required.fields@example.com");
 		form.setPhone("01700000000");
 		form.setOrganizationName("Acme Ltd");
-		form.setOrganizationSector("Private Limited Company");
+		form.setOrganizationType("Private Limited Company");
 		form.setOrganizationAddress("Dhaka");
 		form.setOrganizationPhone("029999999");
 		form.setOrganizationEmail("hr@acme.example.com");

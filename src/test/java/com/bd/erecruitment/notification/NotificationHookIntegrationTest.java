@@ -113,7 +113,7 @@ class NotificationHookIntegrationTest {
 		form.setEmail("nadia.recruiter@example.com");
 		form.setPhone("01700000000");
 		form.setOrganizationName("Acme Ltd");
-		form.setOrganizationSector("Private Limited Company");
+		form.setOrganizationType("Private Limited Company");
 		form.setOrganizationAddress("Dhaka");
 		form.setOrganizationPhone("029999999");
 		form.setOrganizationEmail("hr@acme.example.com");
