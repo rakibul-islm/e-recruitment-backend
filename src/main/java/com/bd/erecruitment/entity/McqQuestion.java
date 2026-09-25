@@ -21,7 +21,7 @@ import java.util.List;
 public class McqQuestion extends SequenceIdGenerator {
 
 	@Column(name = "company_id")
-	private Long companyId;
+	private Long organizationId;
 
 	@Column(name = "question_text", nullable = false, length = 2000)
 	private String questionText;

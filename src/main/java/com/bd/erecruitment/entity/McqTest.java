@@ -21,7 +21,7 @@ import java.util.List;
 public class McqTest extends SequenceIdGenerator {
 
 	@Column(name = "company_id")
-	private Long companyId;
+	private Long organizationId;
 
 	@Column(nullable = false, length = 200)
 	private String name;

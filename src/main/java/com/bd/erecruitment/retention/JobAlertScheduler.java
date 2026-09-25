@@ -87,7 +87,7 @@ public class JobAlertScheduler {
 		String deadline = job.getApplicationDeadLine() != null
 			? new SimpleDateFormat("dd MMM yyyy").format(job.getApplicationDeadLine())
 			: null;
-		return new JobAlertItemDto(job.getJobTitle(), job.getCompanyName(), job.getJobLocation(), employmentType,
+		return new JobAlertItemDto(job.getJobTitle(), job.getOrganizationName(), job.getJobLocation(), employmentType,
 			deadline, frontendBaseUrl + "/jobs/" + job.getId());
 	}
 

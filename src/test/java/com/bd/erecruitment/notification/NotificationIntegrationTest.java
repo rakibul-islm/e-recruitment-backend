@@ -116,7 +116,7 @@ class NotificationIntegrationTest {
 	@Test
 	void notifyAuthority_reachesEveryHolderIncludingSuperAdmin_andNobodyElse() throws InterruptedException {
 		publisher.notifyAuthority("recruiter-application:write", NotificationType.RECRUITER_APPLICATION_SUBMITTED,
-				"/recruiter-applications/5", "companyName", "Acme");
+				"/recruiter-applications/5", "organizationName", "Acme");
 
 		assertThat(awaitRows(userBId, 1)).hasSize(1);
 		assertThat(rowsFor(userAId)).isEmpty();

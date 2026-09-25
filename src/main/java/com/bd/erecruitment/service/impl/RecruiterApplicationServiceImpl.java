@@ -5,7 +5,7 @@ import com.bd.erecruitment.dto.req.RecruiterApplicationReqDto;
 import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.res.RecruiterApplicationResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
-import com.bd.erecruitment.entity.Company;
+import com.bd.erecruitment.entity.Organization;
 import com.bd.erecruitment.entity.RecruiterApplication;
 import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.enums.NotificationType;
@@ -13,7 +13,7 @@ import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.notification.NotificationPublisher;
-import com.bd.erecruitment.repository.CompanyRepo;
+import com.bd.erecruitment.repository.OrganizationRepo;
 import com.bd.erecruitment.repository.RecruiterApplicationRepo;
 import com.bd.erecruitment.repository.RoleRepo;
 import com.bd.erecruitment.repository.UserRepo;
@@ -39,20 +39,20 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 	private final RecruiterApplicationRepo recruiterApplicationRepo;
 	private final UserRepo userRepo;
 	private final RoleRepo roleRepo;
-	private final CompanyRepo companyRepo;
+	private final OrganizationRepo organizationRepo;
 	private final UserService<UserResDTO, UserReqDto> userService;
 	private final MailService mailService;
 	private final NotificationPublisher notificationPublisher;
 	private final ExceptionLogWriter exceptionLogWriter;
 
 	public RecruiterApplicationServiceImpl(RecruiterApplicationRepo recruiterApplicationRepo, UserRepo userRepo,
-			RoleRepo roleRepo, CompanyRepo companyRepo, UserService<UserResDTO, UserReqDto> userService, MailService mailService,
+			RoleRepo roleRepo, OrganizationRepo organizationRepo, UserService<UserResDTO, UserReqDto> userService, MailService mailService,
 			NotificationPublisher notificationPublisher, ExceptionLogWriter exceptionLogWriter) {
 		super(recruiterApplicationRepo);
 		this.recruiterApplicationRepo = recruiterApplicationRepo;
 		this.userRepo = userRepo;
 		this.roleRepo = roleRepo;
-		this.companyRepo = companyRepo;
+		this.organizationRepo = organizationRepo;
 		this.userService = userService;
 		this.mailService = mailService;
 		this.notificationPublisher = notificationPublisher;
@@ -117,14 +117,14 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		Role recruiterRole = roleRepo.findByCode("RECRUITER");
 		if (recruiterRole == null) returnErrorException("Recruiter role is not configured");
 
-		Company company = resolveOrCreateCompany(application);
+		Organization organization = resolveOrCreateOrganization(application);
 
 		UserReqDto userReqDto = new UserReqDto();
 		userReqDto.setFullName(application.getFullName());
 		userReqDto.setEmail(application.getEmail());
 		userReqDto.setMobile(application.getPhone());
 		userReqDto.setRoleIds(Set.of(recruiterRole.getId()));
-		userReqDto.setCompanyId(company.getId());
+		userReqDto.setOrganizationId(organization.getId());
 		userService.save(userReqDto);
 
 		application.setStatus("APPROVED");
@@ -145,29 +145,29 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 		return getSuccessResponse("Application rejected", new RecruiterApplicationResDTO(application));
 	}
 
-	private Company resolveOrCreateCompany(RecruiterApplication application) {
-		return companyRepo.findFirstByNameIgnoreCaseAndDeleted(application.getCompanyName(), false)
+	private Organization resolveOrCreateOrganization(RecruiterApplication application) {
+		return organizationRepo.findFirstByNameIgnoreCaseAndDeleted(application.getOrganizationName(), false)
 			.orElseGet(() -> {
 				String actor = getLoggedInUserDetails().getUsername();
 				java.util.Date now = new java.util.Date();
-				Company company = new Company()
-					.setName(application.getCompanyName())
-					.setWebsite(application.getCompanyWebsite())
-					.setIndustry(application.getCompanyIndustry())
-					.setSize(application.getCompanySize())
-					.setAddress(application.getCompanyAddress())
-					.setPhone(application.getCompanyPhone())
-					.setEmail(application.getCompanyEmail())
-					.setDescription(application.getCompanyDescription());
-				company.setCreatedBy(actor).setCreatedOn(now).setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
-				return companyRepo.save(company);
+				Organization organization = new Organization()
+					.setName(application.getOrganizationName())
+					.setWebsite(application.getOrganizationWebsite())
+					.setSector(application.getOrganizationSector())
+					.setSize(application.getOrganizationSize())
+					.setAddress(application.getOrganizationAddress())
+					.setPhone(application.getOrganizationPhone())
+					.setEmail(application.getOrganizationEmail())
+					.setDescription(application.getOrganizationDescription());
+				organization.setCreatedBy(actor).setCreatedOn(now).setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
+				return organizationRepo.save(organization);
 			});
 	}
 
 	private void notifyReviewers(RecruiterApplication application) {
 		try {
 			notificationPublisher.notifyAuthority(WRITE_AUTHORITY, NotificationType.RECRUITER_APPLICATION_SUBMITTED,
-				"/recruiter-applications/" + application.getId(), "companyName", application.getCompanyName(), "applicantName", application.getFullName());
+				"/recruiter-applications/" + application.getId(), "organizationName", application.getOrganizationName(), "applicantName", application.getFullName());
 		} catch (Exception e) {
 			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.notifyReviewers:" + application.getId());
 		}
@@ -175,7 +175,7 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 
 	private void sendReceivedEmail(RecruiterApplication application) {
 		try {
-			mailService.sendRecruiterApplicationReceivedEmail(application.getEmail(), application.getFullName(), application.getCompanyName());
+			mailService.sendRecruiterApplicationReceivedEmail(application.getEmail(), application.getFullName(), application.getOrganizationName());
 		} catch (Exception e) {
 			exceptionLogWriter.log(e, 0, e.getMessage(), "RecruiterApplicationServiceImpl.sendReceivedEmail:" + application.getId());
 		}
@@ -192,7 +192,13 @@ public class RecruiterApplicationServiceImpl extends AbstractBaseService<Recruit
 	private void validateForm(RecruiterApplicationReqDto reqDto) {
 		if (StringUtils.isBlank(reqDto.getFullName())) returnErrorException("Full name required");
 		if (StringUtils.isBlank(reqDto.getEmail())) returnErrorException("Work email required");
-		if (StringUtils.isBlank(reqDto.getCompanyName())) returnErrorException("Company name required");
+		if (StringUtils.isBlank(reqDto.getPhone())) returnErrorException("Mobile required");
+		if (StringUtils.isBlank(reqDto.getOrganizationName())) returnErrorException("Organization name required");
+		if (StringUtils.isBlank(reqDto.getOrganizationSector())) returnErrorException("Organization sector required");
+		if (StringUtils.isBlank(reqDto.getOrganizationAddress())) returnErrorException("Organization address required");
+		if (StringUtils.isBlank(reqDto.getOrganizationPhone())) returnErrorException("Organization phone required");
+		if (StringUtils.isBlank(reqDto.getOrganizationEmail())) returnErrorException("Organization email required");
+		if (StringUtils.isBlank(reqDto.getJobTitle())) returnErrorException("Job title required");
 	}
 
 	private void requirePermission(String authority) {

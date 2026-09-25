@@ -44,15 +44,15 @@ public class SecurityConfig {
 								"/user/verify-signup-otp",
 								"/user/resend-signup-otp",
 								"/job-circular/filter",
-								"/company/filter",
-								"/company-type/filter",
+								"/organization/filter",
+								"/organization-type/filter",
 								"/presence/guest-stream",
 								"/h2-console/**"
 						).permitAll()
 						.requestMatchers("/actuator/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/job-circular/*", "/company/*").permitAll()
+						.requestMatchers(HttpMethod.GET, "/job-circular/*", "/organization/*").permitAll()
 						.requestMatchers(HttpMethod.POST, "/recruiter-application").permitAll()
-						.requestMatchers(HttpMethod.POST, "/company-type").permitAll()
+						.requestMatchers(HttpMethod.POST, "/organization-type").permitAll()
 						.requestMatchers(HttpMethod.GET, "/password-policy").permitAll()
 						.requestMatchers(AUTH_WHITELIST).permitAll()
 						.anyRequest().authenticated()

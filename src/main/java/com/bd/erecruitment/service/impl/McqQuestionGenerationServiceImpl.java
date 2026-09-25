@@ -109,12 +109,12 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 			throw new ApiException(502, "AI question generation service returned an unexpected response");
 		}
 
-		Long companyId = getLoggedInUserDetails().getCompanyId();
+		Long organizationId = getLoggedInUserDetails().getOrganizationId();
 		List<McqQuestionResDTO> created = new ArrayList<>();
 		for (GeneratedMcqItem item : items) {
 			if (item.questionText == null || item.options == null || item.options.size() < 2) continue;
 			McqQuestion question = new McqQuestion()
-				.setCompanyId(companyId)
+				.setOrganizationId(organizationId)
 				.setQuestionText(item.questionText)
 				.setSkillTag(req.getSkillTag())
 				.setDifficulty(StringUtils.defaultIfBlank(item.difficulty, "MEDIUM"))

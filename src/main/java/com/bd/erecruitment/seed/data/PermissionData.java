@@ -37,9 +37,9 @@ public class PermissionData {
 			new PermissionDef("Manage Job Circulars",   "job-circular:write",   "JOB_MANAGEMENT",   "job-circular-manage"),
 			new PermissionDef("Delete Job Circulars",   "job-circular:delete",  "JOB_MANAGEMENT",   null),
 
-			new PermissionDef("View Companies",         "company:read",         "JOB_MANAGEMENT",   "company-list"),
-			new PermissionDef("Manage Companies",       "company:write",        "JOB_MANAGEMENT",   "company-manage"),
-			new PermissionDef("Delete Companies",       "company:delete",       "JOB_MANAGEMENT",   null),
+			new PermissionDef("View Organizations",         "organization:read",         "JOB_MANAGEMENT",   "organization-list"),
+			new PermissionDef("Manage Organizations",       "organization:write",        "JOB_MANAGEMENT",   "organization-manage"),
+			new PermissionDef("Delete Organizations",       "organization:delete",       "JOB_MANAGEMENT",   null),
 
 			new PermissionDef("View My Candidate Profile",   "candidate-profile:read",  "PROFILE", null),
 			new PermissionDef("Update My Candidate Profile", "candidate-profile:write", "PROFILE", null),

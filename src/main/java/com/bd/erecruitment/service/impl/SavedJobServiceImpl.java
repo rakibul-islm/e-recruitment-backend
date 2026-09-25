@@ -65,7 +65,7 @@ public class SavedJobServiceImpl {
 		SavedJobResDTO dto = new SavedJobResDTO(savedJob);
 		jobCircularRepo.findByIdAndDeleted(savedJob.getJobCircularId(), false).ifPresent(job -> {
 			dto.setJobTitle(job.getJobTitle());
-			dto.setCompanyName(job.getCompanyName());
+			dto.setOrganizationName(job.getOrganizationName());
 			dto.setJobStatus(job.getStatus());
 		});
 		return dto;

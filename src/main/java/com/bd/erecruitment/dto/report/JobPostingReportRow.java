@@ -9,7 +9,7 @@ import lombok.Getter;
 public class JobPostingReportRow {
 
 	private final String jobTitle;
-	private final String companyName;
+	private final String organizationName;
 	private final String status;
 	private final Integer vacancy;
 	private final String applicationDeadLine;

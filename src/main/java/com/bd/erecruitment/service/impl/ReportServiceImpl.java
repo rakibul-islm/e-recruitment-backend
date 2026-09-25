@@ -146,7 +146,7 @@ public class ReportServiceImpl {
 
 		return jobs.stream()
 			.map(job -> new JobPostingReportRow(
-				job.getJobTitle(), job.getCompanyName(), job.getStatus(), job.getVacancy(),
+				job.getJobTitle(), job.getOrganizationName(), job.getStatus(), job.getVacancy(),
 				deadlineText(job.getApplicationDeadLine()), job.getJobLocation(), job.getEmploymentStatus(),
 				applicantCounts.getOrDefault(job.getId(), 0L).intValue()
 			))

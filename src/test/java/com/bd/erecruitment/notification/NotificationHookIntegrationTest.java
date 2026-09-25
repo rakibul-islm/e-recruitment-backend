@@ -111,7 +111,13 @@ class NotificationHookIntegrationTest {
 		RecruiterApplicationReqDto form = new RecruiterApplicationReqDto();
 		form.setFullName("Nadia Rahman");
 		form.setEmail("nadia.recruiter@example.com");
-		form.setCompanyName("Acme Ltd");
+		form.setPhone("01700000000");
+		form.setOrganizationName("Acme Ltd");
+		form.setOrganizationSector("Private Limited Company");
+		form.setOrganizationAddress("Dhaka");
+		form.setOrganizationPhone("029999999");
+		form.setOrganizationEmail("hr@acme.example.com");
+		form.setJobTitle("HR Manager");
 
 		Long applicationId = recruiterApplicationService.save(form).getObj().getId();
 

@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 public class JobPostingAiSuggestReqDto {
 
 	private String jobTitle;
-	private String companyName;
+	private String organizationName;
 	private String jobLocation;
 	private String employmentStatus;
 	private String experience;

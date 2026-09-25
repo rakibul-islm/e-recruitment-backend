@@ -31,8 +31,8 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Google avatar fetching** — on Google Sign-In, the user's profile picture is downloaded and stored asynchronously (`GoogleAvatarFetcher`) so it doesn't delay login
 - **User profile self-service** — view/update own profile and OTP-verified self password change, separate from admin-initiated flows (`ProfileController`, `/profile`)
 - **Data archiving & retention** — runtime-configurable per-table archive policies (source table, archive schema/table, date column, retention days, optional SQL where-condition), run on a nightly schedule or on demand, with the archived data browsable through the admin UI (`ArchiveConfigController`, `GenericArchiveEngine`, `ArchiveScheduler`, `/archive-config`)
-- **Companies & job circulars** — company profiles (`CompanyController`, `/company`) and company types (`CompanyTypeController`, `/company-type`) backing job postings; job circulars can be linked to a `Company` or carry free-text company details for backward compatibility (`JobCircularController`)
-- **Recruiter self-registration** — prospective recruiters submit a company/application request that an admin reviews and approves or rejects, promoting the requester into a recruiter role on approval (`RecruiterApplicationController`, `/recruiter-application`)
+- **Organizations & job circulars** — organization profiles (`OrganizationController`, `/organization`) and organization types (`OrganizationTypeController`, `/organization-type`) backing job postings; job circulars can be linked to a `Organization` or carry free-text organization details for backward compatibility (`JobCircularController`)
+- **Recruiter self-registration** — prospective recruiters submit an organization/application request that an admin reviews and approves or rejects, promoting the requester into a recruiter role on approval (`RecruiterApplicationController`, `/recruiter-application`)
 - **Candidate profiles & CV generation** — structured candidate profiles (education, work experience, skills, certifications, projects, languages) that can be rendered to a downloadable PDF CV via HTML-to-PDF (`CandidateProfileController`, `/candidate-profile`, `CvGenerationService`, `HtmlToPdfRenderer`)
 - **Job applications & hiring pipeline** — candidates apply to a job circular with a resume or generated CV, with status history tracked per application (`ApplicationController`, `/application`, `ApplicationStatusHistory`)
 - **Interview scheduling & feedback** — scheduling interviews against an application and recording structured interviewer feedback (`InterviewController`, `/interview`)
@@ -153,7 +153,7 @@ A public, unauthenticated health check is exposed via Spring Boot Actuator at `h
 src/main/java/com/bd/erecruitment/
 ├── controller/         REST controllers (Authentication, User, Role, Permission, UserGroup,
 │                        SystemConfig, PasswordPolicy, ExceptionLog, AuditLog, UserSession,
-│                        Profile, ArchiveConfig, Company, CompanyType, JobCircular,
+│                        Profile, ArchiveConfig, Organization, OrganizationType, JobCircular,
 │                        RecruiterApplication, CandidateProfile, Application, Interview, Offer,
 │                        OnboardingTask, Notification, NotificationBroadcast, SavedJob, JobAlert,
 │                        Analytics, Report)

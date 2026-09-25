@@ -35,7 +35,7 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 	@Override
 	public Response<McqTestResDTO> find(Long id) {
 		McqTest test = findByIdOrThrow(id, "Test not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(test.getCompanyId())) returnNotFoundException("Test not found");
+		if (isScopedRecruiter() && !organizationMatchesCaller(test.getOrganizationId())) returnNotFoundException("Test not found");
 		return getSuccessResponse("Test found", new McqTestResDTO(test));
 	}
 
@@ -45,7 +45,7 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 		validateForm(reqDto);
 		McqTest bean = reqDto.getBean();
 		if (StringUtils.isBlank(bean.getStatus())) bean.setStatus("DRAFT");
-		if (isScopedRecruiter()) bean.setCompanyId(getLoggedInUserDetails().getCompanyId());
+		if (isScopedRecruiter()) bean.setOrganizationId(getLoggedInUserDetails().getOrganizationId());
 		McqTest test = createEntity(bean);
 		return getCreatedResponse("Test saved successfully", new McqTestResDTO(test));
 	}
@@ -54,8 +54,8 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 	@Override
 	public Response<McqTestResDTO> update(McqTestReqDto reqDto) {
 		McqTest existing = findByIdOrThrow(reqDto.getId(), "Test not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(existing.getCompanyId()))
-			throw new ForbiddenException("You may only manage your own company's tests");
+		if (isScopedRecruiter() && !organizationMatchesCaller(existing.getOrganizationId()))
+			throw new ForbiddenException("You may only manage your own organization's tests");
 		validateForm(reqDto);
 
 		existing.setName(reqDto.getName())
@@ -78,8 +78,8 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 	@Override
 	public Response<McqTestResDTO> delete(Long id) {
 		McqTest test = findByIdOrThrow(id, "Test not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(test.getCompanyId()))
-			throw new ForbiddenException("You may only manage your own company's tests");
+		if (isScopedRecruiter() && !organizationMatchesCaller(test.getOrganizationId()))
+			throw new ForbiddenException("You may only manage your own organization's tests");
 		deleteEntity(test);
 		return getSuccessResponse("Deleted successfully");
 	}
@@ -88,8 +88,8 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 	@Override
 	public Response<McqTestResDTO> remove(Long id) {
 		McqTest test = findByIdOrThrow(id, "Test not found");
-		if (isScopedRecruiter() && !companyMatchesCaller(test.getCompanyId()))
-			throw new ForbiddenException("You may only manage your own company's tests");
+		if (isScopedRecruiter() && !organizationMatchesCaller(test.getOrganizationId()))
+			throw new ForbiddenException("You may only manage your own organization's tests");
 		removeEntity(test);
 		return getSuccessResponse("Removed successfully");
 	}
@@ -100,14 +100,14 @@ public class McqTestServiceImpl extends AbstractBaseService<McqTest> implements 
 		if (isScopedRecruiter()) {
 			MyUserDetail me = getLoggedInUserDetails();
 			filters = new HashMap<>(filters);
-			filters.put("companyId", me.getCompanyId() == null ? "-1" : String.valueOf(me.getCompanyId()));
+			filters.put("organizationId", me.getOrganizationId() == null ? "-1" : String.valueOf(me.getOrganizationId()));
 		}
 		return genericFilter(filters, pageable, isPageable, McqTestResDTO.class);
 	}
 
-	private boolean companyMatchesCaller(Long companyId) {
+	private boolean organizationMatchesCaller(Long organizationId) {
 		MyUserDetail me = getLoggedInUserDetails();
-		return me != null && me.getCompanyId() != null && me.getCompanyId().equals(companyId);
+		return me != null && me.getOrganizationId() != null && me.getOrganizationId().equals(organizationId);
 	}
 
 	private void validateForm(McqTestReqDto reqDto) {

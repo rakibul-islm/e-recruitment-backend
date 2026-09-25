@@ -15,7 +15,8 @@ import java.util.Date;
 public class WorkExperienceItem {
 
 	private String title;
-	private String companyName;
+	@Column(name = "company_name")
+	private String organizationName;
 	private String location;
 
 	@Temporal(TemporalType.DATE)

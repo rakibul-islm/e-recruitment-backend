@@ -186,10 +186,10 @@ public class MailServiceImpl implements MailService {
 				.append("<a href=\"").append(escape(job.jobLink())).append("\" style=\"display:block;margin:0 0 4px;color:#1d4ed8;font-size:15px;font-weight:600;text-decoration:none;\">")
 				.append(escape(job.jobTitle())).append("</a>");
 
-			String companyLine = StringUtils.join(java.util.stream.Stream.of(job.companyName(), job.jobLocation())
+			String organizationLine = StringUtils.join(java.util.stream.Stream.of(job.organizationName(), job.jobLocation())
 				.filter(StringUtils::isNotBlank).toList(), " · ");
-			if (StringUtils.isNotBlank(companyLine)) {
-				html.append("<p style=\"margin:0 0 10px;color:#6b7280;font-size:13px;\">").append(escape(companyLine)).append("</p>");
+			if (StringUtils.isNotBlank(organizationLine)) {
+				html.append("<p style=\"margin:0 0 10px;color:#6b7280;font-size:13px;\">").append(escape(organizationLine)).append("</p>");
 			}
 
 			if (StringUtils.isNotBlank(job.employmentType()) || StringUtils.isNotBlank(job.applicationDeadline())) {
@@ -211,10 +211,10 @@ public class MailServiceImpl implements MailService {
 
 	@Async("notificationExecutor")
 	@Override
-	public void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String companyName) {
+	public void sendRecruiterApplicationReceivedEmail(String toEmail, String fullName, String organizationName) {
 		sendTemplateEmail(toEmail, "recruiter-application-received-email.html", Map.of(
 			"greetingName", greetingName(fullName),
-			"companyName", companyName
+			"organizationName", organizationName
 		));
 	}
 

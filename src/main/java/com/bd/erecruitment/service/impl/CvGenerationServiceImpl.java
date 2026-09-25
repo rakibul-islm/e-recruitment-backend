@@ -116,7 +116,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 				sb.append("<div class='item'>")
 					.append("<span class='item-dates'>").append(dateRange(w.getStartDate(), w.getEndDate(), w.isCurrent())).append("</span>")
 					.append("<div class='item-title'>").append(esc(w.getTitle())).append("</div>")
-					.append("<div class='item-sub'>").append(esc(joinNonBlank(w.getCompanyName(), w.getLocation()))).append("</div>");
+					.append("<div class='item-sub'>").append(esc(joinNonBlank(w.getOrganizationName(), w.getLocation()))).append("</div>");
 				if (StringUtils.isNotBlank(w.getDescription())) sb.append("<div class='item-desc'>").append(esc(w.getDescription())).append("</div>");
 				sb.append("</div>");
 			}

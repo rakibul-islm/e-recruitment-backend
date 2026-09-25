@@ -130,8 +130,8 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 	}
 
 	private McqTestAssignment doAssign(Application application, McqTest test, Date scheduledAt, Date scheduledEndAt, String actor) {
-		if (isScopedRecruiter() && !companyMatchesCaller(test.getCompanyId()))
-			throw new ForbiddenException("You may only assign your own company's tests");
+		if (isScopedRecruiter() && !organizationMatchesCaller(test.getOrganizationId()))
+			throw new ForbiddenException("You may only assign your own organization's tests");
 
 		List<Long> selected = selectQuestionIds(test);
 		if (selected.isEmpty()) returnErrorException("This test has no questions to assign");
@@ -590,8 +590,8 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 			STAFF_AUTHORITY.equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
 	}
 
-	private boolean companyMatchesCaller(Long companyId) {
+	private boolean organizationMatchesCaller(Long organizationId) {
 		MyUserDetail me = getLoggedInUserDetails();
-		return me != null && me.getCompanyId() != null && me.getCompanyId().equals(companyId);
+		return me != null && me.getOrganizationId() != null && me.getOrganizationId().equals(organizationId);
 	}
 }

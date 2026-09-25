@@ -20,15 +20,21 @@ import java.util.Date;
 public class JobCircular extends SequenceIdGenerator{
 
 	private String jobTitle;
-	private String companyName;
-	private String companyAddress;
-	private String companyPhone;
-	private String companyEmail;
-	private String companyWebsite;
-	private String companyBusiness;
+	@Column(name = "company_name")
+	private String organizationName;
+	@Column(name = "company_address")
+	private String organizationAddress;
+	@Column(name = "company_phone")
+	private String organizationPhone;
+	@Column(name = "company_email")
+	private String organizationEmail;
+	@Column(name = "company_website")
+	private String organizationWebsite;
+	@Column(name = "company_business")
+	private String organizationBusiness;
 
 	@Column(name = "company_id")
-	private Long companyId;
+	private Long organizationId;
 
 	@Temporal(TemporalType.DATE)
 	private Date applicationDeadLine;

@@ -37,7 +37,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
 		"saved-job:read", "saved-job:write",
 		"job-alert:read", "job-alert:write", "job-alert:delete",
 		"notification:read", "notification:write", "notification:delete",
-		"job-circular:read", "company:read"
+		"job-circular:read", "organization:read"
 	);
 
 	private final PermissionRepo permissionRepo;

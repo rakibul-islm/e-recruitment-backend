@@ -277,12 +277,12 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 			.append("</style></head><body>");
 
 		sb.append("<h1>Offer of Employment</h1>");
-		sb.append("<div class='sub'>").append(esc(job.getCompanyName())).append("</div>");
+		sb.append("<div class='sub'>").append(esc(job.getOrganizationName())).append("</div>");
 
 		sb.append("<p>Dear ").append(esc(candidate.getFullName())).append(",</p>");
 		sb.append("<p>We are pleased to offer you the position of <strong>")
 			.append(esc(StringUtils.defaultIfBlank(offer.getPosition(), job.getJobTitle())))
-			.append("</strong> at ").append(esc(job.getCompanyName())).append(".</p>");
+			.append("</strong> at ").append(esc(job.getOrganizationName())).append(".</p>");
 
 		sb.append("<div class='field'><span class='field-label'>Position:</span>")
 			.append(esc(StringUtils.defaultIfBlank(offer.getPosition(), job.getJobTitle()))).append("</div>");
@@ -300,7 +300,7 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 		}
 
 		sb.append("<p>Please review this offer and respond via your candidate dashboard by the date noted above. We look forward to welcoming you to the team.</p>");
-		sb.append("<p>Sincerely,<br/>").append(esc(job.getCompanyName())).append(" Hiring Team</p>");
+		sb.append("<p>Sincerely,<br/>").append(esc(job.getOrganizationName())).append(" Hiring Team</p>");
 
 		sb.append("</body></html>");
 		return sb.toString();

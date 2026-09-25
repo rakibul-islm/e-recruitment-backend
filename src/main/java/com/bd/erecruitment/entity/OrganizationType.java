@@ -10,13 +10,14 @@ import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 @Data
-@Entity
+// entity and column names deliberately keep "company" so the existing tables, columns and id sequence stay valid
+@Entity(name = "CompanyType")
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
 @Table(name = "COMPANY_TYPE")
 @EqualsAndHashCode(callSuper = true)
-public class CompanyType extends SequenceIdGenerator {
+public class OrganizationType extends SequenceIdGenerator {
 
 	@Column(nullable = false, length = 100)
 	private String name;

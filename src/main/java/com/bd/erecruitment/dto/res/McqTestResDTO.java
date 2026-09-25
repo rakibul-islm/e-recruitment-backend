@@ -20,7 +20,7 @@ public class McqTestResDTO extends BaseResponseDTO<McqTest> {
 		this.questionCount = test.getQuestionIds() != null ? test.getQuestionIds().size() : 0;
 	}
 
-	private Long companyId;
+	private Long organizationId;
 	private String name;
 	private String description;
 	private Integer durationMinutes;

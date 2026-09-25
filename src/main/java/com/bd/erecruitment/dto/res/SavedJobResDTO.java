@@ -22,6 +22,6 @@ public class SavedJobResDTO extends BaseResponseDTO<SavedJob> {
 	private Date savedOn;
 
 	private String jobTitle;
-	private String companyName;
+	private String organizationName;
 	private String jobStatus;
 }

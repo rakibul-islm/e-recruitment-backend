@@ -81,5 +81,5 @@ public class User extends SequenceIdGenerator {
 	private Long userGroupId;
 
 	@Column(name = "company_id")
-	private Long companyId;
+	private Long organizationId;
 }

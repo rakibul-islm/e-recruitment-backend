@@ -2,7 +2,7 @@ package com.bd.erecruitment.dto.res;
 
 import com.bd.erecruitment.util.ModelMapperUtils;
 
-import com.bd.erecruitment.entity.Company;
+import com.bd.erecruitment.entity.Organization;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -10,16 +10,16 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CompanyResDTO extends BaseResponseDTO<Company> {
+public class OrganizationResDTO extends BaseResponseDTO<Organization> {
 
-	public CompanyResDTO(Company company) {
-		ModelMapperUtils.MAPPER.map(company, this);
+	public OrganizationResDTO(Organization organization) {
+		ModelMapperUtils.MAPPER.map(organization, this);
 	}
 
 	private String name;
 	private Long logoFileId;
 	private String website;
-	private String industry;
+	private String sector;
 	private String phone;
 	private String email;
 	private String description;
