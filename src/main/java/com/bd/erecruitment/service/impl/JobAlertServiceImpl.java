@@ -25,7 +25,11 @@ public class JobAlertServiceImpl {
 
 	@Transactional
 	public Response<JobAlertResDTO> save(JobAlertReqDto reqDto) {
-		if (StringUtils.isBlank(reqDto.getKeyword()) && StringUtils.isBlank(reqDto.getLocation()) && StringUtils.isBlank(reqDto.getCategory())) {
+		// Trimmed so a stray trailing space from a mobile keyboard can't make the alert un-matchable.
+		String keyword = StringUtils.trimToNull(reqDto.getKeyword());
+		String location = StringUtils.trimToNull(reqDto.getLocation());
+		String category = StringUtils.trimToNull(reqDto.getCategory());
+		if (keyword == null && location == null && category == null) {
 			Response<JobAlertResDTO> error = new Response<>();
 			error.setCode(400);
 			error.setSuccess(false);
@@ -47,9 +51,9 @@ public class JobAlertServiceImpl {
 			alert.setCreatedBy(actor).setCreatedOn(now);
 		}
 
-		alert.setKeyword(reqDto.getKeyword())
-			.setLocation(reqDto.getLocation())
-			.setCategory(reqDto.getCategory())
+		alert.setKeyword(keyword)
+			.setLocation(location)
+			.setCategory(category)
 			.setActive(reqDto.getActive() == null || reqDto.getActive());
 		alert.setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
 

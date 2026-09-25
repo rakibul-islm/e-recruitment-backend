@@ -169,7 +169,8 @@ public class MailServiceImpl implements MailService {
 		));
 	}
 
-	@Async("notificationExecutor")
+	// Deliberately NOT @Async, unlike the other senders: JobAlertScheduler only advances an alert's
+	// lastNotifiedOn after this returns, so it must see a Gmail failure as an exception.
 	@Override
 	public void sendJobAlertDigestEmail(String toEmail, String fullName, List<JobAlertItemDto> jobs) {
 		sendTemplateEmail(toEmail, "job-alert-digest-email.html", Map.of(

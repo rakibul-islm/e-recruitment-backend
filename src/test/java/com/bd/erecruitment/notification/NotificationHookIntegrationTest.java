@@ -37,6 +37,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
@@ -143,7 +147,7 @@ class NotificationHookIntegrationTest {
 
 	@Test
 	void jobAlertDigest_alsoCreatesAnInAppNotificationWithTheMatchCount() throws InterruptedException {
-		jobCircularRepo.save(stamp(new JobCircular().setJobTitle("Senior Java Developer").setStatus("PUBLISHED")));
+		jobCircularRepo.save(publishedJob("Senior Java Developer", 5));
 		jobAlertRepo.save(stamp(new JobAlert().setUserId(candidateId).setKeyword("Java").setActive(true)));
 
 		jobAlertScheduler.runDailyDigest();
@@ -153,6 +157,69 @@ class NotificationHookIntegrationTest {
 		assertThat(row.getActionRoute()).isEqualTo("/jobs");
 		assertThat(row.getParamsJson()).contains("\"count\":1");
 		verify(mailService).sendJobAlertDigestEmail(anyString(), any(), anyList());
+	}
+
+	@Test
+	void jobAlertDigest_ignoresLeadingAndTrailingSpacesInTheStoredKeyword() {
+		jobCircularRepo.save(publishedJob("English Teacher", 5));
+		jobAlertRepo.save(stamp(new JobAlert().setUserId(candidateId).setKeyword("Teacher ").setActive(true)));
+
+		jobAlertScheduler.runDailyDigest();
+
+		verify(mailService).sendJobAlertDigestEmail(anyString(), any(), anyList());
+	}
+
+	@Test
+	void jobAlertDigest_doesNotAdvanceTheAlertWhenTheEmailFails_soTheNextRunRetries() {
+		jobCircularRepo.save(publishedJob("Senior Java Developer", 5));
+		JobAlert alert = jobAlertRepo.save(stamp(new JobAlert().setUserId(candidateId).setKeyword("Java").setActive(true)));
+		doThrow(new IllegalStateException("gmail down")).when(mailService).sendJobAlertDigestEmail(anyString(), any(), anyList());
+
+		jobAlertScheduler.runDailyDigest();
+
+		assertThat(jobAlertRepo.findById(alert.getId()).orElseThrow().getLastNotifiedOn()).isNull();
+		assertThat(rowsFor(candidateId)).isEmpty();
+
+		doNothing().when(mailService).sendJobAlertDigestEmail(anyString(), any(), anyList());
+		jobAlertScheduler.runDailyDigest();
+
+		verify(mailService, times(2)).sendJobAlertDigestEmail(anyString(), any(), anyList());
+		assertThat(jobAlertRepo.findById(alert.getId()).orElseThrow().getLastNotifiedOn()).isNotNull();
+	}
+
+	@Test
+	void jobAlertDigest_doesNotRepeatAJobJustBecauseItWasEditedAfterTheDigest() {
+		JobCircular job = jobCircularRepo.save(publishedJob("Senior Java Developer", 5));
+		jobAlertRepo.save(stamp(new JobAlert().setUserId(candidateId).setKeyword("Java").setActive(true)));
+
+		jobAlertScheduler.runDailyDigest();
+		verify(mailService, times(1)).sendJobAlertDigestEmail(anyString(), any(), anyList());
+
+		job.setUpdatedOn(new Date());
+		jobCircularRepo.save(job);
+		jobAlertScheduler.runDailyDigest();
+
+		verify(mailService, times(1)).sendJobAlertDigestEmail(anyString(), any(), anyList());
+	}
+
+	@Test
+	void jobAlertDigest_holdsBackAJobPublishedInsideTheSettleMargin() {
+		JobCircular fresh = stamp(new JobCircular().setJobTitle("Senior Java Developer").setStatus("PUBLISHED"));
+		fresh.setPublishedOn(new Date());
+		jobCircularRepo.save(fresh);
+		jobAlertRepo.save(stamp(new JobAlert().setUserId(candidateId).setKeyword("Java").setActive(true)));
+
+		jobAlertScheduler.runDailyDigest();
+
+		verify(mailService, never()).sendJobAlertDigestEmail(anyString(), any(), anyList());
+	}
+
+	private JobCircular publishedJob(String title, int publishedMinutesAgo) {
+		Date published = new Date(System.currentTimeMillis() - publishedMinutesAgo * 60_000L);
+		JobCircular job = stamp(new JobCircular().setJobTitle(title).setStatus("PUBLISHED"));
+		job.setPublishedOn(published);
+		job.setCreatedOn(published);
+		return job;
 	}
 
 	private List<Notification> rowsFor(Long userId) {

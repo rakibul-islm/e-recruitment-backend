@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
@@ -70,6 +71,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<?> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
 		return respondWithTrace(409, "A record with a conflicting value already exists", ex, request);
+	}
+
+	@ExceptionHandler(AsyncRequestNotUsableException.class)
+	public ResponseEntity<?> handleClientDisconnect(AsyncRequestNotUsableException ex) {
+		return null;
 	}
 
 	@ExceptionHandler(Exception.class)

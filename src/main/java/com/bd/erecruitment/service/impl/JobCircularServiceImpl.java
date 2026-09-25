@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -26,6 +27,8 @@ import java.util.Objects;
 // tampered/disabled frontend field can't post a job under a different company.
 @Service
 public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> implements BaseService<JobCircularResDTO, JobCircularReqDto> {
+
+	private static final String STATUS_PUBLISHED = "PUBLISHED";
 
 	private final CompanyRepo companyRepo;
 
@@ -49,6 +52,7 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		validateForm(reqDto);
 		JobCircular bean = reqDto.getBean();
 		if (StringUtils.isBlank(bean.getStatus())) bean.setStatus("DRAFT");
+		if (STATUS_PUBLISHED.equals(bean.getStatus())) bean.setPublishedOn(new Date());
 		JobCircular jobCircular = createEntity(bean);
 		return getCreatedResponse("Job circular saved successfully", new JobCircularResDTO(jobCircular));
 	}
@@ -62,7 +66,9 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 			applyOwnCompany(reqDto);
 		}
 		validateForm(reqDto);
+		boolean wasPublished = STATUS_PUBLISHED.equals(existing.getStatus());
 		modelMapper.map(reqDto, existing);
+		if (!wasPublished && STATUS_PUBLISHED.equals(existing.getStatus())) existing.setPublishedOn(new Date());
 		existing = updateEntity(existing);
 		return getSuccessResponse("Job circular updated successfully", new JobCircularResDTO(existing));
 	}

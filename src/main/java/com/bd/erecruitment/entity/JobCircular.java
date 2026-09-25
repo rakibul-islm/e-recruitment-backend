@@ -63,4 +63,10 @@ public class JobCircular extends SequenceIdGenerator{
 	@Column(nullable = false, length = 20)
 	@Builder.Default
 	private String status = "DRAFT";
+
+	// Set each time the circular moves into PUBLISHED (first publish or a reopen), never on plain edits -
+	// JobAlertScheduler keys off this so editing a live job doesn't re-announce it. Rows published before
+	// this column existed have it null; the scheduler falls back to createdOn for those.
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date publishedOn;
 }
