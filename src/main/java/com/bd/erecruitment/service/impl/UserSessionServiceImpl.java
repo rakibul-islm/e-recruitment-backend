@@ -38,6 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @AuditExempt
 public class UserSessionServiceImpl extends AbstractBaseService<UserSession> implements UserSessionService, BaseService<UserSessionResDTO, UserSessionReqDto> {
 
+	private static final String DEFAULT_LOGOUT_REASON = "force-logout";
+
 	@Autowired private AuditLogWriter auditLogWriter;
 	@Autowired private SseEmitterRegistry sseEmitterRegistry;
 
@@ -90,9 +92,15 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	@Transactional
 	@Override
 	public Response<Object> forceLogoutUser(Long userId) {
+		return forceLogoutUser(userId, DEFAULT_LOGOUT_REASON);
+	}
+
+	@Transactional
+	@Override
+	public Response<Object> forceLogoutUser(Long userId, String reason) {
 		List<UserSession> sessions = userSessionRepo.findAllByUser_IdAndRevokedFalse(userId);
 		sessions.forEach(this::revoke);
-		notifyForceLogout(userId);
+		notifyForceLogout(userId, reason);
 		auditLogWriter.logSecurity(AuditAction.FORCE_LOGOUT, AuditOutcome.SUCCESS);
 		return getSuccessResponse("Logged out " + sessions.size() + " active session(s)");
 	}
@@ -197,6 +205,10 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	}
 
 	private void notifyForceLogout(Long userId) {
-		sseEmitterRegistry.push(userId, "force-logout", Map.of("reason", "force-logout"));
+		notifyForceLogout(userId, DEFAULT_LOGOUT_REASON);
+	}
+
+	private void notifyForceLogout(Long userId, String reason) {
+		sseEmitterRegistry.push(userId, "force-logout", Map.of("reason", reason));
 	}
 }

@@ -4,11 +4,13 @@ import com.bd.erecruitment.dto.report.ApplicationReportRow;
 import com.bd.erecruitment.dto.report.AuditLogReportRow;
 import com.bd.erecruitment.dto.report.JobPostingReportRow;
 import com.bd.erecruitment.dto.report.McqResultReportRow;
+import com.bd.erecruitment.dto.report.McqViolationReportRow;
 import com.bd.erecruitment.entity.Application;
 import com.bd.erecruitment.entity.AuditLog;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.entity.McqTest;
 import com.bd.erecruitment.entity.McqTestAssignment;
+import com.bd.erecruitment.entity.McqTestViolation;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.exception.BadRequestException;
 import com.bd.erecruitment.repository.ApplicationRepo;
@@ -16,6 +18,7 @@ import com.bd.erecruitment.repository.AuditLogRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
 import com.bd.erecruitment.repository.McqTestAssignmentRepo;
 import com.bd.erecruitment.repository.McqTestRepo;
+import com.bd.erecruitment.repository.McqTestViolationRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.specification.GenericSpecification;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,12 +60,13 @@ public class ReportServiceImpl {
 
 	private static final ZoneId DEFAULT_REPORT_ZONE = ZoneId.of("Asia/Dhaka");
 	private static final DateTimeFormatter DEADLINE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneOffset.UTC);
-	private static final List<String> REPORT_KEYS = List.of("job-posting", "application", "mcq-result", "audit-log");
+	private static final List<String> REPORT_KEYS = List.of("job-posting", "application", "mcq-result", "audit-log", "mcq-violation");
 
 	private final JobCircularRepo jobCircularRepo;
 	private final ApplicationRepo applicationRepo;
 	private final McqTestAssignmentRepo mcqTestAssignmentRepo;
 	private final McqTestRepo mcqTestRepo;
+	private final McqTestViolationRepo mcqTestViolationRepo;
 	private final AuditLogRepo auditLogRepo;
 	private final UserRepo userRepo;
 
@@ -78,6 +83,7 @@ public class ReportServiceImpl {
 			case "application" -> buildApplicationRows(filters);
 			case "mcq-result" -> buildMcqResultRows(filters);
 			case "audit-log" -> buildAuditLogRows(filters);
+			case "mcq-violation" -> buildMcqViolationRows(filters);
 			default -> throw new BadRequestException("Unknown report: " + reportKey);
 		};
 
@@ -201,6 +207,39 @@ public class ReportServiceImpl {
 					jobTitle, assignment.getScorePercent(),
 					Boolean.TRUE.equals(assignment.getPassed()) ? "Yes" : "No",
 					assignment.getSubmittedOn()
+				);
+			})
+			.toList();
+	}
+
+	private List<McqViolationReportRow> buildMcqViolationRows(Map<String, String> filters) {
+		List<McqTestViolation> violations = mcqTestViolationRepo.findAll(GenericSpecification.<McqTestViolation>build(filters)).stream()
+			.sorted(Comparator.comparing(McqTestViolation::getCreatedOn).reversed())
+			.toList();
+		if (violations.isEmpty()) return List.of();
+
+		Map<Long, String> testNames = mcqTestRepo.findAllByIdInAndDeleted(violations.stream().map(McqTestViolation::getMcqTestId).distinct().toList(), false)
+			.stream().collect(Collectors.toMap(McqTest::getId, McqTest::getName));
+		Map<Long, User> candidates = usersByCandidateId(violations.stream().map(McqTestViolation::getCandidateUserId).distinct().toList());
+		Map<Long, McqTestAssignment> assignments = mcqTestAssignmentRepo.findAllByIdInAndDeleted(violations.stream().map(McqTestViolation::getAssignmentId).distinct().toList(), false)
+			.stream().collect(Collectors.toMap(McqTestAssignment::getId, a -> a));
+		Map<Long, Application> applications = applicationRepo.findAllByIdInAndDeleted(assignments.values().stream().map(McqTestAssignment::getApplicationId).distinct().toList(), false)
+			.stream().collect(Collectors.toMap(Application::getId, a -> a));
+		Map<Long, String> jobTitles = jobTitlesByJobCircularId(applications.values().stream().map(Application::getJobCircularId).distinct().toList());
+
+		return violations.stream()
+			.map(violation -> {
+				User candidate = candidates.get(violation.getCandidateUserId());
+				McqTestAssignment assignment = assignments.get(violation.getAssignmentId());
+				Application application = assignment != null ? applications.get(assignment.getApplicationId()) : null;
+				String jobTitle = application != null ? jobTitles.getOrDefault(application.getJobCircularId(), "") : "";
+
+				return new McqViolationReportRow(
+					testNames.getOrDefault(violation.getMcqTestId(), ""),
+					candidate != null ? candidate.getFullName() : "",
+					candidate != null ? candidate.getEmail() : "",
+					jobTitle, violation.getViolationType(), violation.getDetail(),
+					violation.getQuestionNumber(), violation.getSequenceNo(), violation.getAction(), violation.getCreatedOn()
 				);
 			})
 			.toList();

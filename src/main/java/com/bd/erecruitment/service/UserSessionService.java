@@ -18,6 +18,8 @@ public interface UserSessionService extends BaseService<UserSessionResDTO, UserS
 
 	Response<Object> forceLogoutUser(Long userId);
 
+	Response<Object> forceLogoutUser(Long userId, String reason);
+
 	Response<Object> forceLogoutAll();
 
 	Response<Object> logoutCurrentSession(String jti);

@@ -74,6 +74,7 @@ public class PermissionData {
 			new PermissionDef("View Application Report", "report:application-read", "JOB_MANAGEMENT", "report-application-list"),
 			new PermissionDef("View MCQ Result Report",  "report:mcq-result-read",  "JOB_MANAGEMENT", "report-mcq-result-list"),
 			new PermissionDef("View Audit Log Report",   "report:audit-log-read",  "JOB_MANAGEMENT", "report-audit-log-list"),
+			new PermissionDef("View MCQ Violation Report", "report:mcq-violation-read", "JOB_MANAGEMENT", "report-mcq-violation-list"),
 
 			new PermissionDef("Manage My Saved Jobs",   "saved-job:read",       "PROFILE",           null),
 			new PermissionDef("Save/Unsave Jobs",       "saved-job:write",      "PROFILE",           null),
