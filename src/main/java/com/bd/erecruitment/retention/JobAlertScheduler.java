@@ -40,7 +40,7 @@ public class JobAlertScheduler {
 	@Value("${app.frontend.base-url}")
 	private String frontendBaseUrl;
 
-	@Scheduled(cron = "0 0 7 * * *")
+	@Scheduled(cron = "0 0 4 * * *", zone = "Asia/Dhaka")
 	public void runDailyDigest() {
 		List<JobAlert> alerts = jobAlertRepo.findAllByActiveAndDeleted(true, false);
 		for (JobAlert alert : alerts) {

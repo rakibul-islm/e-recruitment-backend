@@ -23,7 +23,7 @@ public class ArchiveScheduler {
 		this.exceptionLogWriter = exceptionLogWriter;
 	}
 
-	@Scheduled(cron = "0 0 3 * * *")
+	@Scheduled(cron = "0 0 3 * * *", zone = "Asia/Dhaka")
 	public void runScheduledArchiving() {
 		List<ArchiveConfig> configs = archiveConfigService.findEnabled();
 		for (ArchiveConfig config : configs) {

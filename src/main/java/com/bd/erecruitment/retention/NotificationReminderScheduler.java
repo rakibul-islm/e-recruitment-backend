@@ -51,7 +51,7 @@ public class NotificationReminderScheduler {
 	private final NotificationServiceImpl notificationService;
 	private final ExceptionLogWriter exceptionLogWriter;
 
-	@Scheduled(cron = "0 */5 * * * *")
+	@Scheduled(cron = "0 */5 * * * *", zone = "Asia/Dhaka")
 	public void run() {
 		Instant now = Instant.now();
 		runSafely("interview", () -> remindInterviews(now));

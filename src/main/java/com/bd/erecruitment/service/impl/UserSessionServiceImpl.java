@@ -55,7 +55,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		refreshRevokedCache();
 	}
 
-	@Scheduled(cron = "0 0 * * * *")
+	@Scheduled(cron = "0 0 * * * *", zone = "Asia/Dhaka")
 	public void refreshRevokedCache() {
 		Set<String> fresh = new HashSet<>(userSessionRepo.findRevokedJtisNotExpired(new Date()));
 		revokedJtiCache.retainAll(fresh);
