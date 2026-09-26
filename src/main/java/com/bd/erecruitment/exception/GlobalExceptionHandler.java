@@ -17,7 +17,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
+import org.springframework.web.util.DisconnectedClientHelper;
 
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -78,9 +81,27 @@ public class GlobalExceptionHandler {
 		return null;
 	}
 
+	@ExceptionHandler(AsyncRequestTimeoutException.class)
+	public ResponseEntity<?> handleAsyncTimeout(AsyncRequestTimeoutException ex) {
+		return null;
+	}
+
+	@ExceptionHandler(IOException.class)
+	public ResponseEntity<?> handleIo(IOException ex, HttpServletRequest request) {
+		if (isClientDisconnect(ex)) return null;
+		return handleGeneral(ex, request);
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<?> handleGeneral(Exception ex, HttpServletRequest request) {
 		return respondWithTrace(500, "An unexpected error occurred", ex, request);
+	}
+
+	private boolean isClientDisconnect(IOException ex) {
+		if (DisconnectedClientHelper.isClientDisconnectedException(ex)) return true;
+		// Windows wording, which Spring's helper does not recognise
+		String message = ex.getMessage();
+		return message != null && message.toLowerCase().contains("connection was aborted");
 	}
 
 	private ResponseEntity<Response<Object>> respond(int code, String message) {

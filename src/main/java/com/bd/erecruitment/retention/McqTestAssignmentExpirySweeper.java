@@ -1,6 +1,5 @@
 package com.bd.erecruitment.retention;
 
-import com.bd.erecruitment.entity.McqTestAssignment;
 import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.repository.McqTestAssignmentRepo;
 import com.bd.erecruitment.service.impl.McqTestAssignmentServiceImpl;
@@ -25,36 +24,36 @@ public class McqTestAssignmentExpirySweeper {
 	public void runSweep() {
 		Date now = new Date();
 
-		List<McqTestAssignment> expiredInProgress = mcqTestAssignmentRepo
-			.findAllByStatusAndDeadlineAtBeforeAndDeleted("IN_PROGRESS", now, false);
-		for (McqTestAssignment assignment : expiredInProgress) {
+		List<Long> expiredInProgress = mcqTestAssignmentRepo
+			.findIdsByStatusAndDeadlineAtBeforeAndDeleted("IN_PROGRESS", now, false);
+		for (Long id : expiredInProgress) {
 			try {
-				mcqTestAssignmentService.autoSubmitExpired(assignment.getId());
+				mcqTestAssignmentService.autoSubmitExpired(id);
 			} catch (Exception ex) {
-				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed: {}", assignment.getId(), ex.getMessage(), ex);
-				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.autoSubmitExpired:" + assignment.getId());
+				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed: {}", id, ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.autoSubmitExpired:" + id);
 			}
 		}
 
-		List<McqTestAssignment> missedWindow = mcqTestAssignmentRepo
-			.findAllByStatusAndScheduledEndAtBeforeAndDeleted("ASSIGNED", now, false);
-		for (McqTestAssignment assignment : missedWindow) {
+		List<Long> missedWindow = mcqTestAssignmentRepo
+			.findIdsByStatusAndScheduledEndAtBeforeAndDeleted("ASSIGNED", now, false);
+		for (Long id : missedWindow) {
 			try {
-				mcqTestAssignmentService.expireUnstarted(assignment.getId());
+				mcqTestAssignmentService.expireUnstarted(id);
 			} catch (Exception ex) {
-				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed to expire: {}", assignment.getId(), ex.getMessage(), ex);
-				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.expireUnstarted:" + assignment.getId());
+				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed to expire: {}", id, ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.expireUnstarted:" + id);
 			}
 		}
 
-		List<McqTestAssignment> expiredQuestions = mcqTestAssignmentRepo
-			.findAllByStatusAndCurrentQuestionDeadlineAtBeforeAndDeleted("IN_PROGRESS", now, false);
-		for (McqTestAssignment assignment : expiredQuestions) {
+		List<Long> expiredQuestions = mcqTestAssignmentRepo
+			.findIdsByStatusAndCurrentQuestionDeadlineAtBeforeAndDeleted("IN_PROGRESS", now, false);
+		for (Long id : expiredQuestions) {
 			try {
-				mcqTestAssignmentService.autoAdvanceOrSubmitIfQuestionExpired(assignment.getId());
+				mcqTestAssignmentService.autoAdvanceOrSubmitIfQuestionExpired(id);
 			} catch (Exception ex) {
-				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed to auto-advance: {}", assignment.getId(), ex.getMessage(), ex);
-				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.autoAdvanceOrSubmit:" + assignment.getId());
+				log.error("[McqTestAssignmentExpirySweeper] assignment {}: failed to auto-advance: {}", id, ex.getMessage(), ex);
+				exceptionLogWriter.log(ex, 0, ex.getMessage(), "McqTestAssignmentExpirySweeper.autoAdvanceOrSubmit:" + id);
 			}
 		}
 	}
