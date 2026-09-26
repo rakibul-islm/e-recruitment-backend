@@ -2,6 +2,7 @@ package com.bd.erecruitment.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -18,7 +19,11 @@ import java.util.Date;
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
-@Table(name = "MCQ_TEST_ASSIGNMENT")
+@Table(name = "MCQ_TEST_ASSIGNMENT", indexes = {
+	@Index(name = "idx_mcq_assign_deadline", columnList = "status, deleted, deadline_at"),
+	@Index(name = "idx_mcq_assign_sched_end", columnList = "status, deleted, scheduled_end_at"),
+	@Index(name = "idx_mcq_assign_q_deadline", columnList = "status, deleted, current_question_deadline_at")
+})
 @EqualsAndHashCode(callSuper = true)
 public class McqTestAssignment extends SequenceIdGenerator {
 
@@ -42,12 +47,14 @@ public class McqTestAssignment extends SequenceIdGenerator {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date scheduledAt;
 
+	@Column(name = "scheduled_end_at")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date scheduledEndAt;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date startedOn;
 
+	@Column(name = "deadline_at")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date deadlineAt;
 
@@ -57,6 +64,7 @@ public class McqTestAssignment extends SequenceIdGenerator {
 	@Column(name = "seconds_per_question_snapshot")
 	private Integer secondsPerQuestionSnapshot;
 
+	@Column(name = "current_question_deadline_at")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date currentQuestionDeadlineAt;
 
