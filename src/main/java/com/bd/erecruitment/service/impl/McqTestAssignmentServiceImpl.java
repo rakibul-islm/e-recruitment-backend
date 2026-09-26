@@ -357,6 +357,11 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 	}
 
 	@Transactional
+	public McqTestAssignment terminateForViolations(McqTestAssignment assignment) {
+		return doSubmit(assignment, "VIOLATION", "system", true);
+	}
+
+	@Transactional
 	public void expireUnstarted(Long id) {
 		McqTestAssignment assignment = findByIdOrThrow(id, "Assignment not found");
 		if (!"ASSIGNED".equals(assignment.getStatus())) return;

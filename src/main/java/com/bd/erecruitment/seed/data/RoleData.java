@@ -69,6 +69,7 @@ public class RoleData {
 					"report:job-posting-read",
 					"report:application-read",
 					"report:mcq-result-read",
+					"report:mcq-violation-read",
 					"report:audit-log-read"
 				)
 			),
@@ -94,6 +95,7 @@ public class RoleData {
 					"report:job-posting-read",
 					"report:application-read",
 					"report:mcq-result-read",
+					"report:mcq-violation-read",
 					"report:audit-log-read",
 					"system-config:read",
 					"password-policy:read",
@@ -138,6 +140,7 @@ public class RoleData {
 					"report:job-posting-read",
 					"report:application-read",
 					"report:mcq-result-read",
+					"report:mcq-violation-read",
 					"report:audit-log-read",
 					"password-policy:read",
 					"password-policy:write",
@@ -192,6 +195,7 @@ public class RoleData {
 					"report:job-posting-read",
 					"report:application-read",
 					"report:mcq-result-read",
+					"report:mcq-violation-read",
 					"report:audit-log-read",
 					"password-policy:read",
 					"password-policy:write",

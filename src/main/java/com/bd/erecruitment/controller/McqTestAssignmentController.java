@@ -3,10 +3,13 @@ package com.bd.erecruitment.controller;
 import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.dto.req.AssignMcqTestReqDto;
 import com.bd.erecruitment.dto.req.BulkAssignMcqTestReqDto;
+import com.bd.erecruitment.dto.req.McqViolationReqDto;
 import com.bd.erecruitment.dto.req.SubmitAnswerReqDto;
 import com.bd.erecruitment.dto.res.McqTestAssignmentResDTO;
 import com.bd.erecruitment.dto.res.McqTestAttemptQuestionDto;
+import com.bd.erecruitment.dto.res.McqViolationResDTO;
 import com.bd.erecruitment.service.impl.McqTestAssignmentServiceImpl;
+import com.bd.erecruitment.service.impl.McqTestViolationServiceImpl;
 import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class McqTestAssignmentController {
 
 	private final McqTestAssignmentServiceImpl assignmentService;
+	private final McqTestViolationServiceImpl violationService;
 
 	@Operation(summary = "Assign a test to a candidate's application (recruiter/admin)")
 	@PostMapping
@@ -73,6 +77,12 @@ public class McqTestAssignmentController {
 	@PostMapping("/{id}/advance")
 	public Response<McqTestAssignmentResDTO> advance(@PathVariable Long id) {
 		return assignmentService.advance(id);
+	}
+
+	@Operation(summary = "Report suspicious behavior during a test; past the configured limit the test is ended and the candidate logged out (candidate only)")
+	@PostMapping("/{id}/violation")
+	public Response<McqViolationResDTO> violation(@PathVariable Long id, @RequestBody McqViolationReqDto reqDto) {
+		return violationService.record(id, reqDto);
 	}
 
 	@Operation(summary = "Submit the test for grading (candidate only)")

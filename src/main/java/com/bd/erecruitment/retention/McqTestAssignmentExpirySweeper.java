@@ -20,7 +20,7 @@ public class McqTestAssignmentExpirySweeper {
 	private final McqTestAssignmentServiceImpl mcqTestAssignmentService;
 	private final ExceptionLogWriter exceptionLogWriter;
 
-	@Scheduled(cron = "0 * * * * *")
+	@Scheduled(cron = "0 * * * * *", zone = "Asia/Dhaka")
 	public void runSweep() {
 		Date now = new Date();
 

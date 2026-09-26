@@ -37,6 +37,18 @@ public class SystemConfigData {
 				"90",
 				"Number of days past expiry a user_session row is retained before the scheduled retention job archives and purges it",
 				null
+			),
+			new ConfigDef(
+				"MCQ_VIOLATION_MONITORING_ENABLED",
+				"Y",
+				"When Y, suspicious behavior during an MCQ test (tab switch, window blur, leaving fullscreen, copy attempts, blocked shortcuts) is recorded and the candidate is warned",
+				"Y,N"
+			),
+			new ConfigDef(
+				"MCQ_VIOLATION_LIMIT",
+				"3",
+				"Number of recorded violations a candidate may accumulate in one MCQ test; the violation after this number ends the test, auto-submits it and logs the candidate out",
+				null
 			)
 		);
 	}
