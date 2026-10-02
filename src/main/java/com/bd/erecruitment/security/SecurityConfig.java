@@ -2,6 +2,7 @@ package com.bd.erecruitment.security;
 
 import com.bd.erecruitment.filter.CorrelationIdFilter;
 import com.bd.erecruitment.filter.JwtAutenticationFilter;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +39,8 @@ public class SecurityConfig {
 				.csrf(csrf -> csrf.disable())
 				.headers(headers -> headers.frameOptions(fo -> fo.disable()))
 				.authorizeHttpRequests(auth -> auth
+						// the original request was already authorized; the async dispatch that completes an SSE stream carries no authentication
+						.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
 						.requestMatchers(
 								"/authenticate/**",
 								"/user/signup",

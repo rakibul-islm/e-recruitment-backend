@@ -251,7 +251,8 @@ public class ReportServiceImpl {
 				log.getCategory() != null ? log.getCategory().name() : "",
 				log.getAction(), log.getEntityType(), log.getEntityId(),
 				log.getOutcome() != null ? log.getOutcome().name() : "",
-				log.getCreatedBy(), log.getCreatedOn()
+				log.getCreatedBy(), log.getCreatedOn(),
+				log.getIpAddress(), log.getCity(), log.getCountry(), log.getDeviceType(), log.getOs(), log.getBrowser()
 			))
 			.toList();
 	}

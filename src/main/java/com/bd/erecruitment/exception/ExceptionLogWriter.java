@@ -54,7 +54,9 @@ public class ExceptionLogWriter {
 					.setMessage(message)
 					.setStackTrace(stackTrace)
 					.setCreatedBy("system").setCreatedOn(now).setCreatedTerminal(terminal)
+					.setCreatedLocation(RequestUtils.getClientLocation()).setCreatedDevice(RequestUtils.getClientDevice()).setCreatedUserAgent(RequestUtils.getClientUserAgent())
 					.setUpdatedBy("system").setUpdatedOn(now).setUpdatedTerminal(terminal)
+					.setUpdatedLocation(RequestUtils.getClientLocation()).setUpdatedDevice(RequestUtils.getClientDevice()).setUpdatedUserAgent(RequestUtils.getClientUserAgent())
 					.setDeleted(false);
 			exceptionLogRepo.save(entry);
 		} catch (Exception persistEx) {

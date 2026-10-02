@@ -47,4 +47,7 @@ public class Application extends SequenceIdGenerator {
 	private Date statusUpdatedOn;
 
 	private String statusUpdatedBy;
+
+	@Column(name = "match_score")
+	private Integer matchScore;
 }

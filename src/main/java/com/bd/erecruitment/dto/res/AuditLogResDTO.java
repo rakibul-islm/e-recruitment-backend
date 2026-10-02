@@ -23,6 +23,11 @@ public class AuditLogResDTO extends BaseResponseDTO<AuditLog> {
 	private AuditOutcome outcome;
 	private String ipAddress;
 	private String userAgent;
+	private String city;
+	private String country;
+	private String deviceType;
+	private String os;
+	private String browser;
 	private String correlationId;
 	private String requestUri;
 	private String httpMethod;

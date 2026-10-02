@@ -1,5 +1,8 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.enums.AuditOutcome;
+import com.bd.erecruitment.audit.AuditAction;
+import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.dto.req.CandidateProfileReqDto;
 import com.bd.erecruitment.dto.res.CandidateProfileResDTO;
 import com.bd.erecruitment.dto.res.GeneratedCvResDTO;
@@ -33,6 +36,7 @@ public class CandidateProfileServiceImpl {
 	private final UserRepo userRepo;
 	private final CvGenerationService cvGenerationService;
 	private final StorageService storageService;
+	private final AuditLogWriter auditLogWriter;
 
 	// Self-proxy so createProfile()'s REQUIRES_NEW applies; a plain this.createProfile() bypasses the transactional proxy.
 	@Lazy
@@ -42,7 +46,7 @@ public class CandidateProfileServiceImpl {
 	@Transactional
 	public Response<CandidateProfileResDTO> getMyProfile() {
 		CandidateProfile profile = getOrCreateProfile(currentUserId());
-		return getSuccess("Profile found", new CandidateProfileResDTO(profile));
+		return getSuccess("Profile found", toDto(profile));
 	}
 
 	@Transactional
@@ -70,7 +74,8 @@ public class CandidateProfileServiceImpl {
 		if (reqDto.getProjects() != null) profile.getProjects().addAll(reqDto.getProjects());
 
 		profile = saveProfile(profile);
-		return getSuccess("Profile updated successfully", new CandidateProfileResDTO(profile));
+		auditLogWriter.logEntity(AuditAction.UPDATE, "CandidateProfile", profile.getId(), AuditOutcome.SUCCESS, null);
+		return getSuccess("Profile updated successfully", toDto(profile));
 	}
 
 	@Transactional
@@ -82,6 +87,7 @@ public class CandidateProfileServiceImpl {
 
 		retirePreviousCvs(profile.getId());
 		GeneratedCv cv = cvGenerationService.generate(user, profile);
+		auditLogWriter.logEntity(AuditAction.CREATE, "GeneratedCv", cv.getId(), AuditOutcome.SUCCESS, null);
 		return getSuccess("CV generated successfully", new GeneratedCvResDTO(cv));
 	}
 
@@ -111,7 +117,14 @@ public class CandidateProfileServiceImpl {
 		if (!cv.getCandidateProfileId().equals(profile.getId())) {
 			throw new NotFoundException("CV not found");
 		}
+		auditLogWriter.logActivity(AuditAction.DOWNLOAD, "GeneratedCv", cv.getId(), null);
 		return storageService.retrieve(cv.getStoredFileId());
+	}
+
+	private CandidateProfileResDTO toDto(CandidateProfile profile) {
+		CandidateProfileResDTO dto = new CandidateProfileResDTO(profile);
+		dto.setCompleteness(ProfileCompletenessCalculator.calculate(profile, userRepo.findByIdAndDeleted(profile.getUserId(), false).orElse(null)));
+		return dto;
 	}
 
 	private CandidateProfile getOrCreateProfile(Long userId) {

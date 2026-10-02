@@ -1,8 +1,10 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.dto.req.ApplicationStatusChangeReqDto;
 import com.bd.erecruitment.dto.req.ApplyReqDto;
 import com.bd.erecruitment.dto.res.ApplicationResDTO;
+import com.bd.erecruitment.dto.res.CvMatchResDTO;
 import com.bd.erecruitment.dto.res.ApplicationStatusHistoryResDTO;
 import com.bd.erecruitment.entity.*;
 import com.bd.erecruitment.exception.ExceptionLogWriter;
@@ -105,7 +107,8 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 			.setGeneratedCvId(generatedCvId)
 			.setAppliedOn(new Date())
 			.setStatusUpdatedOn(new Date())
-			.setStatusUpdatedBy(me.getUsername());
+			.setStatusUpdatedBy(me.getUsername())
+			.setMatchScore(matchScoreFor(job, me.getId()));
 
 		application = createEntity(application);
 		recordHistory(application.getId(), "APPLIED", "Application submitted", me.getUsername());
@@ -159,6 +162,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
 	public Response<ApplicationResDTO> find(Long id) {
 		Application application = getOwnedOrStaffApplication(id);
+		auditActivity(AuditAction.VIEW, "Application", id, null);
 		return getSuccessResponse("Application found", toDto(application, null, null));
 	}
 
@@ -197,6 +201,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		if (application.getGeneratedCvId() == null) throw new NotFoundException("No generated CV on this application");
 		GeneratedCv cv = generatedCvRepo.findByIdAndDeleted(application.getGeneratedCvId(), false)
 			.orElseThrow(() -> new NotFoundException("CV not found"));
+		auditActivity(AuditAction.DOWNLOAD, "ApplicationCv", applicationId, null);
 		return storageService.retrieve(cv.getStoredFileId());
 	}
 
@@ -250,6 +255,26 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		Date now = new Date();
 		history.setCreatedBy(actor).setCreatedOn(now).setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
 		historyRepo.save(history);
+	}
+
+	private Integer matchScoreFor(JobCircular job, Long userId) {
+		return candidateProfileRepo.findByUserIdAndDeleted(userId, false)
+			.map(profile -> CvJobMatchCalculator.calculate(job, profile, null))
+			.filter(CvMatchResDTO::isScorable)
+			.map(CvMatchResDTO::getPercent)
+			.orElse(null);
+	}
+
+	@Transactional
+	public Response<CvMatchResDTO> getMatch(Long id) {
+		requireStaff("view the CV match");
+		Application application = getOwnedOrStaffApplication(id);
+		JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false)
+			.orElseThrow(() -> new NotFoundException("Job not found"));
+		CandidateProfile profile = candidateProfileRepo.findByUserIdAndDeleted(application.getCandidateUserId(), false)
+			.orElseGet(CandidateProfile::new);
+		User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
+		return getSuccessResponse("Found", CvJobMatchCalculator.calculate(job, profile, candidate));
 	}
 
 	private Long candidateProfileIdFor(Long userId) {

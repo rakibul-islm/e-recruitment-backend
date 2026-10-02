@@ -8,6 +8,7 @@ import com.bd.erecruitment.filter.CorrelationIdFilter;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.AuditLogRepo;
 import com.bd.erecruitment.service.impl.SystemConfigServiceImpl;
+import com.bd.erecruitment.util.ClientInfo;
 import com.bd.erecruitment.util.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +53,11 @@ public class AuditLogWriter {
 		capture(AuditCategory.ENTITY, action, entityType, entityId, currentActor(), outcome, changedFields).run();
 	}
 
+	public void logActivity(String action, String entityType, Long entityId, String detail) {
+		if (!enabled() || !isSignedInUser()) return;
+		submitAfterCommit(capture(AuditCategory.ACTIVITY, action, entityType, entityId, currentActor(), AuditOutcome.SUCCESS, detail));
+	}
+
 	public void logSecurity(String action, AuditOutcome outcome) {
 		logSecurity(action, currentActor(), outcome);
 	}
@@ -69,11 +75,12 @@ public class AuditLogWriter {
 
 	private Runnable capture(AuditCategory category, String action, String entityType, Long entityId, String actor, AuditOutcome outcome, String changedFields) {
 		String ip = RequestUtils.getClientTerminal();
-		String userAgent = RequestUtils.getUserAgent();
+		ClientInfo client = RequestUtils.getClientInfo();
+		String userAgent = RequestUtils.getClientUserAgent();
 		String uri = RequestUtils.getRequestUri();
 		String method = RequestUtils.getHttpMethod();
 		String correlationId = MDC.get(CorrelationIdFilter.MDC_KEY);
-		return () -> persist(category, action, entityType, entityId, actor, outcome, ip, userAgent, uri, method, correlationId, changedFields);
+		return () -> persist(category, action, entityType, entityId, actor, outcome, ip, client, userAgent, uri, method, correlationId, changedFields);
 	}
 
 	private void submitAfterCommit(Runnable persistTask) {
@@ -90,7 +97,7 @@ public class AuditLogWriter {
 	}
 
 	private void persist(AuditCategory category, String action, String entityType, Long entityId, String actor,
-						  AuditOutcome outcome, String ip, String userAgent, String uri, String method, String correlationId,
+						  AuditOutcome outcome, String ip, ClientInfo client, String userAgent, String uri, String method, String correlationId,
 						  String changedFields) {
 		try {
 			Date now = new Date();
@@ -102,18 +109,28 @@ public class AuditLogWriter {
 					.setOutcome(outcome)
 					.setIpAddress(ip)
 					.setUserAgent(userAgent)
+					.setCity(client.city())
+					.setCountry(client.country())
+					.setDeviceType(client.deviceType())
+					.setOs(client.os())
+					.setBrowser(client.browser())
 					.setRequestUri(uri)
 					.setHttpMethod(method)
 					.setCorrelationId(correlationId)
 					.setChangedFields(changedFields);
-			entry.setCreatedBy(actor).setCreatedOn(now).setCreatedTerminal(ip)
-					.setUpdatedBy(actor).setUpdatedOn(now).setUpdatedTerminal(ip)
+			entry.setCreatedBy(actor).setCreatedOn(now).setCreatedTerminal(ip).setCreatedLocation(client.location()).setCreatedDevice(client.device()).setCreatedUserAgent(userAgent)
+					.setUpdatedBy(actor).setUpdatedOn(now).setUpdatedTerminal(ip).setUpdatedLocation(client.location()).setUpdatedDevice(client.device()).setUpdatedUserAgent(userAgent)
 					.setDeleted(false);
 			auditLogRepo.save(entry);
 		} catch (Exception persistEx) {
 			log.error("Failed to persist audit log: category={} action={} entityType={} entityId={}: {}",
 					category, action, entityType, entityId, persistEx.getMessage(), persistEx);
 		}
+	}
+
+	private boolean isSignedInUser() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		return auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof MyUserDetail;
 	}
 
 	private String currentActor() {

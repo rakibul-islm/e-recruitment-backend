@@ -107,7 +107,9 @@ public class McqTestViolationServiceImpl extends CommonFunctionsImpl {
 			.setIpAddress(RequestUtils.getClientTerminal())
 			.setUserAgent(StringUtils.abbreviate(RequestUtils.getUserAgent(), 255));
 		violation.setCreatedBy(me.getUsername()).setCreatedOn(now).setCreatedTerminal(RequestUtils.getClientTerminal())
-			.setUpdatedBy(me.getUsername()).setUpdatedOn(now).setDeleted(false);
+			.setCreatedLocation(RequestUtils.getClientLocation()).setCreatedDevice(RequestUtils.getClientDevice()).setCreatedUserAgent(RequestUtils.getClientUserAgent())
+			.setUpdatedBy(me.getUsername()).setUpdatedOn(now)
+			.setUpdatedLocation(RequestUtils.getClientLocation()).setUpdatedDevice(RequestUtils.getClientDevice()).setUpdatedUserAgent(RequestUtils.getClientUserAgent()).setDeleted(false);
 		violationRepo.save(violation);
 	}
 

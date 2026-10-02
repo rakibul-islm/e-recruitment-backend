@@ -4,6 +4,7 @@ import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.audit.AuditExempt;
 import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.dto.req.UserSessionReqDto;
+import com.bd.erecruitment.dto.res.GuestSessionResDTO;
 import com.bd.erecruitment.dto.res.SessionSummaryResDTO;
 import com.bd.erecruitment.dto.res.UserSessionResDTO;
 import com.bd.erecruitment.entity.User;
@@ -14,6 +15,7 @@ import com.bd.erecruitment.repository.UserSessionRepo;
 import com.bd.erecruitment.service.BaseService;
 import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.specification.GenericSpecification;
+import com.bd.erecruitment.util.ClientInfo;
 import com.bd.erecruitment.util.RequestUtils;
 import com.bd.erecruitment.util.Response;
 import jakarta.annotation.PostConstruct;
@@ -67,16 +69,24 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	@Transactional
 	@Override
 	public UserSession createSession(User user, String jti, Date issuedAt, Date expiresAt) {
+		ClientInfo client = RequestUtils.getClientInfo();
 		UserSession session = UserSession.builder()
 				.user(user)
 				.jti(jti)
 				.issuedAt(issuedAt)
 				.expiresAt(expiresAt)
 				.ipAddress(RequestUtils.getClientTerminal())
-				.userAgent(RequestUtils.getUserAgent())
+				.city(client.city())
+				.country(client.country())
+				.deviceType(client.deviceType())
+				.os(client.os())
+				.browser(client.browser())
 				.revoked(false)
 				.createdBy(user.getEmail())
 				.createdOn(issuedAt)
+				.createdLocation(client.location())
+				.createdDevice(client.device())
+				.createdUserAgent(RequestUtils.getClientUserAgent())
 				.updatedBy(user.getEmail())
 				.updatedOn(issuedAt)
 				.deleted(false)
@@ -124,6 +134,18 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 
 	@Transactional
 	@Override
+	public Response<Object> updateCurrentSessionLocation(String jti) {
+		ClientInfo client = RequestUtils.getClientInfo();
+		if (StringUtils.isBlank(jti) || StringUtils.isAllBlank(client.city(), client.country())) return getSuccessResponse("No location to update");
+		userSessionRepo.findByJti(jti).ifPresent(session -> {
+			session.setCity(client.city()).setCountry(client.country()).setCreatedLocation(client.location());
+			userSessionRepo.save(session);
+		});
+		return getSuccessResponse("Session location updated");
+	}
+
+	@Transactional
+	@Override
 	public Response<UserSessionResDTO> findByUser(Long userId) {
 		List<UserSessionResDTO> dtos = userSessionRepo.findAllByUser_IdOrderByIdDesc(userId).stream()
 				.map(UserSessionResDTO::new).toList();
@@ -135,6 +157,13 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		Date now = new Date();
 		long activeSessions = userSessionRepo.countByRevokedFalseAndDeletedFalseAndExpiresAtAfter(now);
 		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, sseEmitterRegistry.onlineUserCount(), sseEmitterRegistry.onlineGuestCount()));
+	}
+
+	@Override
+	public Response<GuestSessionResDTO> getActiveGuests() {
+		List<GuestSessionResDTO> guests = sseEmitterRegistry.onlineGuests().stream()
+				.map(g -> new GuestSessionResDTO(g.guestId(), g.ipAddress(), g.city(), g.country(), g.deviceType(), g.os(), g.browser(), g.connectedAt())).toList();
+		return getSuccessResponse(guests.isEmpty() ? "No data found" : "Found", guests);
 	}
 
 	@Override

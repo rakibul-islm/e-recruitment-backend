@@ -1,5 +1,7 @@
 package com.bd.erecruitment.controller;
 
+import com.bd.erecruitment.audit.AuditAction;
+import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.service.impl.ReportServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +28,7 @@ public class ReportController {
 		MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
 	private final ReportServiceImpl reportService;
+	private final AuditLogWriter auditLogWriter;
 
 	@Operation(summary = "Generate a report as PDF or Excel (format=PDF|XLSX, timeZone=IANA id such as Asia/Dhaka for how dates are shown, remaining params are report-specific filters)")
 	@GetMapping("/{reportKey}/generate")
@@ -37,6 +40,7 @@ public class ReportController {
 
 		byte[] bytes = reportService.generate(reportKey, format, dataFilters, timeZone);
 		boolean xlsx = "XLSX".equalsIgnoreCase(format);
+		auditLogWriter.logActivity(AuditAction.DOWNLOAD, "Report", null, reportKey + " (" + (xlsx ? "XLSX" : "PDF") + ")");
 
 		return ResponseEntity.ok()
 			.contentType(xlsx ? XLSX_MEDIA_TYPE : MediaType.APPLICATION_PDF)

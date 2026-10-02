@@ -8,6 +8,8 @@ import com.bd.erecruitment.dto.req.VerifyChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.res.UserProfileResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.service.UserService;
+import com.bd.erecruitment.service.UserSessionService;
+import com.bd.erecruitment.util.JwtUtil;
 import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestApiController
@@ -23,9 +26,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class ProfileController {
 
 	private final UserService<UserResDTO, UserReqDto> userService;
+	private final UserSessionService userSessionService;
+	private final JwtUtil jwtUtil;
 
-	public ProfileController(UserService<UserResDTO, UserReqDto> userService) {
+	public ProfileController(UserService<UserResDTO, UserReqDto> userService, UserSessionService userSessionService, JwtUtil jwtUtil) {
 		this.userService = userService;
+		this.userSessionService = userSessionService;
+		this.jwtUtil = jwtUtil;
 	}
 
 	@Operation(summary = "Get my profile")
@@ -38,6 +45,18 @@ public class ProfileController {
 	@PutMapping
 	public Response<UserResDTO> updateProfile(@RequestBody UserReqDto reqDto) {
 		return userService.updateProfile(reqDto);
+	}
+
+	@Operation(summary = "Record the exact city and country (X-Client-City / X-Client-Country headers) on my current login session")
+	@PutMapping("/session-location")
+	public Response<Object> updateSessionLocation(@RequestHeader(value = "Authorization", required = false) String authorization) {
+		String jti = null;
+		if (authorization != null && authorization.startsWith("Bearer ")) {
+			try {
+				jti = jwtUtil.extractJti(authorization.substring(7));
+			} catch (Exception ignored) {}
+		}
+		return userSessionService.updateCurrentSessionLocation(jti);
 	}
 
 	@Operation(summary = "Request an OTP to confirm a password change")

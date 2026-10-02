@@ -55,6 +55,21 @@ public class AuditLog extends SequenceIdGenerator {
 	@Column(name = "user_agent", length = 500)
 	private String userAgent;
 
+	@Column(name = "city", length = 100)
+	private String city;
+
+	@Column(name = "country", length = 100)
+	private String country;
+
+	@Column(name = "device_type", length = 20)
+	private String deviceType;
+
+	@Column(name = "os", length = 50)
+	private String os;
+
+	@Column(name = "browser", length = 50)
+	private String browser;
+
 	@Column(name = "correlation_id", length = 100)
 	private String correlationId;
 

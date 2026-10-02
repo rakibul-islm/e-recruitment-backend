@@ -40,4 +40,22 @@ public class BaseEntity {
 	@Column(name = "updated_terminal", length = 100)
 	private String updatedTerminal;
 
+	@Column(name = "created_location", length = 100)
+	private String createdLocation;
+
+	@Column(name = "updated_location", length = 100)
+	private String updatedLocation;
+
+	@Column(name = "created_device", length = 150)
+	private String createdDevice;
+
+	@Column(name = "updated_device", length = 150)
+	private String updatedDevice;
+
+	@Column(name = "created_user_agent", length = 255)
+	private String createdUserAgent;
+
+	@Column(name = "updated_user_agent", length = 255)
+	private String updatedUserAgent;
+
 }

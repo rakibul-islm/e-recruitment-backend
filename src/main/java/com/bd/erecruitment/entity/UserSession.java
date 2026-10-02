@@ -47,8 +47,20 @@ public class UserSession extends SequenceIdGenerator {
 	@Column(length = 100)
 	private String ipAddress;
 
-	@Column(length = 255)
-	private String userAgent;
+	@Column(length = 100)
+	private String city;
+
+	@Column(length = 100)
+	private String country;
+
+	@Column(length = 20)
+	private String deviceType;
+
+	@Column(length = 50)
+	private String os;
+
+	@Column(length = 50)
+	private String browser;
 
 	private boolean revoked;
 

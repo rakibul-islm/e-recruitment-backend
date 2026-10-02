@@ -19,7 +19,11 @@ public class UserSessionResDTO extends BaseResponseDTO<UserSession> {
 	private Date issuedAt;
 	private Date expiresAt;
 	private String ipAddress;
-	private String userAgent;
+	private String city;
+	private String country;
+	private String deviceType;
+	private String os;
+	private String browser;
 	private boolean revoked;
 	private Date revokedAt;
 	private String revokedBy;
@@ -30,7 +34,11 @@ public class UserSessionResDTO extends BaseResponseDTO<UserSession> {
 		this.issuedAt = session.getIssuedAt();
 		this.expiresAt = session.getExpiresAt();
 		this.ipAddress = session.getIpAddress();
-		this.userAgent = session.getUserAgent();
+		this.city = session.getCity();
+		this.country = session.getCountry();
+		this.deviceType = session.getDeviceType();
+		this.os = session.getOs();
+		this.browser = session.getBrowser();
 		this.revoked = session.isRevoked();
 		this.revokedAt = session.getRevokedAt();
 		this.revokedBy = session.getRevokedBy();

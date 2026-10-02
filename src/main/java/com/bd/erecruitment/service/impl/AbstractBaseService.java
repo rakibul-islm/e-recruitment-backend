@@ -109,14 +109,23 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	protected List<E> createAllEntity(List<E> entities) {
 		String actor = getLoggedInUserDetails().getUsername();
 		String terminal = RequestUtils.getClientTerminal();
+		String location = RequestUtils.getClientLocation();
+		String device = RequestUtils.getClientDevice();
+		String userAgent = RequestUtils.getClientUserAgent();
 		Date now = new Date();
 		for (E entity : entities) {
 			entity.setCreatedBy(actor);
 			entity.setCreatedOn(now);
 			entity.setCreatedTerminal(terminal);
+			entity.setCreatedLocation(location);
+			entity.setCreatedDevice(device);
+			entity.setCreatedUserAgent(userAgent);
 			entity.setUpdatedBy(actor);
 			entity.setUpdatedOn(now);
 			entity.setUpdatedTerminal(terminal);
+			entity.setUpdatedLocation(location);
+			entity.setUpdatedDevice(device);
+			entity.setUpdatedUserAgent(userAgent);
 			entity.setDeleted(false);
 		}
 		List<E> saved = repository.saveAll(entities);
@@ -130,13 +139,22 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 
 	protected E createEntity(E entity, String actor) {
 		String terminal = RequestUtils.getClientTerminal();
+		String location = RequestUtils.getClientLocation();
+		String device = RequestUtils.getClientDevice();
+		String userAgent = RequestUtils.getClientUserAgent();
 		Date now = new Date();
 		entity.setCreatedBy(actor);
 		entity.setCreatedOn(now);
 		entity.setCreatedTerminal(terminal);
+		entity.setCreatedLocation(location);
+		entity.setCreatedDevice(device);
+		entity.setCreatedUserAgent(userAgent);
 		entity.setUpdatedBy(actor);
 		entity.setUpdatedOn(now);
 		entity.setUpdatedTerminal(terminal);
+		entity.setUpdatedLocation(location);
+		entity.setUpdatedDevice(device);
+		entity.setUpdatedUserAgent(userAgent);
 		entity.setDeleted(false);
 		E saved = repository.save(entity);
 		audit(AuditAction.CREATE, saved);
@@ -145,13 +163,22 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 
 	protected E createNormalUser(E entity) {
 		String terminal = RequestUtils.getClientTerminal();
+		String location = RequestUtils.getClientLocation();
+		String device = RequestUtils.getClientDevice();
+		String userAgent = RequestUtils.getClientUserAgent();
 		Date now = new Date();
 		entity.setCreatedBy("signup");
 		entity.setCreatedOn(now);
 		entity.setCreatedTerminal(terminal);
+		entity.setCreatedLocation(location);
+		entity.setCreatedDevice(device);
+		entity.setCreatedUserAgent(userAgent);
 		entity.setUpdatedBy("signup");
 		entity.setUpdatedOn(now);
 		entity.setUpdatedTerminal(terminal);
+		entity.setUpdatedLocation(location);
+		entity.setUpdatedDevice(device);
+		entity.setUpdatedUserAgent(userAgent);
 		entity.setDeleted(false);
 		return repository.save(entity);
 	}
@@ -160,6 +187,9 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
 		entity.setUpdatedOn(new Date());
 		entity.setUpdatedTerminal(RequestUtils.getClientTerminal());
+		entity.setUpdatedLocation(RequestUtils.getClientLocation());
+		entity.setUpdatedDevice(RequestUtils.getClientDevice());
+		entity.setUpdatedUserAgent(RequestUtils.getClientUserAgent());
 		entity.setDeleted(false);
 		E saved = repository.save(entity);
 		audit(AuditAction.UPDATE, saved);
@@ -175,6 +205,9 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		entity.setUpdatedBy(getLoggedInUserDetails().getUsername());
 		entity.setUpdatedOn(new Date());
 		entity.setUpdatedTerminal(RequestUtils.getClientTerminal());
+		entity.setUpdatedLocation(RequestUtils.getClientLocation());
+		entity.setUpdatedDevice(RequestUtils.getClientDevice());
+		entity.setUpdatedUserAgent(RequestUtils.getClientUserAgent());
 		entity.setDeleted(true);
 		E saved = repository.save(entity);
 		audit(AuditAction.SOFT_DELETE, saved);
@@ -195,6 +228,10 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		if (me.getAuthorities().stream().anyMatch(a -> "SUPER_ADMIN".equals(a.getAuthority()))) return false;
 		if (me.getRoleCodes().stream().anyMatch(UNRESTRICTED_ROLE_CODES::contains)) return false;
 		return me.getRoleCodes().contains("RECRUITER");
+	}
+
+	protected void auditActivity(String action, String entityType, Long entityId, String detail) {
+		auditLogWriter.logActivity(action, entityType, entityId, detail);
 	}
 
 	private void audit(String action, E entity) {

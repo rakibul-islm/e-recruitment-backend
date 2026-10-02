@@ -1,5 +1,8 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.enums.AuditOutcome;
+import com.bd.erecruitment.audit.AuditAction;
+import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.dto.res.NotificationPollResDTO;
 import com.bd.erecruitment.dto.res.NotificationResDTO;
 import com.bd.erecruitment.entity.Notification;
@@ -47,6 +50,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	private final UserRepo userRepo;
 	private final SseEmitterRegistry sseEmitterRegistry;
 	private final ExceptionLogWriter exceptionLogWriter;
+	private final AuditLogWriter auditLogWriter;
 	private final ObjectMapper paramsMapper = new ObjectMapper();
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -111,6 +115,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	public Response<NotificationResDTO> markAllRead() {
 		MyUserDetail user = currentUser();
 		notificationRepo.markAllRead(user.getId(), new Date(), user.getUsername());
+		auditLogWriter.logActivity(AuditAction.MARK_ALL_READ, "Notification", null, null);
 		return getSuccessResponse("All notifications marked as read");
 	}
 
@@ -119,6 +124,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 		Notification notification = findOwned(id);
 		touch(notification).setDeleted(true);
 		notificationRepo.save(notification);
+		auditLogWriter.logEntity(AuditAction.SOFT_DELETE, "Notification", notification.getId(), AuditOutcome.SUCCESS, null);
 		return getSuccessResponse("Notification removed");
 	}
 
