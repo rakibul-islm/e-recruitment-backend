@@ -3,7 +3,6 @@ package com.bd.erecruitment.service.impl;
 import com.bd.erecruitment.dto.res.ApplicationFunnelResDTO;
 import com.bd.erecruitment.dto.res.RecruitmentSummaryResDTO;
 import com.bd.erecruitment.entity.Application;
-import com.bd.erecruitment.entity.ApplicationStatusHistory;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.exception.ForbiddenException;
 import com.bd.erecruitment.model.MyUserDetail;
@@ -48,10 +47,8 @@ public class AnalyticsServiceImpl {
 		}
 		dto.setApplicationsByStatus(byStatus);
 
-		List<ApplicationStatusHistory> hires = historyRepo.findAllByStatusAndDeleted("HIRED", false);
-		long hiresLast30Days = hires.stream().filter(h -> h.getChangedOn() != null && h.getChangedOn().after(thirtyDaysAgo)).count();
-		dto.setHiresLast30Days(hiresLast30Days);
-		dto.setAvgTimeToHireDays(computeAvgTimeToHire(hires));
+		dto.setHiresLast30Days(historyRepo.countByStatusAndDeletedAndChangedOnAfter("HIRED", false, thirtyDaysAgo));
+		dto.setAvgTimeToHireDays(computeAvgTimeToHire(historyRepo.findChangedOnAndAppliedOnByStatus("HIRED")));
 
 		return success(dto);
 	}
@@ -84,22 +81,15 @@ public class AnalyticsServiceImpl {
 		return response;
 	}
 
-	private Double computeAvgTimeToHire(List<ApplicationStatusHistory> hires) {
-		if (hires.isEmpty()) return null;
+	private Double computeAvgTimeToHire(List<Object[]> changedOnAndAppliedOn) {
+		if (changedOnAndAppliedOn.isEmpty()) return null;
 
-		Map<Long, Application> applicationsById = new HashMap<>();
 		double totalDays = 0;
-		int counted = 0;
-		for (ApplicationStatusHistory hire : hires) {
-			Application application = applicationsById.computeIfAbsent(hire.getApplicationId(),
-				id -> applicationRepo.findByIdAndDeleted(id, false).orElse(null));
-			if (application == null || application.getAppliedOn() == null || hire.getChangedOn() == null) continue;
-
-			long diffMs = hire.getChangedOn().getTime() - application.getAppliedOn().getTime();
+		for (Object[] row : changedOnAndAppliedOn) {
+			long diffMs = ((Date) row[0]).getTime() - ((Date) row[1]).getTime();
 			totalDays += diffMs / (1000.0 * 60 * 60 * 24);
-			counted++;
 		}
-		return counted > 0 ? totalDays / counted : null;
+		return totalDays / changedOnAndAppliedOn.size();
 	}
 
 	private Date daysAgo(int days) {

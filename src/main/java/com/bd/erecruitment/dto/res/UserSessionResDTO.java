@@ -27,6 +27,7 @@ public class UserSessionResDTO extends BaseResponseDTO<UserSession> {
 	private boolean revoked;
 	private Date revokedAt;
 	private String revokedBy;
+	private Long sessionCount;
 
 	public UserSessionResDTO(UserSession session) {
 		this.setId(session.getId());

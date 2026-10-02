@@ -49,6 +49,10 @@ public class SseEmitterRegistry {
 				.sorted(java.util.Comparator.comparing(GuestInfo::connectedAt).reversed()).toList();
 	}
 
+	public List<Long> onlineUserIds() {
+		return users.keys();
+	}
+
 	public SseEmitter registerWatcher() {
 		return watchers.register(UUID.randomUUID().toString(), () -> { });
 	}

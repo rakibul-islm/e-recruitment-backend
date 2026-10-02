@@ -31,6 +31,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -157,6 +158,32 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 		Date now = new Date();
 		long activeSessions = userSessionRepo.countByRevokedFalseAndDeletedFalseAndExpiresAtAfter(now);
 		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, sseEmitterRegistry.onlineUserCount(), sseEmitterRegistry.onlineGuestCount()));
+	}
+
+	@Transactional
+	@Override
+	public Response<UserSessionResDTO> getOnlineUsers() {
+		List<Long> onlineUserIds = sseEmitterRegistry.onlineUserIds();
+		if (onlineUserIds.isEmpty()) return getSuccessResponse("No data found", List.<UserSessionResDTO>of());
+		List<UserSessionResDTO> dtos = latestPerUser(userSessionRepo.findActiveByUserIds(onlineUserIds, new Date()));
+		return getSuccessResponse(dtos.isEmpty() ? "No data found" : "Found", dtos);
+	}
+
+	@Transactional
+	@Override
+	public Response<UserSessionResDTO> getActiveUsers() {
+		List<UserSessionResDTO> dtos = latestPerUser(userSessionRepo.findAllActive(new Date()));
+		return getSuccessResponse(dtos.isEmpty() ? "No data found" : "Found", dtos);
+	}
+
+	private List<UserSessionResDTO> latestPerUser(List<UserSession> sessionsNewestFirst) {
+		Map<Long, UserSessionResDTO> latestByUser = new LinkedHashMap<>();
+		sessionsNewestFirst.forEach(session -> latestByUser.compute(session.getUser().getId(), (id, existing) -> {
+			UserSessionResDTO dto = existing != null ? existing : new UserSessionResDTO(session);
+			dto.setSessionCount(dto.getSessionCount() == null ? 1L : dto.getSessionCount() + 1);
+			return dto;
+		}));
+		return List.copyOf(latestByUser.values());
 	}
 
 	@Override
