@@ -14,6 +14,7 @@ import java.util.Set;
 
 @Data
 @Entity
+@EntityListeners(com.bd.erecruitment.security.AuthCacheInvalidationListener.class)
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)

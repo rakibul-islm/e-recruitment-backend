@@ -22,6 +22,7 @@ import com.bd.erecruitment.repository.McqTestAssignmentRepo;
 import com.bd.erecruitment.repository.McqTestRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.MailService;
+import com.bd.erecruitment.util.EntityLookup;
 import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -194,20 +196,26 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 
 	public Response<McqTestAssignmentResDTO> myAssignments() {
 		MyUserDetail me = getLoggedInUserDetails();
-		List<Application> myApplications = applicationRepo.findAllByCandidateUserIdAndDeletedOrderByAppliedOnDesc(me.getId(), false);
-		List<McqTestAssignmentResDTO> list = myApplications.stream()
-			.flatMap(app -> mcqTestAssignmentRepo.findAllByApplicationIdAndDeletedOrderByAssignedOnDesc(app.getId(), false).stream())
-			.map(a -> toDto(a, null))
-			.toList();
+		List<McqTestAssignmentResDTO> list = toDtos(mcqTestAssignmentRepo.findAllByCandidateUserId(me.getId()));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
 	public Response<McqTestAssignmentResDTO> findByApplication(Long applicationId) {
 		getOwnedOrStaffApplication(applicationId);
-		List<McqTestAssignmentResDTO> list = mcqTestAssignmentRepo
-			.findAllByApplicationIdAndDeletedOrderByAssignedOnDesc(applicationId, false)
-			.stream().map(a -> toDto(a, null)).toList();
+		List<McqTestAssignmentResDTO> list = toDtos(mcqTestAssignmentRepo
+			.findAllByApplicationIdAndDeletedOrderByAssignedOnDesc(applicationId, false));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
+	}
+
+	// Loads the tests, applications, jobs and candidates of the whole list in one query each instead of four lookups per row.
+	private List<McqTestAssignmentResDTO> toDtos(List<McqTestAssignment> assignments) {
+		EntityLookup lookup = new EntityLookup()
+			.preload(mcqTestRepo, assignments.stream().map(McqTestAssignment::getMcqTestId).toList())
+			.preload(applicationRepo, assignments.stream().map(McqTestAssignment::getApplicationId).toList());
+		List<Application> applications = assignments.stream().map(a -> lookup.get(applicationRepo, a.getApplicationId())).filter(Objects::nonNull).toList();
+		lookup.preload(jobCircularRepo, applications.stream().map(Application::getJobCircularId).toList())
+			.preload(userRepo, applications.stream().map(Application::getCandidateUserId).toList());
+		return assignments.stream().map(a -> toDto(a, null, lookup)).toList();
 	}
 
 	public Response<McqTestAssignmentResDTO> find(Long id) {
@@ -532,15 +540,19 @@ public class McqTestAssignmentServiceImpl extends AbstractBaseService<McqTestAss
 	}
 
 	private McqTestAssignmentResDTO toDto(McqTestAssignment assignment, McqTest testHint) {
+		return toDto(assignment, testHint, new EntityLookup());
+	}
+
+	private McqTestAssignmentResDTO toDto(McqTestAssignment assignment, McqTest testHint, EntityLookup lookup) {
 		McqTestAssignmentResDTO dto = new McqTestAssignmentResDTO(assignment);
-		McqTest test = testHint != null ? testHint : mcqTestRepo.findByIdAndDeleted(assignment.getMcqTestId(), false).orElse(null);
+		McqTest test = testHint != null ? testHint : lookup.get(mcqTestRepo, assignment.getMcqTestId());
 		if (test != null) dto.setTestName(test.getName());
 
-		Application application = applicationRepo.findByIdAndDeleted(assignment.getApplicationId(), false).orElse(null);
+		Application application = lookup.get(applicationRepo, assignment.getApplicationId());
 		if (application != null) {
-			JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
+			JobCircular job = lookup.get(jobCircularRepo, application.getJobCircularId());
 			if (job != null) dto.setJobTitle(job.getJobTitle());
-			User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
+			User candidate = lookup.get(userRepo, application.getCandidateUserId());
 			if (candidate != null) dto.setCandidateName(candidate.getFullName());
 		}
 		return dto;

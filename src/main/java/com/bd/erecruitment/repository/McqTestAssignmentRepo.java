@@ -13,6 +13,11 @@ public interface McqTestAssignmentRepo extends ServiceRepository<McqTestAssignme
 
 	List<McqTestAssignment> findAllByApplicationIdAndDeletedOrderByAssignedOnDesc(Long applicationId, boolean deleted);
 
+	/** Assignments on a candidate's non-deleted applications, in one query (no separate applications lookup). */
+	@Query("select m from McqTestAssignment m where m.deleted = false and m.applicationId in " +
+		"(select a.id from Application a where a.candidateUserId = :userId and a.deleted = false) order by m.assignedOn desc")
+	List<McqTestAssignment> findAllByCandidateUserId(@Param("userId") Long userId);
+
 	List<McqTestAssignment> findAllByStatusAndScheduledEndAtBetweenAndDeleted(String status, Date from, Date to, boolean deleted);
 
 	@Query("select a.id from McqTestAssignment a where a.status = :status and a.deadlineAt < :before and a.deleted = :deleted")

@@ -16,12 +16,14 @@ import com.bd.erecruitment.repository.InterviewRepo;
 import com.bd.erecruitment.repository.JobCircularRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.MailService;
+import com.bd.erecruitment.util.EntityLookup;
 import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -111,17 +114,26 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 		Specification<Interview> spec = com.bd.erecruitment.specification.GenericSpecification.build(filters);
 		if (Boolean.TRUE.equals(isPageable)) {
 			Page<Interview> page = interviewRepo.findAll(spec, pageable);
-			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(i -> toDto(i, null, null)));
+			return getSuccessResponse(page.hasContent() ? "Found" : "No data found",
+				new PageImpl<>(toDtos(page.getContent()), pageable, page.getTotalElements()));
 		}
-		List<InterviewResDTO> list = interviewRepo.findAll(spec).stream().map(i -> toDto(i, null, null)).toList();
+		List<InterviewResDTO> list = toDtos(interviewRepo.findAll(spec));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
+	}
+
+	// Applications, jobs and candidates for the whole list in one query each instead of three lookups per row.
+	private List<InterviewResDTO> toDtos(List<Interview> interviews) {
+		EntityLookup lookup = new EntityLookup().preload(applicationRepo, interviews.stream().map(Interview::getApplicationId).toList());
+		List<Application> applications = interviews.stream().map(i -> lookup.get(applicationRepo, i.getApplicationId())).filter(Objects::nonNull).toList();
+		lookup.preload(jobCircularRepo, applications.stream().map(Application::getJobCircularId).toList())
+			.preload(userRepo, applications.stream().map(Application::getCandidateUserId).toList());
+		return interviews.stream().map(i -> toDto(i, null, null, lookup)).toList();
 	}
 
 	@Transactional
 	public Response<InterviewResDTO> findByApplication(Long applicationId) {
 		getOwnedOrStaffApplication(applicationId);
-		List<InterviewResDTO> list = interviewRepo.findAllByApplicationIdAndDeletedOrderByScheduledAtAsc(applicationId, false)
-			.stream().map(i -> toDto(i, null, null)).toList();
+		List<InterviewResDTO> list = toDtos(interviewRepo.findAllByApplicationIdAndDeletedOrderByScheduledAtAsc(applicationId, false));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
@@ -197,12 +209,16 @@ public class InterviewServiceImpl extends AbstractBaseService<Interview> {
 	}
 
 	private InterviewResDTO toDto(Interview interview, JobCircular jobHint, User candidateHint) {
+		return toDto(interview, jobHint, candidateHint, new EntityLookup());
+	}
+
+	private InterviewResDTO toDto(Interview interview, JobCircular jobHint, User candidateHint, EntityLookup lookup) {
 		InterviewResDTO dto = new InterviewResDTO(interview);
-		Application application = applicationRepo.findByIdAndDeleted(interview.getApplicationId(), false).orElse(null);
+		Application application = lookup.get(applicationRepo, interview.getApplicationId());
 		if (application != null) {
-			JobCircular job = jobHint != null ? jobHint : jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
+			JobCircular job = jobHint != null ? jobHint : lookup.get(jobCircularRepo, application.getJobCircularId());
 			if (job != null) dto.setJobTitle(job.getJobTitle());
-			User candidate = candidateHint != null ? candidateHint : userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
+			User candidate = candidateHint != null ? candidateHint : lookup.get(userRepo, application.getCandidateUserId());
 			if (candidate != null) dto.setCandidateName(candidate.getFullName());
 		}
 		return dto;

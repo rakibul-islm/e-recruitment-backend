@@ -18,11 +18,12 @@ import java.util.Set;
 
 @Data
 @Entity
+@EntityListeners(com.bd.erecruitment.security.AuthCacheInvalidationListener.class)
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
 @Table(name = "USER_ACCOUNT")
-@EqualsAndHashCode(callSuper = true, exclude = {"roles"})
+@EqualsAndHashCode(callSuper = true, exclude = {"roles", "fileData"})
 public class User extends SequenceIdGenerator {
 
 	private String fullName;
@@ -42,6 +43,10 @@ public class User extends SequenceIdGenerator {
 	@Temporal(TemporalType.DATE)
 	private Date expiryDate;
 
+	// Lazy (needs the build-time enhancement in build.gradle): only fetched when getFileData() is called, so the
+	// 5MB photo is no longer dragged along by every User query (authentication, list pages, lookups).
+	@Basic(fetch = FetchType.LAZY)
+	@ToString.Exclude
 	@JdbcTypeCode(SqlTypes.VARBINARY)
 	@Column(name = "filedata", length = 5_000_000)
 	private byte[] fileData;

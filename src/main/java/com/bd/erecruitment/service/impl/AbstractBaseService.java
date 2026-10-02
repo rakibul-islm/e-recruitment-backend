@@ -13,14 +13,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.audit.AuditExempt;
 import com.bd.erecruitment.audit.AuditIgnore;
 import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.entity.BaseEntity;
+import com.bd.erecruitment.entity.Permission;
+import com.bd.erecruitment.entity.Role;
+import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.entity.UserGroup;
+import com.bd.erecruitment.security.UserDetailsCache;
 import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.model.MyUserDetail;
+import com.bd.erecruitment.repository.ProjectionQueryExecutor;
 import com.bd.erecruitment.repository.ServiceRepository;
 import com.bd.erecruitment.specification.GenericSpecification;
 import com.bd.erecruitment.util.RequestUtils;
@@ -30,7 +37,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -52,6 +61,11 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 
 	@Autowired
 	private ObjectMapper objectMapper;
+
+	@Autowired
+	private ProjectionQueryExecutor projectionQueryExecutor;
+
+	private Class<E> entityClass;
 
 	// Identity-keyed and thread-local: services are singletons and equals/hashCode is id-based, unreliable pre-save.
 	private final ThreadLocal<Map<Object, Map<String, Object>>> auditSnapshots = ThreadLocal.withInitial(IdentityHashMap::new);
@@ -93,10 +107,44 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	}
 
 	protected <R> Response<R> genericFilter(Map<String, String> filters, Pageable pageable, Boolean isPageable, Class<R> responseClass) {
-		return genericFilter(GenericSpecification.build(filters), pageable, isPageable, responseClass);
+		return genericFilter(GenericSpecification.build(filters), pageable, isPageable, responseClass, null);
+	}
+
+	protected <R> Response<R> genericFilter(Map<String, String> filters, Pageable pageable, Boolean isPageable, Class<R> responseClass,
+			Consumer<List<R>> enricher) {
+		return genericFilter(GenericSpecification.<E>build(filters), pageable, isPageable, responseClass, enricher);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Class<E> entityClass() {
+		if (entityClass == null) {
+			entityClass = (Class<E>) GenericTypeResolver.resolveTypeArgument(AopUtils.getTargetClass(this), AbstractBaseService.class);
+		}
+		return entityClass;
 	}
 
 	protected <R> Response<R> genericFilter(Specification<E> spec, Pageable pageable, Boolean isPageable, Class<R> responseClass) {
+		return genericFilter(spec, pageable, isPageable, responseClass, null);
+	}
+
+	/**
+	 * Lists/pages {@code responseClass} by selecting only the columns it declares (no entity loading). Response fields
+	 * that are not plain columns of the entity (nested objects, joined names, ...) are left empty for {@code enricher}
+	 * to fill in batch. Without an enricher, such a DTO falls back to loading whole entities and mapping them.
+	 */
+	protected <R> Response<R> genericFilter(Specification<E> spec, Pageable pageable, Boolean isPageable, Class<R> responseClass,
+			Consumer<List<R>> enricher) {
+		ProjectionQueryExecutor.Plan plan = projectionQueryExecutor.plan(entityClass(), responseClass);
+		if (plan.fullyCovered() || enricher != null) {
+			if (Boolean.TRUE.equals(isPageable)) {
+				Page<R> page = projectionQueryExecutor.page(entityClass(), spec, pageable, responseClass);
+				if (enricher != null) enricher.accept(page.getContent());
+				return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page);
+			}
+			List<R> result = projectionQueryExecutor.list(entityClass(), spec, responseClass);
+			if (enricher != null) enricher.accept(result);
+			return getSuccessResponse(result.isEmpty() ? "No data found" : "Found", result);
+		}
 		if (Boolean.TRUE.equals(isPageable)) {
 			Page<E> page = repository.findAll(spec, pageable);
 			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(e -> modelMapper.map(e, responseClass)));
@@ -129,6 +177,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 			entity.setDeleted(false);
 		}
 		List<E> saved = repository.saveAll(entities);
+		saved.forEach(this::invalidateAuthCache);
 		saved.forEach(entity -> audit(AuditAction.CREATE, entity));
 		return saved;
 	}
@@ -157,6 +206,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		entity.setUpdatedUserAgent(userAgent);
 		entity.setDeleted(false);
 		E saved = repository.save(entity);
+		invalidateAuthCache(saved);
 		audit(AuditAction.CREATE, saved);
 		return saved;
 	}
@@ -192,6 +242,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		entity.setUpdatedUserAgent(RequestUtils.getClientUserAgent());
 		entity.setDeleted(false);
 		E saved = repository.save(entity);
+		invalidateAuthCache(saved);
 		audit(AuditAction.UPDATE, saved);
 		return saved;
 	}
@@ -199,6 +250,14 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	protected void deleteEntity(E entity) {
 		auditSync(AuditAction.HARD_DELETE, entity);
 		repository.delete(entity);
+		invalidateAuthCache(entity);
+	}
+
+	// Role/permission membership changes (join-table rows) don't always fire an entity listener, so drop the login cache here too.
+	private void invalidateAuthCache(E entity) {
+		if (entity instanceof User || entity instanceof Role || entity instanceof Permission || entity instanceof UserGroup) {
+			UserDetailsCache.clearAfterCommit();
+		}
 	}
 
 	protected void removeEntity(E entity) {
@@ -210,6 +269,7 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		entity.setUpdatedUserAgent(RequestUtils.getClientUserAgent());
 		entity.setDeleted(true);
 		E saved = repository.save(entity);
+		invalidateAuthCache(saved);
 		audit(AuditAction.SOFT_DELETE, saved);
 	}
 

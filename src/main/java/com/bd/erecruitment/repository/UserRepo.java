@@ -28,6 +28,14 @@ public interface UserRepo extends ServiceRepository<User> {
 		   "(LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
 	List<User> searchActiveByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
+	/** Rows of {userId, roleId, roleName, roleCode, roleDescription} for the given users, for batch-filling list responses. */
+	@Query("SELECT u.id, r.id, r.name, r.code, r.description FROM User u JOIN u.roles r WHERE u.id IN :userIds")
+	List<Object[]> findRoleSummariesByUserIds(@Param("userIds") Collection<Long> userIds);
+
+	/** Rows of {id, fullName, email} for non-deleted users, for batch-filling list responses. */
+	@Query("SELECT u.id, u.fullName, u.email FROM User u WHERE u.deleted = false AND u.id IN :ids")
+	List<Object[]> findNameSummariesByIds(@Param("ids") Collection<Long> ids);
+
 	@Override
 	@EntityGraph(attributePaths = { "roles" })
 	Optional<User> findByIdAndDeleted(Long id, boolean deleted);

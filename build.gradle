@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.13'
 	id 'io.spring.dependency-management' version '1.1.6'
+	// Build-time bytecode enhancement so @Basic(fetch = LAZY) works on columns (User.fileData photo blob).
+	id 'org.hibernate.orm' version '6.5.3.Final'
 }
 
 group = 'com.bd'
@@ -12,6 +14,14 @@ ext['tomcat.version'] = '10.1.59' // CVE-2026-65182/65905/68525 fix (10.1.58 wit
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+hibernate {
+	enhancement {
+		enableLazyInitialization = true
+		enableDirtyTracking = false
+		enableAssociationManagement = false
 	}
 }
 

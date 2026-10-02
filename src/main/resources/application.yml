@@ -22,6 +22,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+        # Lets a lazy column (User.fileData) load on access outside a transaction, since open-in-view is off.
+        enable_lazy_load_no_trans: true
         id:
           optimizer:
             pooled:

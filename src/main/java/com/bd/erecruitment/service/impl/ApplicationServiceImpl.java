@@ -17,6 +17,7 @@ import com.bd.erecruitment.repository.*;
 import com.bd.erecruitment.service.MailService;
 import com.bd.erecruitment.service.StorageService;
 import com.bd.erecruitment.specification.GenericSpecification;
+import com.bd.erecruitment.util.EntityLookup;
 import com.bd.erecruitment.util.Response;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -121,22 +122,46 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
 	public Response<ApplicationResDTO> getMyApplications() {
 		Long userId = getLoggedInUserDetails().getId();
-		List<ApplicationResDTO> list = applicationRepo
-			.findAllByCandidateUserIdAndDeletedOrderByAppliedOnDesc(userId, false)
-			.stream().map(a -> toDto(a, null, null)).toList();
+		List<ApplicationResDTO> list = toDtos(applicationRepo.findAllByCandidateUserIdAndDeletedOrderByAppliedOnDesc(userId, false));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
+	}
+
+	// Jobs and candidates for the whole list in one query each instead of two lookups per row.
+	private List<ApplicationResDTO> toDtos(List<Application> applications) {
+		EntityLookup lookup = new EntityLookup()
+			.preload(jobCircularRepo, applications.stream().map(Application::getJobCircularId).toList())
+			.preload(userRepo, applications.stream().map(Application::getCandidateUserId).toList());
+		return applications.stream()
+			.map(a -> toDto(a, lookup.get(jobCircularRepo, a.getJobCircularId()), lookup.get(userRepo, a.getCandidateUserId())))
+			.toList();
 	}
 
 	public Response<ApplicationResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
 		requireStaff("view all applications");
 		Specification<Application> spec = GenericSpecification.build(resolveCandidateFilters(filters));
 		if (isScopedRecruiter()) spec = spec.and(forOwnOrganizationJobs(getLoggedInUserDetails().getOrganizationId()));
-		if (Boolean.TRUE.equals(isPageable)) {
-			Page<Application> page = applicationRepo.findAll(spec, pageable);
-			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(a -> toDto(a, null, null)));
+		return genericFilter(spec, pageable, isPageable, ApplicationResDTO.class, this::fillNames);
+	}
+
+	// Job title and candidate name/email for the whole page in two queries, instead of two lookups per row.
+	private void fillNames(List<ApplicationResDTO> applications) {
+		if (applications.isEmpty()) return;
+		Map<Long, String> jobTitles = new HashMap<>();
+		for (Object[] row : jobCircularRepo.findTitlesByIds(applications.stream().map(ApplicationResDTO::getJobCircularId).distinct().toList())) {
+			jobTitles.put((Long) row[0], (String) row[1]);
 		}
-		List<ApplicationResDTO> list = applicationRepo.findAll(spec).stream().map(a -> toDto(a, null, null)).toList();
-		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
+		Map<Long, Object[]> candidates = new HashMap<>();
+		for (Object[] row : userRepo.findNameSummariesByIds(applications.stream().map(ApplicationResDTO::getCandidateUserId).distinct().toList())) {
+			candidates.put((Long) row[0], row);
+		}
+		for (ApplicationResDTO application : applications) {
+			application.setJobTitle(jobTitles.get(application.getJobCircularId()));
+			Object[] candidate = candidates.get(application.getCandidateUserId());
+			if (candidate != null) {
+				application.setCandidateName((String) candidate[1]);
+				application.setCandidateEmail((String) candidate[2]);
+			}
+		}
 	}
 
 	private Map<String, String> resolveCandidateFilters(Map<String, String> filters) {
@@ -199,7 +224,8 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	public StoredFile downloadCv(Long applicationId) {
 		Application application = getOwnedOrStaffApplication(applicationId);
 		if (application.getGeneratedCvId() == null) throw new NotFoundException("No generated CV on this application");
-		GeneratedCv cv = generatedCvRepo.findByIdAndDeleted(application.getGeneratedCvId(), false)
+		// Not filtered on deleted: CVs superseded by a regeneration are soft-deleted but stay attached to past applications.
+		GeneratedCv cv = generatedCvRepo.findById(application.getGeneratedCvId())
 			.orElseThrow(() -> new NotFoundException("CV not found"));
 		auditActivity(AuditAction.DOWNLOAD, "ApplicationCv", applicationId, null);
 		return storageService.retrieve(cv.getStoredFileId());

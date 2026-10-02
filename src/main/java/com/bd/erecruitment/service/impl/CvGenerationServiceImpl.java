@@ -35,8 +35,19 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		byte[] pdf = pdfRenderer.render(html);
 
 		String filename = "CV-" + safe(user.getFullName()).replaceAll("\\s+", "_") + ".pdf";
-		StoredFile stored = storageService.store(filename, "application/pdf", pdf);
 
+		// One CV per profile: regenerating overwrites the existing file and row instead of inserting new ones.
+		GeneratedCv existing = generatedCvRepo
+			.findAllByCandidateProfileIdAndDeletedOrderByGeneratedOnDesc(profile.getId(), false)
+			.stream().findFirst().orElse(null);
+		if (existing != null) {
+			storageService.replace(existing.getStoredFileId(), filename, "application/pdf", pdf);
+			existing.setTemplateKey(TEMPLATE_KEY).setGeneratedOn(new Date())
+				.setUpdatedBy(user.getEmail()).setUpdatedOn(new Date());
+			return generatedCvRepo.save(existing);
+		}
+
+		StoredFile stored = storageService.store(filename, "application/pdf", pdf);
 		GeneratedCv generatedCv = new GeneratedCv()
 			.setCandidateProfileId(profile.getId())
 			.setTemplateKey(TEMPLATE_KEY)

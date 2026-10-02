@@ -8,6 +8,7 @@ import com.bd.erecruitment.dto.req.UserSignupReqDto;
 import com.bd.erecruitment.dto.req.VerifyChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.req.VerifySignupOtpReqDto;
 import com.bd.erecruitment.dto.res.UserProfileResDTO;
+import com.bd.erecruitment.dto.res.UserRoleResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.entity.User;
@@ -36,8 +37,11 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -310,7 +314,22 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 
 	@Override
 	public Response<UserResDTO> filter(Map<String, String> filters, Pageable pageable, Boolean isPageable) {
-		return genericFilter(filters, pageable, isPageable, UserResDTO.class);
+		return genericFilter(filters, pageable, isPageable, UserResDTO.class, this::fillRoles);
+	}
+
+	// One query for the whole page instead of loading each user's lazy roles (and its photo blob) individually.
+	private void fillRoles(List<UserResDTO> users) {
+		if (users.isEmpty()) return;
+		Map<Long, Set<UserRoleResDTO>> rolesByUser = new HashMap<>();
+		for (Object[] row : userRepo.findRoleSummariesByUserIds(users.stream().map(UserResDTO::getId).toList())) {
+			UserRoleResDTO role = new UserRoleResDTO();
+			role.setId((Long) row[1]);
+			role.setName((String) row[2]);
+			role.setCode((String) row[3]);
+			role.setDescription((String) row[4]);
+			rolesByUser.computeIfAbsent((Long) row[0], k -> new HashSet<>()).add(role);
+		}
+		users.forEach(user -> user.setRoles(rolesByUser.getOrDefault(user.getId(), new HashSet<>())));
 	}
 
 	private void validateForSave(String email) {
