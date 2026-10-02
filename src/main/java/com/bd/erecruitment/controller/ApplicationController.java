@@ -4,6 +4,7 @@ import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.dto.req.ApplicationStatusChangeReqDto;
 import com.bd.erecruitment.dto.req.ApplyReqDto;
 import com.bd.erecruitment.dto.res.ApplicationResDTO;
+import com.bd.erecruitment.dto.res.CvMatchResDTO;
 import com.bd.erecruitment.dto.res.ApplicationStatusHistoryResDTO;
 import com.bd.erecruitment.entity.StoredFile;
 import com.bd.erecruitment.service.impl.ApplicationServiceImpl;
@@ -57,6 +58,12 @@ public class ApplicationController {
 	@GetMapping("/{id}")
 	public Response<ApplicationResDTO> find(@PathVariable Long id) {
 		return applicationService.find(id);
+	}
+
+	@Operation(summary = "How well the candidate's profile matches the job's requirements (recruiter/admin)")
+	@GetMapping("/{id}/match")
+	public Response<CvMatchResDTO> match(@PathVariable Long id) {
+		return applicationService.getMatch(id);
 	}
 
 	@Operation(summary = "Change application status (recruiter/admin)")

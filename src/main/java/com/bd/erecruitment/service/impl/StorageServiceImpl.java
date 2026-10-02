@@ -28,8 +28,10 @@ public class StorageServiceImpl implements StorageService {
 			.setContentType(contentType)
 			.setSize(data.length)
 			.setData(data);
-		file.setCreatedBy(actor).setCreatedOn(now).setCreatedTerminal(RequestUtils.getClientTerminal());
-		file.setUpdatedBy(actor).setUpdatedOn(now).setUpdatedTerminal(RequestUtils.getClientTerminal());
+		file.setCreatedBy(actor).setCreatedOn(now).setCreatedTerminal(RequestUtils.getClientTerminal())
+			.setCreatedLocation(RequestUtils.getClientLocation()).setCreatedDevice(RequestUtils.getClientDevice()).setCreatedUserAgent(RequestUtils.getClientUserAgent());
+		file.setUpdatedBy(actor).setUpdatedOn(now).setUpdatedTerminal(RequestUtils.getClientTerminal())
+			.setUpdatedLocation(RequestUtils.getClientLocation()).setUpdatedDevice(RequestUtils.getClientDevice()).setUpdatedUserAgent(RequestUtils.getClientUserAgent());
 		file.setDeleted(false);
 		return storedFileRepo.save(file);
 	}

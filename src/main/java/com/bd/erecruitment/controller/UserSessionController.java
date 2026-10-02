@@ -2,6 +2,7 @@ package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.dto.req.UserSessionReqDto;
+import com.bd.erecruitment.dto.res.GuestSessionResDTO;
 import com.bd.erecruitment.dto.res.SessionSummaryResDTO;
 import com.bd.erecruitment.dto.res.UserSessionResDTO;
 import com.bd.erecruitment.service.UserSessionService;
@@ -33,6 +34,12 @@ public class UserSessionController extends AbstractBaseController<UserSessionRes
 	@GetMapping("/summary")
 	public ResponseEntity<Response<SessionSummaryResDTO>> summary() {
 		return respond(sessionService.getSummary());
+	}
+
+	@Operation(summary = "Guests currently online, with IP, location and device")
+	@GetMapping("/guests")
+	public ResponseEntity<Response<GuestSessionResDTO>> guests() {
+		return respond(sessionService.getActiveGuests());
 	}
 
 	@Operation(summary = "Live stream of the online user and guest counts (SSE)")

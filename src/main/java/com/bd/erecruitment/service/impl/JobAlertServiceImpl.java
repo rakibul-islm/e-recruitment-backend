@@ -1,5 +1,8 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.enums.AuditOutcome;
+import com.bd.erecruitment.audit.AuditAction;
+import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.dto.req.JobAlertReqDto;
 import com.bd.erecruitment.dto.res.JobAlertResDTO;
 import com.bd.erecruitment.entity.JobAlert;
@@ -22,6 +25,7 @@ import java.util.List;
 public class JobAlertServiceImpl {
 
 	private final JobAlertRepo jobAlertRepo;
+	private final AuditLogWriter auditLogWriter;
 
 	@Transactional
 	public Response<JobAlertResDTO> save(JobAlertReqDto reqDto) {
@@ -56,7 +60,9 @@ public class JobAlertServiceImpl {
 			.setActive(reqDto.getActive() == null || reqDto.getActive());
 		alert.setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
 
+		boolean isUpdate = reqDto.getId() != null;
 		JobAlert saved = jobAlertRepo.save(alert);
+		auditLogWriter.logEntity(isUpdate ? AuditAction.UPDATE : AuditAction.CREATE, "JobAlert", saved.getId(), AuditOutcome.SUCCESS, null);
 		return success(new JobAlertResDTO(saved));
 	}
 
@@ -80,6 +86,7 @@ public class JobAlertServiceImpl {
 
 		alert.setDeleted(true).setUpdatedBy(currentUsername()).setUpdatedOn(new Date());
 		jobAlertRepo.save(alert);
+		auditLogWriter.logEntity(AuditAction.SOFT_DELETE, "JobAlert", alert.getId(), AuditOutcome.SUCCESS, null);
 
 		Response<JobAlertResDTO> response = new Response<>();
 		response.setCode(200);

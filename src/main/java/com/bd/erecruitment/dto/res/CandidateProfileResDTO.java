@@ -33,4 +33,6 @@ public class CandidateProfileResDTO extends BaseResponseDTO<CandidateProfile> {
 	private List<CertificationItem> certifications = new ArrayList<>();
 	private List<LanguageItem> languages = new ArrayList<>();
 	private List<ProjectItem> projects = new ArrayList<>();
+
+	private ProfileCompletenessResDTO completeness;
 }

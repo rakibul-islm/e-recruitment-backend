@@ -1,5 +1,6 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.dto.req.CreateOfferReqDto;
 import com.bd.erecruitment.dto.req.OfferResponseReqDto;
 import com.bd.erecruitment.dto.res.OfferResDTO;
@@ -151,6 +152,7 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 	public StoredFile downloadLetter(Long id) {
 		Offer offer = getOwnedOrStaffOffer(id);
 		if (offer.getOfferLetterFileId() == null) throw new NotFoundException("Offer letter not generated yet");
+		auditActivity(AuditAction.DOWNLOAD, "OfferLetter", id, null);
 		return storageService.retrieve(offer.getOfferLetterFileId());
 	}
 

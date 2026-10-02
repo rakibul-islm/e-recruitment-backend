@@ -1,5 +1,8 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.enums.AuditOutcome;
+import com.bd.erecruitment.audit.AuditAction;
+import com.bd.erecruitment.audit.AuditLogWriter;
 import com.bd.erecruitment.dto.res.SavedJobResDTO;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.entity.SavedJob;
@@ -20,6 +23,7 @@ public class SavedJobServiceImpl {
 
 	private final SavedJobRepo savedJobRepo;
 	private final JobCircularRepo jobCircularRepo;
+	private final AuditLogWriter auditLogWriter;
 
 	@Transactional
 	public Response<Map<String, Boolean>> toggle(Long jobCircularId) {
@@ -29,13 +33,15 @@ public class SavedJobServiceImpl {
 		boolean nowSaved;
 		if (existing.isPresent()) {
 			savedJobRepo.delete(existing.get());
+			auditLogWriter.logEntity(AuditAction.HARD_DELETE, "SavedJob", existing.get().getId(), AuditOutcome.SUCCESS, null);
 			nowSaved = false;
 		} else {
 			String actor = currentUsername();
 			Date now = new Date();
 			SavedJob savedJob = new SavedJob().setUserId(userId).setJobCircularId(jobCircularId).setSavedOn(now);
 			savedJob.setCreatedBy(actor).setCreatedOn(now).setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
-			savedJobRepo.save(savedJob);
+			SavedJob created = savedJobRepo.save(savedJob);
+			auditLogWriter.logEntity(AuditAction.CREATE, "SavedJob", created.getId(), AuditOutcome.SUCCESS, null);
 			nowSaved = true;
 		}
 

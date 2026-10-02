@@ -4,6 +4,7 @@ import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.notification.GuestStreamLimiter;
 import com.bd.erecruitment.notification.SseEmitterRegistry;
 import com.bd.erecruitment.security.GuestTrackingInterceptor;
+import com.bd.erecruitment.util.ClientInfo;
 import com.bd.erecruitment.util.RequestUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.Date;
 import java.util.UUID;
 
 @RestApiController
@@ -36,7 +38,10 @@ public class PresenceController {
 		Runnable release = guestStreamLimiter.tryAcquire(RequestUtils.getClientTerminal(request));
 		if (release == null) return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
 
-		SseEmitter emitter = sseEmitterRegistry.registerGuest(guestId != null ? guestId : UUID.randomUUID().toString(), release);
+		ClientInfo client = RequestUtils.getClientInfo();
+		SseEmitterRegistry.GuestInfo info = new SseEmitterRegistry.GuestInfo(guestId != null ? guestId : UUID.randomUUID().toString(),
+				RequestUtils.getClientTerminal(request), client.city(), client.country(), client.deviceType(), client.os(), client.browser(), new Date());
+		SseEmitter emitter = sseEmitterRegistry.registerGuest(info, release);
 		return ResponseEntity.ok(emitter);
 	}
 }

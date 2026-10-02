@@ -8,6 +8,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +18,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequiredArgsConstructor
 public class SseEmitterRegistry {
 
+	public record GuestInfo(String guestId, String ipAddress, String city, String country, String deviceType, String os, String browser, Date connectedAt) {
+	}
+
 	private static final int MAX_EMITTERS_PER_KEY = 5;
 
 	private final ApplicationEventPublisher eventPublisher;
@@ -24,13 +28,25 @@ public class SseEmitterRegistry {
 	private final EmitterGroup<Long> users = new EmitterGroup<>(true);
 	private final EmitterGroup<String> guests = new EmitterGroup<>(true);
 	private final EmitterGroup<String> watchers = new EmitterGroup<>(false);
+	private final Map<String, GuestInfo> guestInfos = new ConcurrentHashMap<>();
 
 	public SseEmitter register(Long userId) {
 		return users.register(userId, () -> { });
 	}
 
-	public SseEmitter registerGuest(String guestId, Runnable onClose) {
-		return guests.register(guestId, onClose);
+	public SseEmitter registerGuest(GuestInfo info, Runnable onClose) {
+		guestInfos.merge(info.guestId(), info, (existing, incoming) -> new GuestInfo(existing.guestId(), incoming.ipAddress(),
+				incoming.city() != null ? incoming.city() : existing.city(),
+				incoming.country() != null ? incoming.country() : existing.country(),
+				incoming.deviceType(), incoming.os(), incoming.browser(), existing.connectedAt()));
+		return guests.register(info.guestId(), onClose);
+	}
+
+	public List<GuestInfo> onlineGuests() {
+		List<String> keys = guests.keys();
+		guestInfos.keySet().retainAll(keys);
+		return keys.stream().map(guestInfos::get).filter(java.util.Objects::nonNull)
+				.sorted(java.util.Comparator.comparing(GuestInfo::connectedAt).reversed()).toList();
 	}
 
 	public SseEmitter registerWatcher() {
@@ -118,6 +134,10 @@ public class SseEmitterRegistry {
 
 		long count() {
 			return emittersByKey.size();
+		}
+
+		List<K> keys() {
+			return new ArrayList<>(emittersByKey.keySet());
 		}
 
 		private void sendComment(SseEmitter emitter, String comment) {

@@ -9,6 +9,10 @@ public final class AuditAction {
 	public static final String SOFT_DELETE = "SOFT_DELETE";
 	public static final String HARD_DELETE = "HARD_DELETE";
 
+	public static final String VIEW = "VIEW";
+	public static final String DOWNLOAD = "DOWNLOAD";
+	public static final String MARK_ALL_READ = "MARK_ALL_READ";
+
 	public static final String LOGIN_SUCCESS = "LOGIN_SUCCESS";
 	public static final String LOGIN_FAILURE = "LOGIN_FAILURE";
 	public static final String LOGOUT = "LOGOUT";

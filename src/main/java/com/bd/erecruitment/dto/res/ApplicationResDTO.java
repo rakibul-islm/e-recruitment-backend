@@ -27,6 +27,7 @@ public class ApplicationResDTO extends BaseResponseDTO<Application> {
 	private Date appliedOn;
 	private Date statusUpdatedOn;
 	private String statusUpdatedBy;
+	private Integer matchScore;
 
 	private String jobTitle;
 	private String candidateName;

@@ -1,6 +1,7 @@
 package com.bd.erecruitment.service;
 
 import com.bd.erecruitment.dto.req.UserSessionReqDto;
+import com.bd.erecruitment.dto.res.GuestSessionResDTO;
 import com.bd.erecruitment.dto.res.SessionSummaryResDTO;
 import com.bd.erecruitment.dto.res.UserSessionResDTO;
 import com.bd.erecruitment.entity.User;
@@ -24,9 +25,13 @@ public interface UserSessionService extends BaseService<UserSessionResDTO, UserS
 
 	Response<Object> logoutCurrentSession(String jti);
 
+	Response<Object> updateCurrentSessionLocation(String jti);
+
 	Response<UserSessionResDTO> findByUser(Long userId);
 
 	Response<SessionSummaryResDTO> getSummary();
+
+	Response<GuestSessionResDTO> getActiveGuests();
 
 	SseEmitter watchSummary();
 }

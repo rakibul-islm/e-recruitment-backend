@@ -1,5 +1,6 @@
 package com.bd.erecruitment.service.impl;
 
+import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.dto.req.JobCircularReqDto;
 import com.bd.erecruitment.dto.res.JobCircularResDTO;
 import com.bd.erecruitment.entity.Organization;
@@ -37,6 +38,7 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		if (id == null) returnErrorException("Id required");
 		JobCircular jobCircular = findByIdOrThrow(id, "Job circular not found");
 		if (isScopedRecruiter() && !organizationMatchesCaller(jobCircular.getOrganizationId())) returnNotFoundException("Job circular not found");
+		auditActivity(AuditAction.VIEW, "JobCircular", id, null);
 		return getSuccessResponse("Job circular found", new JobCircularResDTO(jobCircular));
 	}
 
