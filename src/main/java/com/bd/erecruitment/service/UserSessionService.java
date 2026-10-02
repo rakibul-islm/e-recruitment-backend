@@ -31,6 +31,10 @@ public interface UserSessionService extends BaseService<UserSessionResDTO, UserS
 
 	Response<SessionSummaryResDTO> getSummary();
 
+	Response<UserSessionResDTO> getOnlineUsers();
+
+	Response<UserSessionResDTO> getActiveUsers();
+
 	Response<GuestSessionResDTO> getActiveGuests();
 
 	SseEmitter watchSummary();

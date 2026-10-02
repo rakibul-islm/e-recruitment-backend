@@ -36,6 +36,18 @@ public class UserSessionController extends AbstractBaseController<UserSessionRes
 		return respond(sessionService.getSummary());
 	}
 
+	@Operation(summary = "Users with active sessions, one row per user with latest session and session count")
+	@GetMapping("/active-users")
+	public ResponseEntity<Response<UserSessionResDTO>> activeUsers() {
+		return respond(sessionService.getActiveUsers());
+	}
+
+	@Operation(summary = "Users currently online (open live connection), with their latest session")
+	@GetMapping("/online-users")
+	public ResponseEntity<Response<UserSessionResDTO>> onlineUsers() {
+		return respond(sessionService.getOnlineUsers());
+	}
+
 	@Operation(summary = "Guests currently online, with IP, location and device")
 	@GetMapping("/guests")
 	public ResponseEntity<Response<GuestSessionResDTO>> guests() {
