@@ -21,6 +21,8 @@ public class CORSConfig implements WebMvcConfigurer {
 				registry.addMapping("/**")
 						.allowedMethods("GET", "POST", "PUT", "DELETE")
 						.allowedHeaders("*")
+						// Without this the browser hides Content-Disposition from fetch/XHR, so the frontend can't read the download filename.
+						.exposedHeaders("Content-Disposition")
 						.allowedOriginPatterns(frontendBaseUrl)
 						// Credentials need a concrete origin (no wildcard) for the guest-session cookie to round-trip cross-origin.
 						.allowCredentials(true);

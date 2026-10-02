@@ -1,5 +1,6 @@
 package com.bd.erecruitment.filter;
 
+import com.bd.erecruitment.security.UserDetailsCache;
 import com.bd.erecruitment.service.UserSessionService;
 import com.bd.erecruitment.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -28,6 +29,7 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 	public static final String JWT_ERROR_ATTRIBUTE = "jwt_error";
 
 	private final UserDetailsService userDetailsService;
+	private final UserDetailsCache userDetailsCache;
 	private final JwtUtil jwtUtil;
 	private final UserSessionService userSessionService;
 
@@ -52,7 +54,7 @@ public class JwtAutenticationFilter extends OncePerRequestFilter {
 		}
 
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+			UserDetails userDetails = this.userDetailsCache.get(username, this.userDetailsService);
 			// Tokens issued before session tracking carry no jti and count as active.
 			String jti = extractJtiSafely(jwt);
 			boolean sessionRevoked = jti != null && !userSessionService.isActive(jti);

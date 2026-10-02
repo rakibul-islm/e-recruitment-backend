@@ -2,6 +2,7 @@ package com.bd.erecruitment.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 
 @Data
 @Entity
+@EntityListeners(com.bd.erecruitment.security.AuthCacheInvalidationListener.class)
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)

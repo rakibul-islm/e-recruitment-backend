@@ -85,20 +85,9 @@ public class CandidateProfileServiceImpl {
 		User user = userRepo.findByIdAndDeleted(userId, false)
 			.orElseThrow(() -> new NotFoundException("User not found"));
 
-		retirePreviousCvs(profile.getId());
 		GeneratedCv cv = cvGenerationService.generate(user, profile);
 		auditLogWriter.logEntity(AuditAction.CREATE, "GeneratedCv", cv.getId(), AuditOutcome.SUCCESS, null);
 		return getSuccess("CV generated successfully", new GeneratedCvResDTO(cv));
-	}
-
-	private void retirePreviousCvs(Long candidateProfileId) {
-		List<GeneratedCv> previous = generatedCvRepo.findAllByCandidateProfileIdAndDeletedOrderByGeneratedOnDesc(candidateProfileId, false);
-		if (previous.isEmpty()) return;
-
-		String actor = currentUsername();
-		java.util.Date now = new java.util.Date();
-		previous.forEach(cv -> cv.setDeleted(true).setUpdatedBy(actor).setUpdatedOn(now));
-		generatedCvRepo.saveAll(previous);
 	}
 
 	public Response<GeneratedCvResDTO> listMyCvGenerations() {

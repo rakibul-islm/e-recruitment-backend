@@ -16,6 +16,10 @@ public interface JobCircularRepo extends ServiceRepository<JobCircular> {
 
 	List<JobCircular> findAllByStatusAndApplicationDeadLineBetweenAndDeleted(String status, Date from, Date to, boolean deleted);
 
+	/** Rows of {id, jobTitle} for non-deleted jobs, for batch-filling list responses. */
+	@Query("select j.id, j.jobTitle from JobCircular j where j.deleted = false and j.id in :ids")
+	List<Object[]> findTitlesByIds(@Param("ids") java.util.Collection<Long> ids);
+
 	long countByDeleted(boolean deleted);
 
 	long countByStatusAndDeleted(String status, boolean deleted);

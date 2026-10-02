@@ -30,10 +30,25 @@ public class StorageServiceImpl implements StorageService {
 			.setData(data);
 		file.setCreatedBy(actor).setCreatedOn(now).setCreatedTerminal(RequestUtils.getClientTerminal())
 			.setCreatedLocation(RequestUtils.getClientLocation()).setCreatedDevice(RequestUtils.getClientDevice()).setCreatedUserAgent(RequestUtils.getClientUserAgent());
-		file.setUpdatedBy(actor).setUpdatedOn(now).setUpdatedTerminal(RequestUtils.getClientTerminal())
-			.setUpdatedLocation(RequestUtils.getClientLocation()).setUpdatedDevice(RequestUtils.getClientDevice()).setUpdatedUserAgent(RequestUtils.getClientUserAgent());
+		markUpdated(file, actor, now);
 		file.setDeleted(false);
 		return storedFileRepo.save(file);
+	}
+
+	@Override
+	public StoredFile replace(Long fileId, String filename, String contentType, byte[] data) {
+		StoredFile file = retrieve(fileId)
+			.setFilename(filename)
+			.setContentType(contentType)
+			.setSize(data.length)
+			.setData(data);
+		markUpdated(file, currentUsername(), new Date());
+		return storedFileRepo.save(file);
+	}
+
+	private void markUpdated(StoredFile file, String actor, Date now) {
+		file.setUpdatedBy(actor).setUpdatedOn(now).setUpdatedTerminal(RequestUtils.getClientTerminal())
+			.setUpdatedLocation(RequestUtils.getClientLocation()).setUpdatedDevice(RequestUtils.getClientDevice()).setUpdatedUserAgent(RequestUtils.getClientUserAgent());
 	}
 
 	private String currentUsername() {

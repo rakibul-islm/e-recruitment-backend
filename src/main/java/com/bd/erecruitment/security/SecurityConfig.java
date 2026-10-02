@@ -41,6 +41,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						// the original request was already authorized; the async dispatch that completes an SSE stream carries no authentication
 						.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+						// a failed SSE stream (e.g. client disconnect) is forwarded to /error, which would otherwise be denied and log a second, noisier exception
+						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 						.requestMatchers(
 								"/authenticate/**",
 								"/user/signup",

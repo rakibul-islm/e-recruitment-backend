@@ -18,6 +18,7 @@ import com.bd.erecruitment.repository.OfferRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.MailService;
 import com.bd.erecruitment.service.StorageService;
+import com.bd.erecruitment.util.EntityLookup;
 import com.bd.erecruitment.util.Response;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -107,7 +109,10 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 
 		String html = buildLetterHtml(offer, job, candidate);
 		byte[] pdf = pdfRenderer.render(html);
-		StoredFile stored = storageService.store("Offer-Letter-" + candidate.getFullName().replaceAll("\\s+", "_") + ".pdf", "application/pdf", pdf);
+		String filename = "Offer-Letter-" + candidate.getFullName().replaceAll("\\s+", "_") + ".pdf";
+		StoredFile stored = offer.getOfferLetterFileId() != null
+			? storageService.replace(offer.getOfferLetterFileId(), filename, "application/pdf", pdf)
+			: storageService.store(filename, "application/pdf", pdf);
 
 		offer.setOfferLetterFileId(stored.getId());
 		offer = updateEntity(offer);
@@ -158,19 +163,23 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 
 	public Response<OfferResDTO> findByApplication(Long applicationId) {
 		getOwnedOrStaffApplication(applicationId);
-		List<OfferResDTO> list = offerRepo.findAllByApplicationIdAndDeletedOrderByIdDesc(applicationId, false)
-			.stream().map(o -> toDto(o, null, null)).toList();
+		List<OfferResDTO> list = toDtos(offerRepo.findAllByApplicationIdAndDeletedOrderByIdDesc(applicationId, false));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
 	public Response<OfferResDTO> myOffers() {
 		Long userId = getLoggedInUserDetails().getId();
-		List<Application> myApplications = applicationRepo.findAllByCandidateUserIdAndDeletedOrderByAppliedOnDesc(userId, false);
-		List<OfferResDTO> list = myApplications.stream()
-			.flatMap(a -> offerRepo.findAllByApplicationIdAndDeletedOrderByIdDesc(a.getId(), false).stream())
-			.map(o -> toDto(o, null, null))
-			.toList();
+		List<OfferResDTO> list = toDtos(offerRepo.findAllByCandidateUserId(userId));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
+	}
+
+	// Applications, jobs and candidates for the whole list in one query each instead of three lookups per row.
+	private List<OfferResDTO> toDtos(List<Offer> offers) {
+		EntityLookup lookup = new EntityLookup().preload(applicationRepo, offers.stream().map(Offer::getApplicationId).toList());
+		List<Application> applications = offers.stream().map(o -> lookup.get(applicationRepo, o.getApplicationId())).filter(Objects::nonNull).toList();
+		lookup.preload(jobCircularRepo, applications.stream().map(Application::getJobCircularId).toList())
+			.preload(userRepo, applications.stream().map(Application::getCandidateUserId).toList());
+		return offers.stream().map(o -> toDto(o, null, null, lookup)).toList();
 	}
 
 	@Transactional
@@ -241,12 +250,16 @@ public class OfferServiceImpl extends AbstractBaseService<Offer> {
 	}
 
 	private OfferResDTO toDto(Offer offer, JobCircular jobHint, User candidateHint) {
+		return toDto(offer, jobHint, candidateHint, new EntityLookup());
+	}
+
+	private OfferResDTO toDto(Offer offer, JobCircular jobHint, User candidateHint, EntityLookup lookup) {
 		OfferResDTO dto = new OfferResDTO(offer);
-		Application application = applicationRepo.findByIdAndDeleted(offer.getApplicationId(), false).orElse(null);
+		Application application = lookup.get(applicationRepo, offer.getApplicationId());
 		if (application != null) {
-			JobCircular job = jobHint != null ? jobHint : jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false).orElse(null);
+			JobCircular job = jobHint != null ? jobHint : lookup.get(jobCircularRepo, application.getJobCircularId());
 			if (job != null) dto.setJobTitle(job.getJobTitle());
-			User candidate = candidateHint != null ? candidateHint : userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
+			User candidate = candidateHint != null ? candidateHint : lookup.get(userRepo, application.getCandidateUserId());
 			if (candidate != null) dto.setCandidateName(candidate.getFullName());
 		}
 		return dto;
