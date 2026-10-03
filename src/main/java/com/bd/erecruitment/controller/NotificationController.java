@@ -1,6 +1,7 @@
 package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
+import com.bd.erecruitment.dto.req.DeviceTokenReqDto;
 import com.bd.erecruitment.dto.res.NotificationPollResDTO;
 import com.bd.erecruitment.dto.res.NotificationResDTO;
 import com.bd.erecruitment.service.impl.NotificationServiceImpl;
@@ -63,5 +64,17 @@ public class NotificationController {
 	@DeleteMapping("/{id}")
 	public Response<NotificationResDTO> remove(@PathVariable Long id) {
 		return notificationService.remove(id);
+	}
+
+	@Operation(summary = "Register this device for push notifications")
+	@PostMapping("/device-token")
+	public Response<Void> registerDevice(@RequestBody DeviceTokenReqDto req) {
+		return notificationService.registerDevice(req);
+	}
+
+	@Operation(summary = "Stop push notifications to this device")
+	@PostMapping("/device-token/unregister")
+	public Response<Void> unregisterDevice(@RequestBody DeviceTokenReqDto req) {
+		return notificationService.unregisterDevice(req);
 	}
 }
