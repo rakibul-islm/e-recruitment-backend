@@ -1,5 +1,8 @@
 package com.bd.erecruitment.config;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +15,9 @@ public class CORSConfig implements WebMvcConfigurer {
 	@Value("${app.frontend.base-url:http://localhost:4200}")
 	private String frontendBaseUrl;
 
+	@Value("${app.cors.mobile-origins:https://localhost,capacitor://localhost}")
+	private String[] mobileOrigins;
+
 	@Bean
 	public WebMvcConfigurer corsConfigurer() {
 		return new WebMvcConfigurer() {
@@ -23,10 +29,14 @@ public class CORSConfig implements WebMvcConfigurer {
 						.allowedHeaders("*")
 						// Without this the browser hides Content-Disposition from fetch/XHR, so the frontend can't read the download filename.
 						.exposedHeaders("Content-Disposition")
-						.allowedOriginPatterns(frontendBaseUrl)
+						.allowedOriginPatterns(allowedOrigins())
 						// Credentials need a concrete origin (no wildcard) for the guest-session cookie to round-trip cross-origin.
 						.allowCredentials(true);
 			}
 		};
+	}
+
+	private String[] allowedOrigins() {
+		return Stream.concat(Stream.of(frontendBaseUrl), Arrays.stream(mobileOrigins)).toArray(String[]::new);
 	}
 }

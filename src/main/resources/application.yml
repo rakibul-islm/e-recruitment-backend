@@ -75,5 +75,7 @@ app:
     max-streams-per-client: 50
   frontend:
     base-url: ${FRONTEND_BASE_URL}
+  cors:
+    mobile-origins: ${MOBILE_ORIGINS:https://localhost,capacitor://localhost}
   account-setup:
     expiry-hours: 48
