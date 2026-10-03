@@ -3,8 +3,10 @@ package com.bd.erecruitment.service.impl;
 import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.audit.AuditLogWriter;
+import com.bd.erecruitment.dto.req.DeviceTokenReqDto;
 import com.bd.erecruitment.dto.res.NotificationPollResDTO;
 import com.bd.erecruitment.dto.res.NotificationResDTO;
+import com.bd.erecruitment.entity.DeviceToken;
 import com.bd.erecruitment.entity.Notification;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.exception.ExceptionLogWriter;
@@ -12,7 +14,9 @@ import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.exception.UnauthorizedException;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.notification.NotificationEvent;
+import com.bd.erecruitment.notification.PushNotificationSender;
 import com.bd.erecruitment.notification.SseEmitterRegistry;
+import com.bd.erecruitment.repository.DeviceTokenRepo;
 import com.bd.erecruitment.repository.NotificationRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.util.Response;
@@ -27,8 +31,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,8 +54,10 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	private static final int MAX_MESSAGE_PARAM_LENGTH = 3500;
 
 	private final NotificationRepo notificationRepo;
+	private final DeviceTokenRepo deviceTokenRepo;
 	private final UserRepo userRepo;
 	private final SseEmitterRegistry sseEmitterRegistry;
+	private final PushNotificationSender pushNotificationSender;
 	private final ExceptionLogWriter exceptionLogWriter;
 	private final AuditLogWriter auditLogWriter;
 	private final ObjectMapper paramsMapper = new ObjectMapper();
@@ -56,6 +65,7 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void create(NotificationEvent event) {
 		Date now = new Date();
+		List<Notification> created = new ArrayList<>();
 		for (Long recipientId : resolveRecipientIds(event)) {
 			if (event.dedupeKey() != null && notificationRepo.existsByRecipientUserIdAndDedupeKey(recipientId, event.dedupeKey())) continue;
 
@@ -68,7 +78,42 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 			notification.setCreatedBy(SYSTEM).setCreatedOn(now).setUpdatedBy(SYSTEM).setUpdatedOn(now).setDeleted(false);
 			notificationRepo.save(notification);
 			sseEmitterRegistry.push(recipientId, pollPayload(recipientId));
+			created.add(notification);
 		}
+		pushAfterCommit(created);
+	}
+
+	@Transactional
+	public Response<Void> registerDevice(DeviceTokenReqDto req) {
+		if (StringUtils.isBlank(req.getToken())) returnErrorException("Device token is required");
+		Date now = new Date();
+		MyUserDetail user = currentUser();
+		DeviceToken deviceToken = deviceTokenRepo.findByPushToken(req.getToken()).orElseGet(DeviceToken::new);
+		if (deviceToken.getId() == null) deviceToken.setCreatedBy(user.getUsername()).setCreatedOn(now).setDeleted(false);
+		deviceToken.setPushToken(req.getToken()).setUserId(user.getId()).setPlatform(req.getPlatform()).setLastSeenOn(now);
+		deviceToken.setUpdatedBy(user.getUsername()).setUpdatedOn(now);
+		deviceTokenRepo.save(deviceToken);
+		return getSuccessResponse("Device registered");
+	}
+
+	@Transactional
+	public Response<Void> unregisterDevice(DeviceTokenReqDto req) {
+		if (StringUtils.isNotBlank(req.getToken())) deviceTokenRepo.deleteByPushTokenAndUserId(req.getToken(), currentUser().getId());
+		return getSuccessResponse("Device unregistered");
+	}
+
+	private void pushAfterCommit(List<Notification> created) {
+		if (created.isEmpty()) return;
+		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+			created.forEach(pushNotificationSender::send);
+			return;
+		}
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				created.forEach(pushNotificationSender::send);
+			}
+		});
 	}
 
 	public Response<NotificationPollResDTO> poll() {

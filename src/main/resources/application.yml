@@ -77,5 +77,7 @@ app:
     base-url: ${FRONTEND_BASE_URL}
   cors:
     mobile-origins: ${MOBILE_ORIGINS:https://localhost,capacitor://localhost}
+  fcm:
+    service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
   account-setup:
     expiry-hours: 48
