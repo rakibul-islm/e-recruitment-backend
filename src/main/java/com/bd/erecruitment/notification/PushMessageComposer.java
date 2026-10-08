@@ -25,6 +25,8 @@ public class PushMessageComposer {
 	private static final String DEFAULT_TITLE = "New notification";
 	private static final String DEFAULT_BODY = "Open the app to view it.";
 	private static final int MAX_BODY_LENGTH = 300;
+	private static final Pattern BLOCK_BREAK = Pattern.compile("(?i)</(p|div|li|h[1-6])>|<br\\s*/?>");
+	private static final Pattern TAG = Pattern.compile("<[^>]+>");
 	private static final Pattern PLACEHOLDER = Pattern.compile("[{][{]([A-Za-z0-9_]+)[}][}]");
 	private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm 'UTC'", Locale.ENGLISH).withZone(ZoneOffset.UTC);
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH).withZone(ZoneOffset.UTC);
@@ -33,8 +35,14 @@ public class PushMessageComposer {
 
 	public PushMessage compose(NotificationType type, Map<String, Object> params) {
 		String title = fill(templates.getProperty(type + ".title", DEFAULT_TITLE), params);
-		String body = fill(templates.getProperty(type + ".message", DEFAULT_BODY), params);
+		String body = plainText(fill(templates.getProperty(type + ".message", DEFAULT_BODY), params));
 		return new PushMessage(title, StringUtils.abbreviate(body, MAX_BODY_LENGTH));
+	}
+
+	private String plainText(String html) {
+		String text = TAG.matcher(BLOCK_BREAK.matcher(html).replaceAll(" ")).replaceAll("");
+		text = text.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&#39;", "'").replace("&amp;", "&");
+		return text.replaceAll("\\s+", " ").trim();
 	}
 
 	private String fill(String template, Map<String, Object> params) {
