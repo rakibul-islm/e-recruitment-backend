@@ -3,3 +3,11 @@
 # Spring Security 6.3.x are both past their patch window, so no backport exists.
 # Remove this line once the project is upgraded to Spring Boot 3.5.x or later.
 CVE-2026-22732
+
+# CVE-2026-47884 (spring-webmvc): RCE/SSRF in XsltView. Only exploitable if the app
+# renders views via XsltView with a "/**" mapping and no explicit view name — this is
+# a REST-only API (@RestController, no XSLT/view rendering anywhere), so not reachable.
+# OSS fix is Spring Framework 7.0.9 (Spring Boot 4.x); 6.1.29 is Enterprise Support
+# only, so no OSS backport exists on the 6.1.x line.
+# Remove this line once the project is upgraded to Spring Boot 4.x.
+CVE-2026-47884
