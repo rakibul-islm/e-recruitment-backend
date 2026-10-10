@@ -19,4 +19,8 @@ public interface OfferRepo extends ServiceRepository<Offer> {
 	List<Offer> findAllByCandidateUserId(@Param("userId") Long userId);
 
 	Optional<Offer> findFirstByApplicationIdAndDeletedOrderByIdDesc(Long applicationId, boolean deleted);
+
+	@Query("select count(o) from Offer o where o.deleted = false and o.status = 'SENT' and o.applicationId in " +
+		"(select a.id from Application a where a.candidateUserId = :userId and a.deleted = false)")
+	long countSentByCandidateUserId(@Param("userId") Long userId);
 }

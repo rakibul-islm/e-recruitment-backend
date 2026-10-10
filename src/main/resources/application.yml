@@ -67,6 +67,8 @@ app:
       client-id: ${GMAIL_CLIENT_ID}
       client-secret: ${GMAIL_CLIENT_SECRET}
       refresh-token: ${GMAIL_REFRESH_TOKEN}
+  auth:
+    token-expiry-hours: ${TOKEN_EXPIRY_HOURS:24}
   otp:
     expiry-minutes: 10
     max-attempts: 5

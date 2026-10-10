@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class JwtUtil {
 
 	private static final String SECRET_STRING = "404E63526655664r54757hj585gh9012";
 	private static final SecretKey SECRET = Keys.hmacShaKeyFor(SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+
+	@Value("${app.auth.token-expiry-hours:24}")
+	private long tokenExpiryHours;
 
 	public String extractUsername(String token) {
 		return extractClaim(token, Claims::getSubject);
@@ -76,7 +80,7 @@ public class JwtUtil {
 				.claims(claims)
 				.subject(subject)
 				.issuedAt(new Date(System.currentTimeMillis()))
-				.expiration(new Date(System.currentTimeMillis() + 100L * 60 * 60 * 100))
+				.expiration(new Date(System.currentTimeMillis() + tokenExpiryHours * 60 * 60 * 1000))
 				.signWith(SECRET)
 				.compact();
 	}

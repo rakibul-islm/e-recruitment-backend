@@ -15,7 +15,9 @@ import java.util.Date;
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
-@Table(name = "JOB_CIRCULAR")
+@Table(name = "JOB_CIRCULAR", indexes = {
+	@Index(name = "idx_job_circular_company", columnList = "company_id")
+})
 @EqualsAndHashCode(callSuper = true)
 public class JobCircular extends SequenceIdGenerator{
 

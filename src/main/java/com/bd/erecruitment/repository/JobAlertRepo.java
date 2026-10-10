@@ -10,5 +10,7 @@ public interface JobAlertRepo extends ServiceRepository<JobAlert> {
 
 	List<JobAlert> findAllByUserIdAndDeletedOrderByIdDesc(Long userId, boolean deleted);
 
+	long countByUserIdAndDeleted(Long userId, boolean deleted);
+
 	List<JobAlert> findAllByActiveAndDeleted(boolean active, boolean deleted);
 }

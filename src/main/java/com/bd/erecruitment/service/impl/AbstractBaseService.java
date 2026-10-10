@@ -26,7 +26,6 @@ import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.entity.UserGroup;
 import com.bd.erecruitment.security.UserDetailsCache;
 import com.bd.erecruitment.enums.AuditOutcome;
-import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.ProjectionQueryExecutor;
 import com.bd.erecruitment.repository.ServiceRepository;
 import com.bd.erecruitment.specification.GenericSpecification;
@@ -43,8 +42,6 @@ import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -271,23 +268,6 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 		E saved = repository.save(entity);
 		invalidateAuthCache(saved);
 		audit(AuditAction.SOFT_DELETE, saved);
-	}
-
-	protected MyUserDetail getLoggedInUserDetails() {
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		if (auth == null || !auth.isAuthenticated()) return null;
-		Object principal = auth.getPrincipal();
-		return principal instanceof MyUserDetail mud ? mud : null;
-	}
-
-	private static final java.util.Set<String> UNRESTRICTED_ROLE_CODES = java.util.Set.of("MANAGER", "EDITOR", "VIEWER");
-
-	protected boolean isScopedRecruiter() {
-		MyUserDetail me = getLoggedInUserDetails();
-		if (me == null) return false;
-		if (me.getAuthorities().stream().anyMatch(a -> "SUPER_ADMIN".equals(a.getAuthority()))) return false;
-		if (me.getRoleCodes().stream().anyMatch(UNRESTRICTED_ROLE_CODES::contains)) return false;
-		return me.getRoleCodes().contains("RECRUITER");
 	}
 
 	protected void auditActivity(String action, String entityType, Long entityId, String detail) {
