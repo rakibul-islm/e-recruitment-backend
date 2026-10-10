@@ -4,7 +4,10 @@ import com.bd.erecruitment.exception.BadRequestException;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.exception.UnauthorizedException;
 import com.bd.erecruitment.util.Response;
+import com.bd.erecruitment.model.MyUserDetail;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -51,5 +54,22 @@ public class CommonFunctionsImpl {
 		res.setList(list);
 		res.setPage(page);
 		return res;
+	}
+
+	protected MyUserDetail getLoggedInUserDetails() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || !auth.isAuthenticated()) return null;
+		Object principal = auth.getPrincipal();
+		return principal instanceof MyUserDetail mud ? mud : null;
+	}
+
+	private static final java.util.Set<String> UNRESTRICTED_ROLE_CODES = java.util.Set.of("MANAGER", "EDITOR", "VIEWER");
+
+	protected boolean isScopedRecruiter() {
+		MyUserDetail me = getLoggedInUserDetails();
+		if (me == null) return false;
+		if (me.getAuthorities().stream().anyMatch(a -> "SUPER_ADMIN".equals(a.getAuthority()))) return false;
+		if (me.getRoleCodes().stream().anyMatch(UNRESTRICTED_ROLE_CODES::contains)) return false;
+		return me.getRoleCodes().contains("RECRUITER");
 	}
 }

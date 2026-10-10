@@ -2,6 +2,7 @@ package com.bd.erecruitment.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -18,7 +19,9 @@ import java.util.Date;
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
-@Table(name = "APPLICATION_STATUS_HISTORY")
+@Table(name = "APPLICATION_STATUS_HISTORY", indexes = {
+	@Index(name = "idx_app_hist_app_status", columnList = "application_id, status, changed_on")
+})
 @EqualsAndHashCode(callSuper = true)
 public class ApplicationStatusHistory extends SequenceIdGenerator {
 

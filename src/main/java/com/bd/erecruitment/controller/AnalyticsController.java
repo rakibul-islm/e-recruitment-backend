@@ -1,6 +1,7 @@
 package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
+import com.bd.erecruitment.dto.res.AnalyticsListResDTO;
 import com.bd.erecruitment.dto.res.ApplicationFunnelResDTO;
 import com.bd.erecruitment.dto.res.RecruitmentSummaryResDTO;
 import com.bd.erecruitment.service.impl.AnalyticsServiceImpl;
@@ -8,9 +9,12 @@ import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+
 
 @RestApiController
 @RequestMapping("/analytics")
@@ -30,5 +34,11 @@ public class AnalyticsController {
 	@GetMapping("/funnel")
 	public Response<ApplicationFunnelResDTO> funnel(@RequestParam(required = false) Long jobCircularId) {
 		return analyticsService.funnel(jobCircularId);
+	}
+
+	@Operation(summary = "Detail rows behind a summary card (modes: jobs, applications, recent)")
+	@GetMapping("/details")
+	public Response<AnalyticsListResDTO> details(@RequestParam String mode, Pageable pageable) {
+		return analyticsService.details(mode, pageable);
 	}
 }

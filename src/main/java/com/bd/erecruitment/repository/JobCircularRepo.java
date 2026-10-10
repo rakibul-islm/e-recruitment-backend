@@ -1,5 +1,7 @@
 package com.bd.erecruitment.repository;
 import com.bd.erecruitment.entity.JobCircular;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,7 +22,14 @@ public interface JobCircularRepo extends ServiceRepository<JobCircular> {
 	@Query("select j.id, j.jobTitle from JobCircular j where j.deleted = false and j.id in :ids")
 	List<Object[]> findTitlesByIds(@Param("ids") java.util.Collection<Long> ids);
 
-	long countByDeleted(boolean deleted);
+	@Query("select count(j) from JobCircular j where j.deleted = false "
+		+ "and (cast(:status as string) is null or j.status = :status) "
+		+ "and (cast(:organizationId as long) is null or j.organizationId = :organizationId)")
+	long countScoped(@Param("status") String status, @Param("organizationId") Long organizationId);
 
-	long countByStatusAndDeleted(String status, boolean deleted);
+	@Query(value = "select j.id, j.jobTitle, j.status from JobCircular j where j.deleted = false "
+		+ "and (cast(:organizationId as long) is null or j.organizationId = :organizationId) order by j.id desc",
+		countQuery = "select count(j) from JobCircular j where j.deleted = false "
+		+ "and (cast(:organizationId as long) is null or j.organizationId = :organizationId)")
+	Page<Object[]> findJobRows(@Param("organizationId") Long organizationId, Pageable pageable);
 }

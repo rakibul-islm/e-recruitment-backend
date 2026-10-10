@@ -11,6 +11,8 @@ public interface SavedJobRepo extends ServiceRepository<SavedJob> {
 
 	List<SavedJob> findAllByUserIdAndDeletedOrderBySavedOnDesc(Long userId, boolean deleted);
 
+	long countByUserIdAndDeleted(Long userId, boolean deleted);
+
 	List<SavedJob> findAllByJobCircularIdAndDeleted(Long jobCircularId, boolean deleted);
 
 	Optional<SavedJob> findByUserIdAndJobCircularIdAndDeleted(Long userId, Long jobCircularId, boolean deleted);

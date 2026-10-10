@@ -4,10 +4,12 @@ import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.dto.req.ApplicationStatusChangeReqDto;
 import com.bd.erecruitment.dto.req.ApplyReqDto;
 import com.bd.erecruitment.dto.res.ApplicationResDTO;
+import com.bd.erecruitment.dto.res.CandidateDashboardResDTO;
 import com.bd.erecruitment.dto.res.CvMatchResDTO;
 import com.bd.erecruitment.dto.res.ApplicationStatusHistoryResDTO;
 import com.bd.erecruitment.entity.StoredFile;
 import com.bd.erecruitment.service.impl.ApplicationServiceImpl;
+import com.bd.erecruitment.service.impl.CandidateDashboardServiceImpl;
 import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,11 +34,18 @@ public class ApplicationController {
 	private static final Set<String> RESERVED_PARAMS = Set.of("page", "size", "sort", "isPageable");
 
 	private final ApplicationServiceImpl applicationService;
+	private final CandidateDashboardServiceImpl candidateDashboardService;
 
 	@Operation(summary = "Apply to a job")
 	@PostMapping
 	public Response<ApplicationResDTO> apply(@RequestBody ApplyReqDto reqDto) {
 		return applicationService.apply(reqDto);
+	}
+
+	@Operation(summary = "Candidate dashboard counts and recent applications")
+	@GetMapping("/my/summary")
+	public Response<CandidateDashboardResDTO> mySummary() {
+		return candidateDashboardService.summary();
 	}
 
 	@Operation(summary = "My applications")

@@ -101,6 +101,7 @@ Configuration is externalized via environment variables, read in `application.ym
 | `MOBILE_ORIGINS`       | No       | Comma-separated origins of the Capacitor Android app allowed by CORS. Defaults to `https://localhost,capacitor://localhost` |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | No | Firebase service-account key (raw JSON, or the same JSON base64-encoded) used to send FCM push notifications to the mobile app. Push is disabled if unset |
 | `GEMINI_API_KEY`       | No       | Google Gemini API key (free tier, from [Google AI Studio](https://aistudio.google.com/apikey)) powering "auto-fill by AI" on the job posting form. Feature returns a 503 if unset |
+| `TOKEN_EXPIRY_HOURS`    | No       | How long a login session (JWT) stays valid, in hours. Defaults to `24` |
 | `DB_URL`               | Prod/Oracle only | JDBC URL — see [Database Profiles](#database-profiles) for defaults |
 | `DB_USERNAME`          | Prod/Oracle only | Database username |
 | `DB_PASSWORD`          | Prod/Oracle only | Database password |
