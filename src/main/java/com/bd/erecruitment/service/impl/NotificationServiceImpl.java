@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -83,17 +84,25 @@ public class NotificationServiceImpl extends CommonFunctionsImpl {
 		pushAfterCommit(created);
 	}
 
-	@Transactional
 	public Response<Void> registerDevice(DeviceTokenReqDto req) {
 		if (StringUtils.isBlank(req.getToken())) returnErrorException("Device token is required");
-		Date now = new Date();
 		MyUserDetail user = currentUser();
+		try {
+			saveDeviceToken(req, user);
+		} catch (DataIntegrityViolationException e) {
+			if (deviceTokenRepo.findByPushToken(req.getToken()).isEmpty()) throw e;
+			saveDeviceToken(req, user);
+		}
+		return getSuccessResponse("Device registered");
+	}
+
+	private void saveDeviceToken(DeviceTokenReqDto req, MyUserDetail user) {
+		Date now = new Date();
 		DeviceToken deviceToken = deviceTokenRepo.findByPushToken(req.getToken()).orElseGet(DeviceToken::new);
 		if (deviceToken.getId() == null) deviceToken.setCreatedBy(user.getUsername()).setCreatedOn(now).setDeleted(false);
 		deviceToken.setPushToken(req.getToken()).setUserId(user.getId()).setPlatform(req.getPlatform()).setLastSeenOn(now);
 		deviceToken.setUpdatedBy(user.getUsername()).setUpdatedOn(now);
 		deviceTokenRepo.save(deviceToken);
-		return getSuccessResponse("Device registered");
 	}
 
 	@Transactional
