@@ -19,8 +19,10 @@ public class UserResDTO extends BaseResponseDTO<User> {
 	private String fullName;
 	private String email;
 	private String address;
-	private String phone;
+	private String secondaryMobile;
+	private String secondaryMobileCountryCode;
 	private String mobile;
+	private String mobileCountryCode;
 	private boolean active;
 	private boolean locked;
 	private Date expiryDate;

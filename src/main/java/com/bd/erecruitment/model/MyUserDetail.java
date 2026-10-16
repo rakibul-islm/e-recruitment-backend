@@ -24,7 +24,7 @@ public class MyUserDetail implements UserDetails {
 	private String password;
 	private String email;
 	private String address;
-	private String phone;
+	private String secondaryMobile;
 	private String mobile;
 	private boolean enabled;
 	private boolean locked;
@@ -38,7 +38,7 @@ public class MyUserDetail implements UserDetails {
 		this.password = user.getPassword();
 		this.email = user.getEmail();
 		this.address = user.getAddress();
-		this.phone = user.getPhone();
+		this.secondaryMobile = user.getSecondaryMobile();
 		this.mobile = user.getMobile();
 		this.enabled = user.isActive();
 		this.locked = user.isLocked();

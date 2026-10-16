@@ -217,6 +217,7 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 			if (existing.isActive()) returnErrorException("Email address already exists");
 			existing.setFullName(reqDto.getFullName())
 					.setMobile(reqDto.getMobile())
+					.setMobileCountryCode(reqDto.getMobileCountryCode())
 					.setExpiryDate(getDefaultExpiryDate())
 					.setPassword(encoder.encode(reqDto.getPassword()));
 			assignRegisteredUserRole(existing);

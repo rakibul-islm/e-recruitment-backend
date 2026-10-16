@@ -20,8 +20,10 @@ public class UserReqDto extends BaseRequestDTO<User> {
 	private String password;
 	private String email;
 	private String address;
-	private String phone;
+	private String secondaryMobile;
+	private String secondaryMobileCountryCode;
 	private String mobile;
+	private String mobileCountryCode;
 	private boolean active;
 	private boolean locked;
 	private Date expiryDate;

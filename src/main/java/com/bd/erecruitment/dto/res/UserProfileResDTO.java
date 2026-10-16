@@ -29,8 +29,10 @@ public class UserProfileResDTO{
 	private String fullName;
 	private String email;
 	private String address;
-	private String phone;
+	private String secondaryMobile;
+	private String secondaryMobileCountryCode;
 	private String mobile;
+	private String mobileCountryCode;
 	private String imageBase64;
 	private Long organizationId;
 

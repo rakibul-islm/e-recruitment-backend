@@ -35,8 +35,10 @@ public class User extends SequenceIdGenerator {
 	private String email;
 
 	private String address;
-	private String phone;
+	private String secondaryMobile;
+	private String secondaryMobileCountryCode;
 	private String mobile;
+	private String mobileCountryCode;
 	private boolean active;
 	private boolean locked;
 
