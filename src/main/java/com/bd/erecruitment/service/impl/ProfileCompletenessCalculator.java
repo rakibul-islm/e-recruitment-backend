@@ -22,7 +22,7 @@ public final class ProfileCompletenessCalculator {
 	public static ProfileCompletenessResDTO calculate(CandidateProfile profile, User account) {
 		List<Section> sections = new ArrayList<>();
 
-		boolean hasPhone = account != null ? has(account.getMobile()) || has(account.getPhone()) : has(profile.getPhone());
+		boolean hasPhone = account != null ? has(account.getMobile()) || has(account.getSecondaryMobile()) : has(profile.getPhone());
 		boolean hasAddress = account != null ? has(account.getAddress()) : has(profile.getAddress());
 		int basic = (has(profile.getHeadline()) ? 10 : 0) + (has(profile.getSummary()) ? 10 : 0)
 			+ (hasPhone ? 5 : 0) + (hasAddress ? 5 : 0);

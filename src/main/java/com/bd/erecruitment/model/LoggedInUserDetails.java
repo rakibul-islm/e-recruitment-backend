@@ -11,7 +11,7 @@ public class LoggedInUserDetails {
 	private Long id;
 	private String email;
 	private String address;
-	private String phone;
+	private String secondaryMobile;
 	private String mobile;
 	private boolean enabled;
 	private boolean locked;

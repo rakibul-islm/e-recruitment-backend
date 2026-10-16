@@ -106,7 +106,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		List<String> contactParts = List.of(
 			StringUtils.defaultString(user.getEmail()),
 			StringUtils.defaultString(user.getMobile()),
-			StringUtils.defaultString(user.getPhone()),
+			StringUtils.defaultString(user.getSecondaryMobile()),
 			StringUtils.defaultString(user.getAddress()),
 			StringUtils.defaultString(profile.getLinkedinUrl()),
 			StringUtils.defaultString(profile.getPortfolioUrl())

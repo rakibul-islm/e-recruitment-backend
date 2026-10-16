@@ -17,6 +17,7 @@ public class UserSignupReqDto extends BaseRequestDTO<User> {
 	private String password;
 	private String email;
 	private String mobile;
+	private String mobileCountryCode;
 
 	@JsonIgnore
 	@Override
