@@ -41,7 +41,7 @@ public class JobPostingAiServiceImpl {
 	@Value("${app.ai.gemini.api-key:}")
 	private String apiKey;
 
-	@Value("${app.ai.gemini.model:gemini-3.6-flash}")
+	@Value("${app.ai.gemini.model:}")
 	private String model;
 
 	public Response<JobPostingAiSuggestResDTO> suggest(JobPostingAiSuggestReqDto req) {
