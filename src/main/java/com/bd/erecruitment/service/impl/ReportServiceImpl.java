@@ -50,13 +50,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ReportServiceImpl {
+public class ReportServiceImpl extends CommonFunctionsImpl {
 
 	private static final ZoneId DEFAULT_REPORT_ZONE = ZoneId.of("Asia/Dhaka");
 	private static final DateTimeFormatter DEADLINE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy").withZone(ZoneOffset.UTC);
@@ -143,6 +144,11 @@ public class ReportServiceImpl {
 	}
 
 	private List<JobPostingReportRow> buildJobPostingRows(Map<String, String> filters) {
+		Long organizationId = organizationScope();
+		if (organizationId != null) {
+			filters = new HashMap<>(filters);
+			filters.put("organizationId", String.valueOf(organizationId));
+		}
 		List<JobCircular> jobs = jobCircularRepo.findAll(GenericSpecification.<JobCircular>build(filters));
 		if (jobs.isEmpty()) return List.of();
 
@@ -154,13 +160,18 @@ public class ReportServiceImpl {
 			.map(job -> new JobPostingReportRow(
 				job.getJobTitle(), job.getOrganizationName(), job.getStatus(), job.getVacancy(),
 				deadlineText(job.getApplicationDeadLine()), job.getJobLocation(), job.getEmploymentStatus(),
-				applicantCounts.getOrDefault(job.getId(), 0L).intValue()
+				applicantCounts.getOrDefault(job.getId(), 0L).intValue(), job.getCategory()
 			))
 			.toList();
 	}
 
 	private List<ApplicationReportRow> buildApplicationRows(Map<String, String> filters) {
-		List<Application> applications = applicationRepo.findAll(GenericSpecification.<Application>build(filters));
+		List<Application> applications = applicationRepo.findAll(GenericSpecification.<Application>build(resolveJobTitleFilter(resolveCandidateFilters(filters))));
+		Long organizationId = organizationScope();
+		if (organizationId != null) {
+			Set<Long> ownJobIds = ownJobIds(organizationId);
+			applications = applications.stream().filter(a -> ownJobIds.contains(a.getJobCircularId())).toList();
+		}
 		if (applications.isEmpty()) return List.of();
 
 		Map<Long, String> jobTitles = jobTitlesByJobCircularId(applications.stream().map(Application::getJobCircularId).distinct().toList());
@@ -174,16 +185,21 @@ public class ReportServiceImpl {
 					jobTitle,
 					candidate != null ? candidate.getFullName() : "",
 					candidate != null ? candidate.getEmail() : "",
-					application.getStatus(), application.getAppliedOn()
+					application.getStatus(), application.getAppliedOn(), application.getMatchScore()
 				);
 			})
 			.toList();
 	}
 
 	private List<McqResultReportRow> buildMcqResultRows(Map<String, String> filters) {
-		List<McqTestAssignment> assignments = mcqTestAssignmentRepo.findAll(GenericSpecification.<McqTestAssignment>build(filters)).stream()
+		List<McqTestAssignment> assignments = mcqTestAssignmentRepo.findAll(GenericSpecification.<McqTestAssignment>build(resolveCandidateFilters(filters))).stream()
 			.filter(a -> a.getScorePercent() != null)
 			.toList();
+		Long organizationId = organizationScope();
+		if (organizationId != null) {
+			Set<Long> ownTestIds = ownTestIds(organizationId);
+			assignments = assignments.stream().filter(a -> ownTestIds.contains(a.getMcqTestId())).toList();
+		}
 		if (assignments.isEmpty()) return List.of();
 
 		Map<Long, String> testNames = mcqTestRepo.findAllByIdInAndDeleted(assignments.stream().map(McqTestAssignment::getMcqTestId).distinct().toList(), false)
@@ -213,9 +229,14 @@ public class ReportServiceImpl {
 	}
 
 	private List<McqViolationReportRow> buildMcqViolationRows(Map<String, String> filters) {
-		List<McqTestViolation> violations = mcqTestViolationRepo.findAll(GenericSpecification.<McqTestViolation>build(filters)).stream()
+		List<McqTestViolation> violations = mcqTestViolationRepo.findAll(GenericSpecification.<McqTestViolation>build(resolveCandidateFilters(filters))).stream()
 			.sorted(Comparator.comparing(McqTestViolation::getCreatedOn).reversed())
 			.toList();
+		Long organizationId = organizationScope();
+		if (organizationId != null) {
+			Set<Long> ownTestIds = ownTestIds(organizationId);
+			violations = violations.stream().filter(v -> ownTestIds.contains(v.getMcqTestId())).toList();
+		}
 		if (violations.isEmpty()) return List.of();
 
 		Map<Long, String> testNames = mcqTestRepo.findAllByIdInAndDeleted(violations.stream().map(McqTestViolation::getMcqTestId).distinct().toList(), false)
@@ -255,6 +276,57 @@ public class ReportServiceImpl {
 				log.getIpAddress(), log.getCity(), log.getCountry(), log.getDeviceType(), log.getOs(), log.getBrowser()
 			))
 			.toList();
+	}
+
+	// Candidate name/email are not columns on these tables, so they are resolved to candidate ids first.
+	private Map<String, String> resolveCandidateFilters(Map<String, String> filters) {
+		String candidateName = filters.get("candidateName_like");
+		String candidateEmail = filters.get("candidateEmail_like");
+		boolean hasName = candidateName != null && !candidateName.isBlank();
+		boolean hasEmail = candidateEmail != null && !candidateEmail.isBlank();
+
+		Map<String, String> effectiveFilters = new HashMap<>(filters);
+		effectiveFilters.remove("candidateName_like");
+		effectiveFilters.remove("candidateEmail_like");
+		if (!hasName && !hasEmail) return effectiveFilters;
+
+		Map<String, String> userFilters = new HashMap<>();
+		if (hasName) userFilters.put("fullName_like", candidateName);
+		if (hasEmail) userFilters.put("email_like", candidateEmail);
+
+		String ids = userRepo.findAll(GenericSpecification.<User>build(userFilters)).stream()
+			.map(user -> String.valueOf(user.getId())).collect(Collectors.joining(","));
+		effectiveFilters.put("candidateUserId_in", ids.isEmpty() ? "-1" : ids);
+		return effectiveFilters;
+	}
+
+	private Map<String, String> resolveJobTitleFilter(Map<String, String> filters) {
+		String jobTitle = filters.get("jobTitle_like");
+		if (jobTitle == null || jobTitle.isBlank()) return filters;
+
+		Map<String, String> effectiveFilters = new HashMap<>(filters);
+		effectiveFilters.remove("jobTitle_like");
+		String ids = jobCircularRepo.findAll(GenericSpecification.<JobCircular>build(Map.of("jobTitle_like", jobTitle))).stream()
+			.map(job -> String.valueOf(job.getId())).collect(Collectors.joining(","));
+		effectiveFilters.put("jobCircularId_in", ids.isEmpty() ? "-1" : ids);
+		return effectiveFilters;
+	}
+
+	// Null for admins; a scoped recruiter without an organization gets -1 so nothing matches.
+	private Long organizationScope() {
+		if (!isScopedRecruiter()) return null;
+		Long organizationId = getLoggedInUserDetails().getOrganizationId();
+		return organizationId != null ? organizationId : -1L;
+	}
+
+	private Set<Long> ownJobIds(Long organizationId) {
+		return jobCircularRepo.findAll(GenericSpecification.<JobCircular>build(Map.of("organizationId", String.valueOf(organizationId))))
+			.stream().map(JobCircular::getId).collect(Collectors.toSet());
+	}
+
+	private Set<Long> ownTestIds(Long organizationId) {
+		return mcqTestRepo.findAll(GenericSpecification.<McqTest>build(Map.of("organizationId", String.valueOf(organizationId))))
+			.stream().map(McqTest::getId).collect(Collectors.toSet());
 	}
 
 	private Map<Long, String> jobTitlesByJobCircularId(List<Long> jobCircularIds) {

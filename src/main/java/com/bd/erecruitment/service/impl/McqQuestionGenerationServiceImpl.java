@@ -39,6 +39,8 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 	private static final long RETRY_BACKOFF_MILLIS = 1000;
 	private static final int DEFAULT_COUNT = 5;
 	private static final int MAX_COUNT = 20;
+	private static final int BATCH_SIZE = 5;
+	private static final int MAX_EMPTY_BATCHES = 2;
 
 	private final RestTemplate restTemplate = buildRestTemplate();
 	private final ObjectMapper objectMapper = new ObjectMapper();
@@ -65,9 +67,63 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 		}
 
 		String url = String.format(GEMINI_URL_TEMPLATE, model, apiKey);
+
+		List<GeneratedMcqItem> items = new ArrayList<>();
+		int emptyBatches = 0;
+		while (items.size() < count && emptyBatches < MAX_EMPTY_BATCHES) {
+			int batchSize = Math.min(BATCH_SIZE, count - items.size());
+			List<GeneratedMcqItem> batch;
+			try {
+				batch = fetchBatch(url, req, batchSize, items);
+			} catch (ApiException e) {
+				if (items.isEmpty()) throw e;
+				log.warn("Stopping MCQ generation early with {} of {} questions: {}", items.size(), count, e.getMessage());
+				break;
+			}
+			batch.removeIf(i -> i.questionText == null || i.options == null || i.options.size() < 2);
+			if (batch.isEmpty()) {
+				emptyBatches++;
+			} else {
+				items.addAll(batch);
+			}
+		}
+		if (items.size() > count) {
+			items = new ArrayList<>(items.subList(0, count));
+		}
+
+		Long organizationId = getLoggedInUserDetails().getOrganizationId();
+		List<McqQuestionResDTO> created = new ArrayList<>();
+		for (GeneratedMcqItem item : items) {
+			McqQuestion question = new McqQuestion()
+				.setOrganizationId(organizationId)
+				.setQuestionText(item.questionText)
+				.setSkillTag(req.getSkillTag())
+				.setDifficulty(StringUtils.defaultIfBlank(item.difficulty, "MEDIUM"))
+				.setStatus("DRAFT")
+				.setSource("AI_GENERATED");
+			for (int i = 0; i < item.options.size(); i++) {
+				question.getOptions().add(new McqOptionItem()
+					.setOptionKey(String.valueOf((char) ('A' + i)))
+					.setOptionText(item.options.get(i))
+					.setCorrect(i == item.correctOptionIndex)
+					.setDisplayOrder(i));
+			}
+			question = createEntity(question);
+			created.add(new McqQuestionResDTO(question));
+		}
+
+		if (created.isEmpty()) {
+			log.warn("Gemini MCQ generation produced no valid questions (requested {})", count);
+			throw new ApiException(502, "AI question generation returned no valid questions, please try again");
+		}
+
+		return success(created);
+	}
+
+	private List<GeneratedMcqItem> fetchBatch(String url, McqGenerateQuestionsReqDto req, int batchSize, List<GeneratedMcqItem> existing) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(buildGeminiRequest(req, count), headers);
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(buildGeminiRequest(req, batchSize, existing), headers);
 
 		String rawResponse = null;
 		RestClientException lastFailure = null;
@@ -98,44 +154,27 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 
 		String text = root.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText(null);
 		if (StringUtils.isBlank(text)) {
+			log.warn("Gemini MCQ generation returned no text. Response: {}", rawResponse);
 			throw new ApiException(502, "AI question generation service returned an empty response");
 		}
 
-		List<GeneratedMcqItem> items;
 		try {
-			items = objectMapper.readValue(text, objectMapper.getTypeFactory().constructCollectionType(List.class, GeneratedMcqItem.class));
+			JsonNode parsedRoot = objectMapper.readTree(text.trim());
+			JsonNode questions = parsedRoot.isArray() ? parsedRoot : parsedRoot.path("questions");
+			List<GeneratedMcqItem> parsed = objectMapper.readerFor(objectMapper.getTypeFactory().constructCollectionType(List.class, GeneratedMcqItem.class)).readValue(questions);
+			if (parsed == null || parsed.isEmpty()) {
+				log.warn("Gemini MCQ generation returned no items (requested {}). Raw text: {}", batchSize, text);
+				return new ArrayList<>();
+			}
+			return new ArrayList<>(parsed);
 		} catch (Exception e) {
-			log.warn("Failed to parse Gemini MCQ generation JSON: {}", e.getMessage());
+			log.warn("Failed to parse Gemini MCQ generation JSON: {}. Raw text: {}", e.getMessage(), text);
 			throw new ApiException(502, "AI question generation service returned an unexpected response");
 		}
-
-		Long organizationId = getLoggedInUserDetails().getOrganizationId();
-		List<McqQuestionResDTO> created = new ArrayList<>();
-		for (GeneratedMcqItem item : items) {
-			if (item.questionText == null || item.options == null || item.options.size() < 2) continue;
-			McqQuestion question = new McqQuestion()
-				.setOrganizationId(organizationId)
-				.setQuestionText(item.questionText)
-				.setSkillTag(req.getSkillTag())
-				.setDifficulty(StringUtils.defaultIfBlank(item.difficulty, "MEDIUM"))
-				.setStatus("DRAFT")
-				.setSource("AI_GENERATED");
-			for (int i = 0; i < item.options.size(); i++) {
-				question.getOptions().add(new McqOptionItem()
-					.setOptionKey(String.valueOf((char) ('A' + i)))
-					.setOptionText(item.options.get(i))
-					.setCorrect(i == item.correctOptionIndex)
-					.setDisplayOrder(i));
-			}
-			question = createEntity(question);
-			created.add(new McqQuestionResDTO(question));
-		}
-
-		return success(created);
 	}
 
-	private Map<String, Object> buildGeminiRequest(McqGenerateQuestionsReqDto req, int count) {
-		Map<String, Object> content = Map.of("parts", List.of(Map.of("text", buildPrompt(req, count))));
+	private Map<String, Object> buildGeminiRequest(McqGenerateQuestionsReqDto req, int count, List<GeneratedMcqItem> existing) {
+		Map<String, Object> content = Map.of("parts", List.of(Map.of("text", buildPrompt(req, count, existing))));
 
 		Map<String, Object> itemProperties = new LinkedHashMap<>();
 		itemProperties.put("questionText", Map.of("type", "STRING"));
@@ -149,11 +188,16 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 			"required", List.of("questionText", "options", "correctOptionIndex")
 		);
 
-		Map<String, Object> arraySchema = Map.of("type", "ARRAY", "items", itemSchema);
+		// Wrapped in an object: a top-level ARRAY schema makes the model return "[]".
+		Map<String, Object> wrapperSchema = Map.of(
+			"type", "OBJECT",
+			"properties", Map.of("questions", Map.of("type", "ARRAY", "items", itemSchema)),
+			"required", List.of("questions")
+		);
 
 		Map<String, Object> generationConfig = Map.of(
 			"responseMimeType", "application/json",
-			"responseSchema", arraySchema
+			"responseSchema", wrapperSchema
 		);
 
 		Map<String, Object> body = new LinkedHashMap<>();
@@ -162,10 +206,10 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 		return body;
 	}
 
-	private String buildPrompt(McqGenerateQuestionsReqDto req, int count) {
+	private String buildPrompt(McqGenerateQuestionsReqDto req, int count, List<GeneratedMcqItem> existing) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("You are helping a recruiter build an interview screening test. Generate ")
-			.append(count).append(" multiple-choice questions as a JSON array matching the given schema.\n\n")
+			.append(count).append(" multiple-choice questions as JSON matching the given schema (an object with a \"questions\" array).\n\n")
 			.append("Topic/skill: ").append(req.getSkillTag()).append("\n");
 		if (StringUtils.isNotBlank(req.getDifficulty())) {
 			sb.append("Difficulty: ").append(req.getDifficulty()).append("\n");
@@ -176,6 +220,10 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 			.append("- difficulty must be EASY, MEDIUM, or HARD.\n")
 			.append("- Questions must be realistic, professional, and specific to the given topic/skill - suitable for screening a real job candidate.\n")
 			.append("- Do not repeat the same question twice.");
+		if (!existing.isEmpty()) {
+			sb.append("\n\nAlready generated (do not repeat or paraphrase these):\n");
+			existing.forEach(i -> sb.append("- ").append(i.questionText).append("\n"));
+		}
 		return sb.toString();
 	}
 
@@ -207,7 +255,7 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 	private static RestTemplate buildRestTemplate() {
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 		factory.setConnectTimeout(5000);
-		factory.setReadTimeout(30000);
+		factory.setReadTimeout(90000);
 		return new RestTemplate(factory);
 	}
 

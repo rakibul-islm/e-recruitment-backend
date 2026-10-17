@@ -16,4 +16,5 @@ public class JobPostingReportRow {
 	private final String jobLocation;
 	private final String employmentStatus;
 	private final Integer applicantCount;
+	private final String category;
 }

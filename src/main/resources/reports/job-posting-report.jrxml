@@ -18,6 +18,7 @@
 	<field name="jobTitle" class="java.lang.String"/>
 	<field name="organizationName" class="java.lang.String"/>
 	<field name="status" class="java.lang.String"/>
+	<field name="category" class="java.lang.String"/>
 	<field name="vacancy" class="java.lang.Integer"/>
 	<field name="applicationDeadLine" class="java.lang.String"/>
 	<field name="jobLocation" class="java.lang.String"/>
@@ -59,49 +60,55 @@
 				<graphicElement><pen lineWidth="0.0"/></graphicElement>
 			</rectangle>
 			<staticText>
-				<reportElement x="20" y="0" width="150" height="22" forecolor="#032967"/>
+				<reportElement x="20" y="0" width="130" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/><leftPen lineWidth="0.0"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Job Title]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="170" y="0" width="130" height="22" forecolor="#032967"/>
+				<reportElement x="150" y="0" width="110" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Organization]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="300" y="0" width="80" height="22" forecolor="#032967"/>
+				<reportElement x="345" y="0" width="70" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Status]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="380" y="0" width="60" height="22" forecolor="#032967"/>
+				<reportElement x="260" y="0" width="85" height="22" forecolor="#032967"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
+				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<text><![CDATA[Category]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="415" y="0" width="50" height="22" forecolor="#032967"/>
 				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Vacancy]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="440" y="0" width="90" height="22" forecolor="#032967"/>
+				<reportElement x="465" y="0" width="80" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Deadline]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="530" y="0" width="110" height="22" forecolor="#032967"/>
+				<reportElement x="545" y="0" width="100" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Location]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="640" y="0" width="110" height="22" forecolor="#032967"/>
+				<reportElement x="645" y="0" width="100" height="22" forecolor="#032967"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#94A3B8"/></box>
 				<textElement verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Employment Status]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="750" y="0" width="72" height="22" forecolor="#032967"/>
+				<reportElement x="745" y="0" width="77" height="22" forecolor="#032967"/>
 				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#94A3B8"/><rightPen lineWidth="0.0"/></box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
 				<text><![CDATA[Applicants]]></text>
@@ -116,49 +123,55 @@
 				<graphicElement><pen lineWidth="0.0"/></graphicElement>
 			</rectangle>
 			<textField isBlankWhenNull="true">
-				<reportElement x="20" y="0" width="150" height="20" forecolor="#1F2937"/>
+				<reportElement x="20" y="0" width="130" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/><leftPen lineWidth="0.0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{jobTitle}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="170" y="0" width="130" height="20" forecolor="#1F2937"/>
+				<reportElement x="150" y="0" width="110" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{organizationName}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="300" y="0" width="80" height="20" forecolor="#1F2937"/>
+				<reportElement x="345" y="0" width="70" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="380" y="0" width="60" height="20" forecolor="#1F2937"/>
+				<reportElement x="260" y="0" width="85" height="20" forecolor="#1F2937"/>
+				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
+				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
+				<textFieldExpression><![CDATA[$F{category}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="415" y="0" width="50" height="20" forecolor="#1F2937"/>
 				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{vacancy}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="440" y="0" width="90" height="20" forecolor="#1F2937"/>
+				<reportElement x="465" y="0" width="80" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{applicationDeadLine}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="530" y="0" width="110" height="20" forecolor="#1F2937"/>
+				<reportElement x="545" y="0" width="100" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{jobLocation}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="640" y="0" width="110" height="20" forecolor="#1F2937"/>
+				<reportElement x="645" y="0" width="100" height="20" forecolor="#1F2937"/>
 				<box leftPadding="4"><pen lineWidth="0.5" lineColor="#E2E8F0"/></box>
 				<textElement verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{employmentStatus}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="750" y="0" width="72" height="20" forecolor="#1F2937"/>
+				<reportElement x="745" y="0" width="77" height="20" forecolor="#1F2937"/>
 				<box rightPadding="6"><pen lineWidth="0.5" lineColor="#E2E8F0"/><rightPen lineWidth="0.0"/></box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{applicantCount}]]></textFieldExpression>

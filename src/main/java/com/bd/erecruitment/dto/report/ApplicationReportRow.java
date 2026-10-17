@@ -15,4 +15,5 @@ public class ApplicationReportRow {
 	private final String candidateEmail;
 	private final String status;
 	private final Date appliedOn;
+	private final Integer matchScore;
 }
