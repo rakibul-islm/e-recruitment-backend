@@ -46,7 +46,7 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 	@Value("${app.ai.gemini.api-key:}")
 	private String apiKey;
 
-	@Value("${app.ai.gemini.model:gemini-3.6-flash}")
+	@Value("${app.ai.gemini.model:}")
 	private String model;
 
 	public McqQuestionGenerationServiceImpl(McqQuestionRepo mcqQuestionRepo) {
