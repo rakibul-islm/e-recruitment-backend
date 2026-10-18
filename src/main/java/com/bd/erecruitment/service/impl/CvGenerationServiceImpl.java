@@ -76,7 +76,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			.append(".cv-header-text{overflow:hidden;}")
 			.append(".contact{clear:both;font-size:10px;color:#374151;margin-top:14px;padding-top:10px;border-top:1px solid #dce6f7;}")
 			.append(".ci{display:inline-block;margin:0 16px 6px 0;}")
-			.append(".ico{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:8px;background:#032967;color:#ffffff;font-family:PrimeIcons;font-size:8px;margin-right:5px;}")
+			.append(".ico{display:inline-block;color:#032967;font-family:PrimeIcons;font-size:11px;margin-right:5px;}")
 			.append(".ci a{color:#1e4d8f;font-weight:bold;text-decoration:none;}")
 			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.8px;color:#032967;border-left:3px solid #032967;border-bottom:1px solid #e2e8f5;padding:0 0 6px 8px;margin-top:22px;margin-bottom:12px;page-break-after:avoid;break-after:avoid;}")
 			.append(".item{overflow:hidden;margin-bottom:13px;padding-left:12px;border-left:2px solid #e2e8f5;page-break-inside:avoid;break-inside:avoid;}")
