@@ -30,6 +30,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -83,6 +86,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		JobCircular job = jobCircularRepo.findByIdAndDeleted(reqDto.getJobCircularId(), false)
 			.orElseThrow(() -> new NotFoundException("Job not found"));
 		if (!"PUBLISHED".equals(job.getStatus())) returnErrorException("This job is not open for applications");
+		if (isPastDeadline(job)) returnErrorException("The application deadline for this job has passed");
 
 		MyUserDetail me = getLoggedInUserDetails();
 		if (applicationRepo.findByJobCircularIdAndCandidateUserIdAndDeleted(job.getId(), me.getId(), false).isPresent()) {
@@ -269,6 +273,13 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	private boolean isStaff(MyUserDetail user) {
 		return user.getAuthorities().stream().anyMatch(a ->
 			STAFF_AUTHORITY.equals(a.getAuthority()) || "SUPER_ADMIN".equals(a.getAuthority()));
+	}
+
+	// The deadline is a calendar date, so the job stays open through the whole of that day (UTC).
+	private boolean isPastDeadline(JobCircular job) {
+		if (job.getApplicationDeadLine() == null) return false;
+		LocalDate deadline = Instant.ofEpochMilli(job.getApplicationDeadLine().getTime()).atZone(ZoneOffset.UTC).toLocalDate();
+		return deadline.isBefore(LocalDate.now(ZoneOffset.UTC));
 	}
 
 	private void recordHistory(Long applicationId, String status, String note, String actor) {
