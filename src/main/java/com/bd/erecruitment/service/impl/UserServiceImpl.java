@@ -1,6 +1,7 @@
 package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.dto.req.ChangePasswordReqDto;
+import com.bd.erecruitment.dto.req.CoverImageReqDto;
 import com.bd.erecruitment.dto.req.RequestChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.req.ResendSignupOtpReqDto;
 import com.bd.erecruitment.dto.req.UserReqDto;
@@ -12,6 +13,7 @@ import com.bd.erecruitment.dto.res.UserRoleResDTO;
 import com.bd.erecruitment.dto.res.UserResDTO;
 import com.bd.erecruitment.entity.Role;
 import com.bd.erecruitment.entity.User;
+import com.bd.erecruitment.exception.BadRequestException;
 import com.bd.erecruitment.exception.ExceptionLogWriter;
 import com.bd.erecruitment.model.MyUserDetail;
 import com.bd.erecruitment.repository.RoleRepo;
@@ -47,6 +49,8 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class UserServiceImpl extends AbstractBaseService<User> implements UserDetailsService, UserService<UserResDTO, UserReqDto> {
+
+	private static final int MAX_COVER_BYTES = 3 * 1024 * 1024;
 
 	private final UserRepo userRepo;
 	private final BCryptPasswordEncoder encoder;
@@ -128,6 +132,44 @@ public class UserServiceImpl extends AbstractBaseService<User> implements UserDe
 		modelMapper.map(reqDto, exUser);
 		exUser.setFileData(StringUtils.isBlank(reqDto.getImageBase64()) ? exUser.getFileData() : Base64.getDecoder().decode(reqDto.getImageBase64()));
 		return getSuccessResponse("Profile updated successfully", new UserResDTO(updateEntity(exUser)));
+	}
+
+	@Transactional
+	@Override
+	public Response<Object> myCover() {
+		User user = findByIdOrThrow(getLoggedInUserDetails().getId(), "User not found");
+		byte[] data = user.getCoverData();
+		Object cover = data == null || data.length == 0 ? null : "data:" + coverMimeType(data) + ";base64," + Base64.getEncoder().encodeToString(data);
+		return getSuccessResponse("Cover photo found", cover);
+	}
+
+	@Transactional
+	@Override
+	public Response<Object> updateMyCover(CoverImageReqDto reqDto) {
+		User user = findByIdOrThrow(getLoggedInUserDetails().getId(), "User not found");
+		String encoded = reqDto == null ? null : reqDto.getImageBase64();
+		if (StringUtils.isBlank(encoded)) {
+			user.setCoverData(null);
+		} else {
+			byte[] data;
+			try {
+				data = Base64.getDecoder().decode(encoded.substring(encoded.indexOf(',') + 1).trim());
+			} catch (IllegalArgumentException e) {
+				throw new BadRequestException("Cover photo is not a valid image");
+			}
+			if (data.length > MAX_COVER_BYTES) throw new BadRequestException("Cover photo must be 3 MB or smaller");
+			if (coverMimeType(data) == null) throw new BadRequestException("Cover photo must be a JPEG, PNG or WebP image");
+			user.setCoverData(data);
+		}
+		updateEntity(user);
+		return getSuccessResponse("Cover photo updated successfully");
+	}
+
+	private String coverMimeType(byte[] data) {
+		if (data.length > 3 && (data[0] & 0xFF) == 0xFF && (data[1] & 0xFF) == 0xD8 && (data[2] & 0xFF) == 0xFF) return "image/jpeg";
+		if (data.length > 4 && (data[0] & 0xFF) == 0x89 && data[1] == 'P' && data[2] == 'N' && data[3] == 'G') return "image/png";
+		if (data.length > 12 && data[0] == 'R' && data[1] == 'I' && data[2] == 'F' && data[3] == 'F' && data[8] == 'W' && data[9] == 'E' && data[10] == 'B' && data[11] == 'P') return "image/webp";
+		return null;
 	}
 
 	@Transactional

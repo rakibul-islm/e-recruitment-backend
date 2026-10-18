@@ -2,6 +2,7 @@ package com.bd.erecruitment.controller;
 
 import com.bd.erecruitment.annotation.RestApiController;
 import com.bd.erecruitment.dto.req.ChangePasswordReqDto;
+import com.bd.erecruitment.dto.req.CoverImageReqDto;
 import com.bd.erecruitment.dto.req.RequestChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.req.UserReqDto;
 import com.bd.erecruitment.dto.req.VerifyChangePasswordOtpReqDto;
@@ -45,6 +46,18 @@ public class ProfileController {
 	@PutMapping
 	public Response<UserResDTO> updateProfile(@RequestBody UserReqDto reqDto) {
 		return userService.updateProfile(reqDto);
+	}
+
+	@Operation(summary = "Get my cover photo as a data URL, or null when none is set")
+	@GetMapping("/cover")
+	public Response<Object> getCover() {
+		return userService.myCover();
+	}
+
+	@Operation(summary = "Set my cover photo, or remove it by sending an empty image")
+	@PutMapping("/cover")
+	public Response<Object> updateCover(@RequestBody CoverImageReqDto reqDto) {
+		return userService.updateMyCover(reqDto);
 	}
 
 	@Operation(summary = "Record the exact city and country (X-Client-City / X-Client-Country headers) on my current login session")

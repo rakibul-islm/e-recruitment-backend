@@ -23,7 +23,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Accessors(chain = true)
 @Table(name = "USER_ACCOUNT")
-@EqualsAndHashCode(callSuper = true, exclude = {"roles", "fileData"})
+@EqualsAndHashCode(callSuper = true, exclude = {"roles", "fileData", "coverData"})
 public class User extends SequenceIdGenerator {
 
 	private String fullName;
@@ -52,6 +52,12 @@ public class User extends SequenceIdGenerator {
 	@JdbcTypeCode(SqlTypes.VARBINARY)
 	@Column(name = "filedata", length = 5_000_000)
 	private byte[] fileData;
+
+	@Basic(fetch = FetchType.LAZY)
+	@ToString.Exclude
+	@JdbcTypeCode(SqlTypes.VARBINARY)
+	@Column(name = "cover_data", length = 5_000_000)
+	private byte[] coverData;
 
 	@Transient
 	private String imageBase64;
