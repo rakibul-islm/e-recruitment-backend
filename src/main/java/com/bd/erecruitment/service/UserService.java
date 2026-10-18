@@ -1,6 +1,7 @@
 package com.bd.erecruitment.service;
 
 import com.bd.erecruitment.dto.req.ChangePasswordReqDto;
+import com.bd.erecruitment.dto.req.CoverImageReqDto;
 import com.bd.erecruitment.dto.req.RequestChangePasswordOtpReqDto;
 import com.bd.erecruitment.dto.req.ResendSignupOtpReqDto;
 import com.bd.erecruitment.dto.req.UserReqDto;
@@ -22,6 +23,10 @@ public interface UserService<R, E> extends BaseService<R, E> {
 	Response<UserProfileResDTO> userProfile();
 
 	Response<UserResDTO> updateProfile(UserReqDto reqDto);
+
+	Response<Object> myCover();
+
+	Response<Object> updateMyCover(CoverImageReqDto reqDto);
 
 	Response<Object> requestChangePasswordOtp(RequestChangePasswordOtpReqDto reqDto);
 
