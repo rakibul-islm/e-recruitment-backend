@@ -74,8 +74,10 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			.append(".cv-header{overflow:hidden;background:#f4f7fc;border:1px solid #dce6f7;border-left:4px solid #032967;border-radius:8px;padding:20px 24px;margin-bottom:24px;}")
 			.append(".cv-photo{float:right;width:80px;height:80px;margin-left:20px;border-radius:50%;border:3px solid #ffffff;}")
 			.append(".cv-header-text{overflow:hidden;}")
-			.append(".contact{font-size:10px;color:#4b5563;margin-top:2px;}")
-			.append(".contact span{display:inline-block;margin:0 14px 4px 0;}")
+			.append(".contact{clear:both;font-size:10px;color:#374151;margin-top:14px;padding-top:10px;border-top:1px solid #dce6f7;}")
+			.append(".ci{display:inline-block;margin:0 16px 6px 0;}")
+			.append(".ico{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;border-radius:8px;background:#032967;color:#ffffff;font-family:PrimeIcons;font-size:8px;margin-right:5px;}")
+			.append(".ci a{color:#1e4d8f;font-weight:bold;text-decoration:none;}")
 			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.8px;color:#032967;border-left:3px solid #032967;border-bottom:1px solid #e2e8f5;padding:0 0 6px 8px;margin-top:22px;margin-bottom:12px;page-break-after:avoid;break-after:avoid;}")
 			.append(".item{overflow:hidden;margin-bottom:13px;padding-left:12px;border-left:2px solid #e2e8f5;page-break-inside:avoid;break-inside:avoid;}")
 			.append(".item-title{font-weight:bold;font-size:12px;color:#111827;}")
@@ -102,20 +104,16 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		if (StringUtils.isNotBlank(profile.getHeadline())) {
 			sb.append("<div class='headline'>").append(esc(profile.getHeadline())).append("</div>");
 		}
-		sb.append("<div class='contact'>");
-		List<String> contactParts = List.of(
-			StringUtils.defaultString(user.getEmail()),
-			StringUtils.defaultString(user.getMobile()),
-			StringUtils.defaultString(user.getSecondaryMobile()),
-			StringUtils.defaultString(user.getAddress()),
-			StringUtils.defaultString(profile.getLinkedinUrl()),
-			StringUtils.defaultString(profile.getPortfolioUrl())
-		);
-		for (String part : contactParts) {
-			if (StringUtils.isNotBlank(part)) sb.append("<span>").append(esc(part)).append("</span>");
-		}
 		sb.append("</div>");
-		sb.append("</div></div>");
+		sb.append("<div class='contact'>");
+		appendContact(sb, "\ue979", user.getEmail(), null);
+		appendContact(sb, "\ue9b8", phone(user.getMobileCountryCode(), user.getMobile()), null);
+		appendContact(sb, "\ue982", phone(user.getSecondaryMobileCountryCode(), user.getSecondaryMobile()), null);
+		appendContact(sb, "\ue968", user.getAddress(), null);
+		appendContact(sb, "\ue9cb", displayUrl(profile.getLinkedinUrl()), withScheme(profile.getLinkedinUrl()));
+		appendContact(sb, "\ue94f", displayUrl(profile.getPortfolioUrl()), withScheme(profile.getPortfolioUrl()));
+		sb.append("</div>");
+		sb.append("</div>");
 
 		if (StringUtils.isNotBlank(profile.getSummary())) {
 			sb.append("<h2>Summary</h2><div>").append(esc(profile.getSummary())).append("</div>");
@@ -195,6 +193,11 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		return esc(startStr + " - " + endStr);
 	}
 
+	private String phone(String countryCode, String number) {
+		if (StringUtils.isBlank(number)) return "";
+		return StringUtils.isBlank(countryCode) ? number.trim() : countryCode.trim() + " " + number.trim();
+	}
+
 	private String joinNonBlank(String... parts) {
 		return String.join(", ", java.util.Arrays.stream(parts).filter(StringUtils::isNotBlank).toList());
 	}
@@ -208,7 +211,24 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 	}
 
 	private String displayUrl(String url) {
-		return url.replaceFirst("^https?://", "").replaceFirst("/$", "");
+		if (StringUtils.isBlank(url)) return "";
+		return url.trim().replaceFirst("(?i)^https?://", "").replaceFirst("/$", "");
+	}
+
+	private String withScheme(String url) {
+		if (StringUtils.isBlank(url)) return "";
+		return url.trim().matches("(?i)^[a-z][a-z0-9+.-]*://.*") ? url.trim() : "https://" + url.trim();
+	}
+
+	private void appendContact(StringBuilder sb, String icon, String text, String href) {
+		if (StringUtils.isBlank(text)) return;
+		sb.append("<span class='ci'><span class='ico'>").append(icon).append("</span>");
+		if (href != null) {
+			sb.append("<a href='").append(esc(href)).append("'>").append(esc(text)).append("</a>");
+		} else {
+			sb.append(esc(text));
+		}
+		sb.append("</span>");
 	}
 
 	private String photoBase64(User user) {

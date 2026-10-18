@@ -123,9 +123,17 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		if (StringUtils.isBlank(reqDto.getOrganizationName())) returnErrorException("Organization name required");
 		if (StringUtils.isBlank(reqDto.getOrganizationPhone())) returnErrorException("Organization phone required");
 		if (StringUtils.isBlank(reqDto.getOrganizationEmail())) returnErrorException("Organization email required");
-		if (StringUtils.isBlank(reqDto.getSalary())) returnErrorException("Salary required");
+		validateSalary(reqDto);
 		if (StringUtils.isBlank(reqDto.getJobRequirement())) returnErrorException("Job requirement required");
 		if (Objects.isNull(reqDto.getVacancy()) || reqDto.getVacancy() < 1) returnErrorException("Vacancy required");
 		if (Objects.isNull(reqDto.getApplicationDeadLine())) returnErrorException("Application deadline required");
+	}
+
+	private void validateSalary(JobCircularReqDto reqDto) {
+		Integer min = reqDto.getSalaryMin();
+		Integer max = reqDto.getSalaryMax();
+		if (StringUtils.isBlank(reqDto.getSalary()) && min == null && max == null) returnErrorException("Salary required: enter a salary range or salary notes");
+		if ((min != null && min < 0) || (max != null && max < 0)) returnErrorException("Salary cannot be negative");
+		if (min != null && max != null && min > max) returnErrorException("Minimum salary cannot be greater than maximum salary");
 	}
 }

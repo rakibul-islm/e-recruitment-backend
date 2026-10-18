@@ -14,6 +14,7 @@ public class HtmlToPdfRenderer {
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
 			PdfRendererBuilder builder = new PdfRendererBuilder();
 			builder.useFastMode();
+			builder.useFont(() -> HtmlToPdfRenderer.class.getResourceAsStream("/fonts/primeicons.ttf"), "PrimeIcons");
 			builder.withHtmlContent(html, null);
 			builder.toStream(os);
 			builder.run();

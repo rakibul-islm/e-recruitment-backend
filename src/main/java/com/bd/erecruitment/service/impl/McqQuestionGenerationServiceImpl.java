@@ -41,8 +41,11 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 	private static final int MAX_COUNT = 20;
 	private static final int BATCH_SIZE = 5;
 	private static final int MAX_EMPTY_BATCHES = 2;
+	private static final int HARD_BATCH_SIZE = 3;
+	private static final long TOTAL_BUDGET_MILLIS = 80_000;
+	private static final long CALL_TIMEOUT_MILLIS = 45_000;
+	private static final long MIN_CALL_MILLIS = 8_000;
 
-	private final RestTemplate restTemplate = buildRestTemplate();
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Value("${app.ai.gemini.api-key:}")
@@ -70,11 +73,19 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 
 		List<GeneratedMcqItem> items = new ArrayList<>();
 		int emptyBatches = 0;
+		long deadline = System.currentTimeMillis() + TOTAL_BUDGET_MILLIS;
+		int perBatch = "HARD".equalsIgnoreCase(req.getDifficulty()) ? HARD_BATCH_SIZE : BATCH_SIZE;
+		boolean outOfTime = false;
 		while (items.size() < count && emptyBatches < MAX_EMPTY_BATCHES) {
-			int batchSize = Math.min(BATCH_SIZE, count - items.size());
+			long remaining = deadline - System.currentTimeMillis();
+			if (remaining < MIN_CALL_MILLIS) {
+				outOfTime = true;
+				break;
+			}
+			int batchSize = Math.min(perBatch, count - items.size());
 			List<GeneratedMcqItem> batch;
 			try {
-				batch = fetchBatch(url, req, batchSize, items);
+				batch = fetchBatch(url, req, batchSize, items, remaining);
 			} catch (ApiException e) {
 				if (items.isEmpty()) throw e;
 				log.warn("Stopping MCQ generation early with {} of {} questions: {}", items.size(), count, e.getMessage());
@@ -112,6 +123,9 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 			created.add(new McqQuestionResDTO(question));
 		}
 
+		if (created.isEmpty() && outOfTime) {
+			throw new ApiException(504, "AI question generation took too long, please try again or request fewer questions");
+		}
 		if (created.isEmpty()) {
 			log.warn("Gemini MCQ generation produced no valid questions (requested {})", count);
 			throw new ApiException(502, "AI question generation returned no valid questions, please try again");
@@ -120,27 +134,33 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 		return success(created);
 	}
 
-	private List<GeneratedMcqItem> fetchBatch(String url, McqGenerateQuestionsReqDto req, int batchSize, List<GeneratedMcqItem> existing) {
+	private List<GeneratedMcqItem> fetchBatch(String url, McqGenerateQuestionsReqDto req, int batchSize, List<GeneratedMcqItem> existing, long remainingMillis) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(buildGeminiRequest(req, batchSize, existing), headers);
 
 		String rawResponse = null;
 		RestClientException lastFailure = null;
+		long deadline = System.currentTimeMillis() + remainingMillis;
 		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+			long callMillis = Math.min(CALL_TIMEOUT_MILLIS, deadline - System.currentTimeMillis());
+			if (callMillis < MIN_CALL_MILLIS) break;
 			try {
-				rawResponse = restTemplate.exchange(url, HttpMethod.POST, entity, String.class).getBody();
+				rawResponse = buildRestTemplate((int) callMillis).exchange(url, HttpMethod.POST, entity, String.class).getBody();
 				lastFailure = null;
 				break;
 			} catch (RestClientException e) {
 				lastFailure = e;
-				log.warn("Gemini MCQ generation call failed (attempt {}/{}): {}", attempt, MAX_ATTEMPTS, e.getMessage());
+				log.warn("Gemini MCQ generation call failed (attempt {}/{}, limit {} ms): {}", attempt, MAX_ATTEMPTS, callMillis, e.getMessage());
+				if (isReadTimeout(e)) {
+					throw new ApiException(504, "AI question generation took too long, please try again or request fewer questions");
+				}
 				if (attempt < MAX_ATTEMPTS) {
 					sleepBeforeRetry();
 				}
 			}
 		}
-		if (lastFailure != null) {
+		if (lastFailure != null || rawResponse == null) {
 			throw new ApiException(502, "AI question generation service is unavailable, please try again");
 		}
 
@@ -252,10 +272,18 @@ public class McqQuestionGenerationServiceImpl extends AbstractBaseService<McqQue
 		return response;
 	}
 
-	private static RestTemplate buildRestTemplate() {
+	// A read timeout means the model is still thinking; retrying the same call would only repeat the wait.
+	private static boolean isReadTimeout(Throwable e) {
+		for (Throwable t = e; t != null; t = t.getCause()) {
+			if (t instanceof java.net.SocketTimeoutException) return true;
+		}
+		return false;
+	}
+
+	private static RestTemplate buildRestTemplate(int readTimeoutMillis) {
 		SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
 		factory.setConnectTimeout(5000);
-		factory.setReadTimeout(90000);
+		factory.setReadTimeout(readTimeoutMillis);
 		return new RestTemplate(factory);
 	}
 
