@@ -78,7 +78,9 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 			.append(".ci{display:inline-block;margin:0 16px 6px 0;}")
 			.append(".ico{display:inline-block;color:#032967;font-family:PrimeIcons;font-size:11px;margin-right:5px;}")
 			.append(".ci a{color:#1e4d8f;font-weight:bold;text-decoration:none;}")
-			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.8px;color:#032967;border-left:3px solid #032967;border-bottom:1px solid #e2e8f5;padding:0 0 6px 8px;margin-top:22px;margin-bottom:12px;page-break-after:avoid;break-after:avoid;}")
+			.append("h2{font-size:12.5px;text-transform:uppercase;letter-spacing:0.8px;color:#032967;border-bottom:1px solid #e2e8f5;padding:0 0 6px 0;margin-top:22px;margin-bottom:12px;page-break-after:avoid;break-after:avoid;}")
+			.append(".h2-bar{display:inline-block;width:4px;height:12px;background:#032967;border-radius:2px;margin-right:8px;}")
+			.append(".h2-ico{font-family:PrimeIcons;color:#1e4d8f;font-size:13px;margin-right:8px;}")
 			.append(".item{overflow:hidden;margin-bottom:13px;padding-left:12px;border-left:2px solid #e2e8f5;page-break-inside:avoid;break-inside:avoid;}")
 			.append(".item-title{font-weight:bold;font-size:12px;color:#111827;}")
 			.append(".item-sub{color:#5b6b85;font-size:10.5px;margin-top:1px;}")
@@ -116,11 +118,11 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		sb.append("</div>");
 
 		if (StringUtils.isNotBlank(profile.getSummary())) {
-			sb.append("<h2>Summary</h2><div>").append(esc(profile.getSummary())).append("</div>");
+			sb.append("<h2><span class='h2-bar'></span>Summary</h2><div>").append(esc(profile.getSummary())).append("</div>");
 		}
 
 		if (!isEmpty(profile.getWorkExperience())) {
-			sb.append("<h2>Work Experience</h2>");
+			sb.append("<h2><span class='h2-bar'></span><span class='h2-ico'>\ue97d</span>Work Experience</h2>");
 			for (WorkExperienceItem w : profile.getWorkExperience()) {
 				sb.append("<div class='item'>")
 					.append("<span class='item-dates'>").append(dateRange(w.getStartDate(), w.getEndDate(), w.isCurrent())).append("</span>")
@@ -132,7 +134,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		}
 
 		if (!isEmpty(profile.getEducation())) {
-			sb.append("<h2>Education</h2>");
+			sb.append("<h2><span class='h2-bar'></span><span class='h2-ico'>\uea34</span>Education</h2>");
 			for (EducationItem ed : profile.getEducation()) {
 				sb.append("<div class='item'>")
 					.append("<span class='item-dates'>").append(dateRange(ed.getStartDate(), ed.getEndDate(), Boolean.TRUE.equals(ed.getCurrent()))).append("</span>")
@@ -143,7 +145,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		}
 
 		if (!isEmpty(profile.getSkills())) {
-			sb.append("<h2>Skills</h2><div>");
+			sb.append("<h2><span class='h2-bar'></span><span class='h2-ico'>\ue936</span>Skills</h2><div>");
 			for (SkillItem s : profile.getSkills()) {
 				String label = StringUtils.isNotBlank(s.getLevel()) ? s.getName() + " (" + s.getLevel() + ")" : s.getName();
 				sb.append("<span class='tag'>").append(esc(label)).append("</span>");
@@ -152,7 +154,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		}
 
 		if (!isEmpty(profile.getCertifications())) {
-			sb.append("<h2>Certifications</h2>");
+			sb.append("<h2><span class='h2-bar'></span><span class='h2-ico'>\uea02</span>Certifications</h2>");
 			for (CertificationItem c : profile.getCertifications()) {
 				sb.append("<div class='item'>")
 					.append("<span class='item-dates'>").append(c.getDate() != null ? esc(MONTH_YEAR.format(c.getDate())) : "").append("</span>")
@@ -163,7 +165,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		}
 
 		if (!isEmpty(profile.getProjects())) {
-			sb.append("<h2>Projects</h2>");
+			sb.append("<h2><span class='h2-bar'></span><span class='h2-ico'>\ue9e7</span>Projects</h2>");
 			for (ProjectItem p : profile.getProjects()) {
 				sb.append("<div class='item'>")
 					.append("<div class='item-title'>").append(esc(p.getName())).append("</div>");
@@ -174,7 +176,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		}
 
 		if (!isEmpty(profile.getLanguages())) {
-			sb.append("<h2>Languages</h2><div>");
+			sb.append("<h2><span class='h2-bar'></span><span class='h2-ico'>\ue9f7</span>Languages</h2><div>");
 			for (LanguageItem l : profile.getLanguages()) {
 				String label = StringUtils.isNotBlank(l.getProficiency()) ? l.getName() + " (" + l.getProficiency() + ")" : l.getName();
 				sb.append("<span class='tag'>").append(esc(label)).append("</span>");
