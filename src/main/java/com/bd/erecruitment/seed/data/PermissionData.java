@@ -100,6 +100,10 @@ public class PermissionData {
 			new PermissionDef("Manage Archive Config",  "archive-config:write",  "SYSTEM_CONFIG",  "archive-config-manage"),
 			new PermissionDef("Delete Archive Config",  "archive-config:delete", "SYSTEM_CONFIG",  "archive-config-delete"),
 
+			new PermissionDef("View Banners",           "banner:read",           "SYSTEM_CONFIG",  "banner-list"),
+			new PermissionDef("Manage Banners",         "banner:write",          "SYSTEM_CONFIG",  "banner-manage"),
+			new PermissionDef("Delete Banners",         "banner:delete",         "SYSTEM_CONFIG",  null),
+
 			new PermissionDef("View Sessions",          "session:read",         "SESSION_MANAGEMENT", "session-list"),
 			new PermissionDef("Force Logout Sessions",  "session:delete",       "SESSION_MANAGEMENT", "session-delete"),
 

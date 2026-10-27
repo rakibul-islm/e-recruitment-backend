@@ -24,6 +24,7 @@ public class JobCircularReqDto extends BaseRequestDTO<JobCircular> {
 	private String organizationEmail;
 	private String organizationWebsite;
 	private String organizationBusiness;
+	private Long organizationLogoFileId;
 	private Long organizationId;
 	@Temporal(TemporalType.DATE)
 	private Date applicationDeadLine;

@@ -42,14 +42,15 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		return getSuccessResponse("Job circular found", new JobCircularResDTO(jobCircular));
 	}
 
-	@Transactional
 	@Override
+	@Transactional
 	public Response<JobCircularResDTO> save(JobCircularReqDto reqDto) {
 		if (isScopedRecruiter()) applyOwnOrganization(reqDto);
 		validateForm(reqDto);
 		JobCircular bean = reqDto.getBean();
 		if (StringUtils.isBlank(bean.getStatus())) bean.setStatus("DRAFT");
 		if (STATUS_PUBLISHED.equals(bean.getStatus())) bean.setPublishedOn(new Date());
+		resolveOrganizationLogo(bean);
 		JobCircular jobCircular = createEntity(bean);
 		return getCreatedResponse("Job circular saved successfully", new JobCircularResDTO(jobCircular));
 	}
@@ -64,8 +65,11 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		}
 		validateForm(reqDto);
 		boolean wasPublished = STATUS_PUBLISHED.equals(existing.getStatus());
+		Long previousLogoFileId = existing.getOrganizationLogoFileId();
 		modelMapper.map(reqDto, existing);
 		if (!wasPublished && STATUS_PUBLISHED.equals(existing.getStatus())) existing.setPublishedOn(new Date());
+		if (existing.getOrganizationLogoFileId() == null) existing.setOrganizationLogoFileId(previousLogoFileId);
+		resolveOrganizationLogo(existing);
 		existing = updateEntity(existing);
 		return getSuccessResponse("Job circular updated successfully", new JobCircularResDTO(existing));
 	}
@@ -111,6 +115,14 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 		reqDto.setOrganizationWebsite(organization.getWebsite());
 		reqDto.setOrganizationPhone(organization.getPhone());
 		reqDto.setOrganizationEmail(organization.getEmail());
+		reqDto.setOrganizationLogoFileId(organization.getLogoFileId());
+	}
+
+	/** Admin-created circulars carry an organizationId; fill the logo snapshot from it so no join is needed when serving. */
+	private void resolveOrganizationLogo(JobCircular bean) {
+		if (bean.getOrganizationLogoFileId() != null || bean.getOrganizationId() == null) return;
+		organizationRepo.findByIdAndDeleted(bean.getOrganizationId(), false)
+			.ifPresent(organization -> bean.setOrganizationLogoFileId(organization.getLogoFileId()));
 	}
 
 	private boolean organizationMatchesCaller(Long organizationId) {

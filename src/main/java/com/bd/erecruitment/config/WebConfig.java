@@ -22,6 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
 				"/authenticate/**",
 				"/user/signup",
 				"/job-circular/filter",
+				"/public/**",
 				"/h2-console/**",
 				"/actuator/**",
 				"/v3/api-docs/**",

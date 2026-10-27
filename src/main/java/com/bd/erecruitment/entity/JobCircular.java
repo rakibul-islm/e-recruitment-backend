@@ -35,6 +35,10 @@ public class JobCircular extends SequenceIdGenerator{
 	@Column(name = "company_business")
 	private String organizationBusiness;
 
+	// Logo snapshot at save time, like the other org fields.
+	@Column(name = "company_logo_file_id")
+	private Long organizationLogoFileId;
+
 	@Column(name = "company_id")
 	private Long organizationId;
 
