@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface OrganizationRepo extends ServiceRepository<Organization> {
 
 	Optional<Organization> findFirstByNameIgnoreCaseAndDeleted(String name, boolean deleted);
+
+	boolean existsByLogoFileIdAndDeletedFalse(Long logoFileId);
 }

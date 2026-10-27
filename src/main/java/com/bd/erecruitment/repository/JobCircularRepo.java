@@ -2,6 +2,7 @@ package com.bd.erecruitment.repository;
 import com.bd.erecruitment.entity.JobCircular;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,4 +33,10 @@ public interface JobCircularRepo extends ServiceRepository<JobCircular> {
 		countQuery = "select count(j) from JobCircular j where j.deleted = false "
 		+ "and (cast(:organizationId as long) is null or j.organizationId = :organizationId)")
 	Page<Object[]> findJobRows(@Param("organizationId") Long organizationId, Pageable pageable);
+
+	/** Backfills the logo snapshot on legacy circulars only. */
+	@Modifying
+	@Query("update JobCircular j set j.organizationLogoFileId = :logoFileId " +
+		"where j.organizationId = :organizationId and j.organizationLogoFileId is null and j.deleted = false")
+	int backfillOrganizationLogo(@Param("organizationId") Long organizationId, @Param("logoFileId") Long logoFileId);
 }

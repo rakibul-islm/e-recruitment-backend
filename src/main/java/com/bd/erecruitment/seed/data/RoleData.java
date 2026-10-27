@@ -146,7 +146,9 @@ public class RoleData {
 					"password-policy:write",
 					"exception-log:read",
 					"audit-log:read",
-					"session:read"
+					"session:read",
+					"banner:read",
+					"banner:write"
 				)
 			),
 			new RoleDef(
@@ -202,11 +204,14 @@ public class RoleData {
 					"password-policy:delete",
 					"exception-log:read",
 					"exception-log:delete",
-					"audit-log:read",
-					"session:read",
-					"session:delete"
-				)
+				"audit-log:read",
+				"session:read",
+				"session:delete",
+				"banner:read",
+				"banner:write",
+				"banner:delete"
 			)
-		);
-	}
+		)
+	);
+}
 }
