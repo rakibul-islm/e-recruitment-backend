@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface UserRepo extends ServiceRepository<User> {
 	User findByEmail(String email);
+
+	long countByDeleted(boolean deleted);
+
 	User findByGoogleId(String googleId);
 	User findByActivationToken(String activationToken);
 

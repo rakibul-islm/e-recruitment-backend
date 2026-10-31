@@ -11,6 +11,7 @@ import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.entity.UserSession;
 import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.notification.SseEmitterRegistry;
+import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.repository.UserSessionRepo;
 import com.bd.erecruitment.service.BaseService;
 import com.bd.erecruitment.service.UserSessionService;
@@ -45,6 +46,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 
 	@Autowired private AuditLogWriter auditLogWriter;
 	@Autowired private SseEmitterRegistry sseEmitterRegistry;
+	@Autowired private UserRepo userRepo;
 
 	private final UserSessionRepo userSessionRepo;
 
@@ -157,7 +159,7 @@ public class UserSessionServiceImpl extends AbstractBaseService<UserSession> imp
 	public Response<SessionSummaryResDTO> getSummary() {
 		Date now = new Date();
 		long activeSessions = userSessionRepo.countByRevokedFalseAndDeletedFalseAndExpiresAtAfter(now);
-		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, sseEmitterRegistry.onlineUserCount(), sseEmitterRegistry.onlineGuestCount()));
+		return getSuccessResponse("Found", new SessionSummaryResDTO(activeSessions, sseEmitterRegistry.onlineUserCount(), sseEmitterRegistry.onlineGuestCount(), userRepo.countByDeleted(false)));
 	}
 
 	@Transactional
