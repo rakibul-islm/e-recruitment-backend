@@ -22,6 +22,17 @@ public class AsyncConfig {
 		return executor;
 	}
 
+	@Bean(name = "backupExecutor")
+	public Executor backupExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		executor.setCorePoolSize(1);
+		executor.setMaxPoolSize(1);
+		executor.setQueueCapacity(1);
+		executor.setThreadNamePrefix("db-backup-");
+		executor.initialize();
+		return executor;
+	}
+
 	@Bean(name = "notificationExecutor")
 	public Executor notificationExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

@@ -12,6 +12,8 @@ public final class AuditAction {
 	public static final String VIEW = "VIEW";
 	public static final String DOWNLOAD = "DOWNLOAD";
 	public static final String MARK_ALL_READ = "MARK_ALL_READ";
+	public static final String BACKUP = "BACKUP";
+	public static final String RESTORE = "RESTORE";
 
 	public static final String LOGIN_SUCCESS = "LOGIN_SUCCESS";
 	public static final String LOGIN_FAILURE = "LOGIN_FAILURE";

@@ -15,6 +15,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - [Default Seeded Accounts](#default-seeded-accounts)
 - [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
+- [Database Backup & Restore](#database-backup--restore)
 - [Testing](#testing)
 - [Docker](#docker)
 - [Deployment](#deployment)
@@ -31,6 +32,7 @@ The companion Angular client for this API lives in `e-recruitment-web`.
 - **Google avatar fetching** — on Google Sign-In, the user's profile picture is downloaded and stored asynchronously (`GoogleAvatarFetcher`) so it doesn't delay login
 - **User profile self-service** — view/update own profile and OTP-verified self password change, separate from admin-initiated flows (`ProfileController`, `/profile`)
 - **Data archiving & retention** — runtime-configurable per-table archive policies (source table, archive schema/table, date column, retention days, optional SQL where-condition), run on a nightly schedule or on demand, with the archived data browsable through the admin UI (`ArchiveConfigController`, `GenericArchiveEngine`, `ArchiveScheduler`, `/archive-config`)
+- **Database backup & restore** — database-independent logical backups (plain JDBC, so no `pg_dump`/`expdp` is needed and the same code runs on H2, PostgreSQL and Oracle): create on demand or on a schedule, upload, download, delete and restore from the admin UI, with a SHA-256 checksum per backup, a safety backup before every restore, and an all-or-nothing restore. See [Database Backup & Restore](#database-backup--restore)
 - **Organizations & job circulars** — organization profiles (`OrganizationController`, `/organization`) and organization types (`OrganizationTypeController`, `/organization-type`) backing job postings; job circulars can be linked to a `Organization` or carry free-text organization details for backward compatibility (`JobCircularController`)
 - **Recruiter self-registration** — prospective recruiters submit an organization/application request that an admin reviews and approves or rejects, promoting the requester into a recruiter role on approval (`RecruiterApplicationController`, `/recruiter-application`)
 - **Candidate profiles & CV generation** — structured candidate profiles (education, work experience, skills, certifications, projects, languages) that can be rendered to a downloadable PDF CV via HTML-to-PDF (`CandidateProfileController`, `/candidate-profile`, `CvGenerationService`, `HtmlToPdfRenderer`)
@@ -106,6 +108,9 @@ Configuration is externalized via environment variables, read in `application.ym
 | `DB_URL`               | Prod/Oracle only | JDBC URL — see [Database Profiles](#database-profiles) for defaults |
 | `DB_USERNAME`          | Prod/Oracle only | Database username |
 | `DB_PASSWORD`          | Prod/Oracle only | Database password |
+| `BACKUP_DIR`           | No       | Folder where database backups are written (default `./backups`, git-ignored). In Docker or on a host with an ephemeral disk, mount a persistent volume here or the backups disappear with the container |
+| `DRIVE_REFRESH_TOKEN`  | No       | OAuth refresh token (scope `drive.file`) used to upload backups to Google Drive. Drive upload is unavailable if unset — see [Database Backup & Restore](#database-backup--restore) |
+| `DRIVE_FOLDER_NAME`    | No       | Name of the Drive folder the backups go into. Defaults to `E-Recruitment Backups` |
 
 Other tunables (OTP expiry/attempts, account-setup link expiry) are set in `application.yml` under `app.otp` / `app.account-setup` rather than env vars.
 
@@ -163,13 +168,16 @@ src/main/java/com/bd/erecruitment/
 │                        Profile, ArchiveConfig, Organization, OrganizationType, JobCircular,
 │                        RecruiterApplication, CandidateProfile, Application, Interview, Offer,
 │                        OnboardingTask, Notification, NotificationBroadcast, SavedJob, JobAlert,
-│                        Analytics, Report)
+│                        Analytics, Report, DatabaseBackup, DatabaseRestore)
 ├── service/             Business logic interfaces (incl. UserSessionService,
 │                        CvGenerationService)
 │   └── impl/             Implementations (incl. AuditLogServiceImpl, GoogleAvatarFetcher,
 │                          ArchiveConfigServiceImpl, JobPostingAiServiceImpl, HtmlToPdfRenderer,
 │                          NotificationBroadcastServiceImpl, AdminMessageEmailSender)
 ├── retention/            Data archiving/retention engine (GenericArchiveEngine, ArchiveScheduler)
+│                        and DatabaseBackupScheduler (scheduled backups)
+├── backup/               Database backup engine (DatabaseExporter, DatabaseRestorer, RestoreState,
+│                          GoogleDriveClient)
 ├── audit/               Audit action constants, AuditLogWriter (async), exemption annotations
 │                        (@AuditExempt, @AuditIgnore)
 ├── notification/         Generic notification pipeline (NotificationEvent, NotificationPublisher,
@@ -181,7 +189,7 @@ src/main/java/com/bd/erecruitment/
 │   ├── res/               Response DTOs
 │   └── report/            One row DTO per Jasper report (field names must match the .jrxml's <field> declarations)
 ├── security/             Spring Security config, JWT entry point
-├── filter/               JWT authentication filter
+├── filter/               JWT authentication filter, RestoreMaintenanceFilter (503 while a restore runs)
 ├── util/                 JWT utility, response wrapper helpers, request utils (RequestUtils, ClientInfo)
 ├── exception/            Custom exceptions + GlobalExceptionHandler (also persists to exception log)
 ├── specification/        JPA Specifications for dynamic search/filtering
@@ -200,9 +208,54 @@ src/main/resources/
 └── reports/                     JasperReports .jrxml templates (one per report key)
 ```
 
+## Database Backup & Restore
+
+Backups are logical, not native dumps: `DatabaseExporter` reads every table in one read-only snapshot transaction and streams it into a single `.zip` (one `data/<table>.ndjson` file per table, one JSON object per row, plus a `manifest.json` with each table's columns and JDBC types). The file is written as `.part` and renamed only when complete, and its SHA-256 is stored with the backup record. The `database_backup` table itself is excluded, so the backup history survives a restore.
+
+| Endpoint | Authority | Purpose |
+|----------|-----------|---------|
+| `GET /backup`, `GET /backup/{id}/download` | `backup:read` | List backups, download one |
+| `POST /backup`, `POST /backup/upload` | `backup:write` | Start a backup (runs in the background), upload a `.zip` made elsewhere |
+| `DELETE /backup/{id}` | `backup:delete` | Delete a backup and its file |
+| `GET /backup-restore/status` | `backup-restore:read` | Progress and outcome of the latest restore |
+| `POST /backup-restore/{id}` | `backup-restore:write` | Restore; body `{"confirmation":"RESTORE"}` |
+
+Restore is under its own path so it needs its own authority rather than `backup:write`. All five authorities are seeded, and only `SUPER_ADMIN` has them until they are granted to a role. A backup contains password hashes and personal data, so keep that grant narrow and store downloads securely.
+
+**Scheduled backups** are controlled from the System Config page and take effect without a restart (the scheduler checks every minute):
+
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `DB_BACKUP_SCHEDULE_ENABLED` | `Y` | Turns scheduled backups on or off |
+| `DB_BACKUP_CRON` | `0 0 2 * * *` | 6-field cron (second minute hour day month weekday), Asia/Dhaka time; the default is every day at 02:00 |
+| `DB_BACKUP_KEEP_COUNT` | `7` | Scheduled backups kept (a count, not days). Older scheduled backups are deleted; manual, uploaded and pre-restore backups never are |
+| `DB_BACKUP_DRIVE_ENABLED` | `Y` | When `Y`, manual and scheduled backups are also uploaded to Google Drive, but only if `DRIVE_REFRESH_TOKEN` is set (see below) |
+
+The seeder only inserts missing keys, so a database that already ran an earlier version keeps its old values. A failed scheduled backup notifies everyone with `backup:write` and all super admins. An invalid cron is logged once and scheduled backups pause until it is fixed.
+
+**Restore** replaces all data with the backup's contents:
+
+1. The request itself is only rejected for a wrong confirmation word, or a backup that is not `COMPLETED` or whose file is missing, so it answers at once even for a very large file. The slow checks then run in the background job, in a `VALIDATING` phase that does not lock anyone out: the file must pass its checksum, and every table and column in it must exist in the current schema (a circular foreign-key dependency also rejects it). A backup that fails these ends with phase `FAILED` and the reason in `message`, and nothing has changed.
+2. A safety backup (`pre-restore-<time>.zip`) of the current data is taken first, so a restore can be undone by restoring that file.
+3. In one transaction, every table is emptied in reverse foreign-key order and reloaded in foreign-key order. Any failure rolls back and leaves the current data untouched. Tables that exist in the database but not in the backup are emptied.
+4. After commit, every sequence is restarted above the highest `id` so new inserts do not collide, and the user-details, permission and system-config caches are cleared.
+
+Once validation passes the phase becomes `RUNNING`, and only then does `RestoreMaintenanceFilter` answer every request except `/backup-restore/status` and `/actuator/health` with `503`. Sessions come from the restored data, so users are normally signed out afterwards. A server restart during a backup marks it `FAILED` on the next start.
+
+**Google Drive copy.** With `DB_BACKUP_DRIVE_ENABLED` set to `Y` (the default) and `DRIVE_REFRESH_TOKEN` configured (without the token nothing is uploaded), every manual and scheduled backup is also uploaded to Google Drive, so a copy survives the loss of the server's disk. Uploaded and pre-restore backups are not uploaded automatically, but any completed backup can be sent with the cloud button in the UI (`POST /backup/{id}/drive-upload`), which also retries a failed upload.
+
+- **Setup:** enable the Google Drive API in the same Google Cloud project as the Gmail client, put `https://www.googleapis.com/auth/drive.file` on the OAuth consent screen, publish the app (in "Testing" status refresh tokens expire after 7 days), and create a refresh token in the OAuth Playground for the Google account that should hold the backups, using your own OAuth credentials and the `drive.file` scope. The client ID and secret are the existing `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET`.
+- **Folder:** the `drive.file` scope only reaches files the app created itself, so the app finds or creates a folder named `E-Recruitment Backups` (override with `DRIVE_FOLDER_NAME`) rather than using a folder you made by hand. Files are uploaded with Drive's resumable upload and are owned by the token's account.
+- **Status:** each backup row shows `UPLOADING`, `UPLOADED` or `FAILED` for Drive. A failure (including a revoked token) notifies everyone with `backup:write` and all super admins, and the local backup is kept either way. Deleting a backup, manually or by the keep-count pruning, also deletes its Drive copy.
+- **Plain upload:** the `.zip` is uploaded as it is, and it holds password hashes and personal data. Use a private account and do not share the folder.
+
+**Performance notes.** Backups stream row by row, so memory stays flat except for a row that holds a large file: each binary cell is read whole and Base64-encoded, so a 100 MB file needs roughly 230 MB of heap at that moment. Base64 also makes binary data about a third larger, and PDFs and JPEGs barely compress. Restore deletes and reloads every table in one transaction, so it is slow on millions of rows and the system answers `503` for that time; on PostgreSQL the `postgres` profile enables `reWriteBatchedInserts` to speed the reload. Uploading a backup through the app is limited to 120 MB (`spring.servlet.multipart`), and the Drive upload is a single streaming request that starts over if it fails. Past a few GB of data, native `pg_dump`/`pg_restore` is the better tool.
+
+The backup and restore code is tested on H2 only. The Drive client is tested against a fake Google server, never against real Google. On PostgreSQL and Oracle the foreign-key ordering and the sequence reset use each database's own syntax, so try a restore on a copy of the data before relying on it in production.
+
 ## Testing
 
-The automated test suite (`src/test`) was removed, so `./gradlew test` currently has nothing to run and the deploy pipeline's test step passes without checking anything. The JUnit 5, Spring Boot Test and Spring Security Test dependencies are still in `build.gradle`, so tests can be added back under `src/test/java`.
+`src/test` currently holds the database backup tests (`DatabaseExporterTest`, `DatabaseRestorerTest`, `GoogleDriveClientTest`), which run with no Spring context: export of typed values, a full restore round trip on in-memory H2 including a sequence reset, rollback when a restore fails, rejection of a schema mismatch, and the Drive client (token exchange, folder create or reuse, resumable upload, delete, revoked-token message) against a local fake Google server. Run them with `./gradlew test`. Apart from these, the rest of the application has no automated tests, so the deploy pipeline's test step checks only the backup code. The JUnit 5, Spring Boot Test and Spring Security Test dependencies are in `build.gradle`, so more tests can be added under `src/test/java`.
 
 ## Docker
 
