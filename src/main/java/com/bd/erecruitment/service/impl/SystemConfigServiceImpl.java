@@ -27,6 +27,10 @@ public class SystemConfigServiceImpl extends AbstractBaseService<SystemConfig> i
 		this.systemConfigRepo = systemConfigRepo;
 	}
 
+	public void clearCache() {
+		configCache.clear();
+	}
+
 	public SystemConfig findCachedByKey(String configKey) {
 		return configCache.computeIfAbsent(configKey, key -> systemConfigRepo.findByConfigKeyAndDeleted(key, false)).orElse(null);
 	}

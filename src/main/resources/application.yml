@@ -83,3 +83,8 @@ app:
     service-account-json: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
   account-setup:
     expiry-hours: 48
+  backup:
+    dir: ${BACKUP_DIR:backups}
+  drive:
+    refresh-token: ${DRIVE_REFRESH_TOKEN:}
+    folder-name: ${DRIVE_FOLDER_NAME:E-Recruitment Backups}

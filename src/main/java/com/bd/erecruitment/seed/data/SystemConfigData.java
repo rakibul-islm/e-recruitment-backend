@@ -9,6 +9,30 @@ public class SystemConfigData {
 	public static List<ConfigDef> get() {
 		return List.of(
 			new ConfigDef(
+				"DB_BACKUP_SCHEDULE_ENABLED",
+				"Y",
+				"When Y, the database is backed up automatically on the schedule in DB_BACKUP_CRON",
+				"Y,N"
+			),
+			new ConfigDef(
+				"DB_BACKUP_CRON",
+				"0 0 2 * * *",
+				"When scheduled database backups run, as a 6-field cron expression (second minute hour day month weekday) in Asia/Dhaka time; the default is every day at 02:00",
+				null
+			),
+			new ConfigDef(
+				"DB_BACKUP_KEEP_COUNT",
+				"7",
+				"Number of scheduled database backups kept; older scheduled backups are deleted automatically (manual backups are never deleted)",
+				null
+			),
+			new ConfigDef(
+				"DB_BACKUP_DRIVE_ENABLED",
+				"Y",
+				"When Y, every manual and scheduled database backup is also uploaded to Google Drive (needs the DRIVE_REFRESH_TOKEN environment variable); deleting a backup here also deletes its Drive copy",
+				"Y,N"
+			),
+			new ConfigDef(
 				"EXCEPTION_LOG_TO_DB",
 				"Y",
 				"When Y, exceptions handled by GlobalExceptionHandler are also persisted to the exception_log table",
