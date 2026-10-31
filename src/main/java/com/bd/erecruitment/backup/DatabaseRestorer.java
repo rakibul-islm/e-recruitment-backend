@@ -151,7 +151,7 @@ public class DatabaseRestorer {
 			Map<String, String> columns = dbColumns.computeIfAbsent(dbName, name -> columnsOf(connection, name));
 			for (ColumnInfo column : table.columns()) {
 				if (!columns.containsKey(column.name().toLowerCase(Locale.ROOT)))
-					throw new IllegalArgumentException("Column '" + table.name() + "." + column.name() + "' in the backup does not exist in this database");
+					log.warn("[DatabaseRestorer] column {}.{} is not in this database and will be skipped", table.name(), column.name());
 			}
 		}
 		return dbColumns;
@@ -201,7 +201,7 @@ public class DatabaseRestorer {
 	}
 
 	private long load(Connection connection, ZipFile zip, TableInfo info, String table, Map<String, String> dbColumns, String quote) throws IOException, SQLException {
-		List<ColumnInfo> columns = info.columns();
+		List<ColumnInfo> columns = info.columns().stream().filter(c -> dbColumns.containsKey(c.name().toLowerCase(Locale.ROOT))).toList();
 		StringBuilder names = new StringBuilder();
 		StringBuilder marks = new StringBuilder();
 		for (int i = 0; i < columns.size(); i++) {

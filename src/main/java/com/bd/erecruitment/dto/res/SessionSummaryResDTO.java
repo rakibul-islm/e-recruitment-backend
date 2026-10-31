@@ -11,4 +11,5 @@ public class SessionSummaryResDTO {
 	private long activeSessions;
 	private long distinctActiveUsers;
 	private long activeGuests;
+	private long totalUsers;
 }
