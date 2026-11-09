@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface JobCircularRepo extends ServiceRepository<JobCircular> {
 
+	java.util.Optional<JobCircular> findByUuidAndDeleted(String uuid, boolean deleted);
+
 	@Query("select j from JobCircular j where j.status = 'PUBLISHED' and j.deleted = false " +
 		"and coalesce(j.publishedOn, j.createdOn) > :after and coalesce(j.publishedOn, j.createdOn) <= :upTo")
 	List<JobCircular> findPublishedBetween(@Param("after") Date after, @Param("upTo") Date upTo);

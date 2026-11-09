@@ -53,7 +53,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	private final ApplicationStatusHistoryRepo historyRepo;
 	private final JobCircularRepo jobCircularRepo;
 	private final UserRepo userRepo;
-	private final CandidateProfileRepo candidateProfileRepo;
+	private final CandidateCvRepo candidateCvRepo;
 	private final GeneratedCvRepo generatedCvRepo;
 	private final StorageService storageService;
 	private final MailService mailService;
@@ -64,7 +64,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	private String frontendBaseUrl;
 
 	public ApplicationServiceImpl(ApplicationRepo applicationRepo, ApplicationStatusHistoryRepo historyRepo,
-			JobCircularRepo jobCircularRepo, UserRepo userRepo, CandidateProfileRepo candidateProfileRepo,
+			JobCircularRepo jobCircularRepo, UserRepo userRepo, CandidateCvRepo candidateCvRepo,
 			GeneratedCvRepo generatedCvRepo, StorageService storageService, MailService mailService,
 			NotificationPublisher notificationPublisher, ExceptionLogWriter exceptionLogWriter) {
 		super(applicationRepo);
@@ -72,7 +72,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		this.historyRepo = historyRepo;
 		this.jobCircularRepo = jobCircularRepo;
 		this.userRepo = userRepo;
-		this.candidateProfileRepo = candidateProfileRepo;
+		this.candidateCvRepo = candidateCvRepo;
 		this.generatedCvRepo = generatedCvRepo;
 		this.storageService = storageService;
 		this.mailService = mailService;
@@ -95,8 +95,8 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 
 		Long generatedCvId = null;
 		if (!Boolean.FALSE.equals(reqDto.getUseLatestGeneratedCv())) {
-			List<GeneratedCv> cvs = generatedCvRepo.findAllByCandidateProfileIdAndDeletedOrderByGeneratedOnDesc(
-				candidateProfileIdFor(me.getId()), false);
+			List<GeneratedCv> cvs = generatedCvRepo.findAllByCandidateCvIdAndDeletedOrderByGeneratedOnDesc(
+				candidateCvIdFor(me.getId()), false);
 			if (!cvs.isEmpty()) generatedCvId = cvs.get(0).getId();
 		}
 		if (generatedCvId == null && reqDto.getResumeFileId() == null) {
@@ -295,7 +295,7 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 	}
 
 	private Integer matchScoreFor(JobCircular job, Long userId) {
-		return candidateProfileRepo.findByUserIdAndDeleted(userId, false)
+		return candidateCvRepo.findByUserIdAndDeleted(userId, false)
 			.map(profile -> CvJobMatchCalculator.calculate(job, profile, null))
 			.filter(CvMatchResDTO::isScorable)
 			.map(CvMatchResDTO::getPercent)
@@ -308,15 +308,15 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		Application application = getOwnedOrStaffApplication(id);
 		JobCircular job = jobCircularRepo.findByIdAndDeleted(application.getJobCircularId(), false)
 			.orElseThrow(() -> new NotFoundException("Job not found"));
-		CandidateProfile profile = candidateProfileRepo.findByUserIdAndDeleted(application.getCandidateUserId(), false)
-			.orElseGet(CandidateProfile::new);
+		CandidateCv profile = candidateCvRepo.findByUserIdAndDeleted(application.getCandidateUserId(), false)
+			.orElseGet(CandidateCv::new);
 		User candidate = userRepo.findByIdAndDeleted(application.getCandidateUserId(), false).orElse(null);
 		return getSuccessResponse("Found", CvJobMatchCalculator.calculate(job, profile, candidate));
 	}
 
-	private Long candidateProfileIdFor(Long userId) {
-		return candidateProfileRepo.findByUserIdAndDeleted(userId, false)
-			.map(CandidateProfile::getId)
+	private Long candidateCvIdFor(Long userId) {
+		return candidateCvRepo.findByUserIdAndDeleted(userId, false)
+			.map(CandidateCv::getId)
 			.orElse(null);
 	}
 

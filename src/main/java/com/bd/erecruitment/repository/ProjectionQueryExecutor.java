@@ -56,7 +56,8 @@ public class ProjectionQueryExecutor {
 		Root<E> root = cq.from(entityClass);
 		select(cq, root, plan);
 		applyWhere(cq, root, cb, spec);
-		if (pageable.getSort().isSorted()) cq.orderBy(toOrders(pageable.getSort(), root, cb));
+		Sort sort = sanitizeSort(entityClass, pageable.getSort());
+		if (sort.isSorted()) cq.orderBy(toOrders(sort, root, cb));
 
 		List<Tuple> rows = em.createQuery(cq)
 			.setFirstResult((int) pageable.getOffset())
@@ -68,6 +69,10 @@ public class ProjectionQueryExecutor {
 	}
 
 	public <E, R> List<R> list(Class<E> entityClass, Specification<E> spec, Class<R> dtoClass) {
+		return list(entityClass, spec, Sort.unsorted(), dtoClass);
+	}
+
+	public <E, R> List<R> list(Class<E> entityClass, Specification<E> spec, Sort requestedSort, Class<R> dtoClass) {
 		Plan plan = plan(entityClass, dtoClass);
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 
@@ -75,7 +80,24 @@ public class ProjectionQueryExecutor {
 		Root<E> root = cq.from(entityClass);
 		select(cq, root, plan);
 		applyWhere(cq, root, cb, spec);
+		Sort sort = sanitizeSort(entityClass, requestedSort);
+		if (sort.isSorted()) cq.orderBy(toOrders(sort, root, cb));
 		return toDtos(em.createQuery(cq).getResultList(), plan, dtoClass);
+	}
+
+	// Keeps only sort properties that are plain columns of the entity, so a bad ?sort= value is ignored instead of failing the request.
+	public <E> Sort sanitizeSort(Class<E> entityClass, Sort sort) {
+		if (sort == null || sort.isUnsorted()) return Sort.unsorted();
+		EntityType<E> entityType = em.getMetamodel().entity(entityClass);
+		List<Sort.Order> valid = new ArrayList<>();
+		for (Sort.Order order : sort) {
+			boolean sortable = entityType.getSingularAttributes().stream()
+				.anyMatch(a -> a.getName().equals(order.getProperty()) && !a.isAssociation());
+			if (sortable) valid.add(order);
+		}
+		if (valid.isEmpty()) return Sort.unsorted();
+		if (valid.stream().noneMatch(o -> o.getProperty().equals("id"))) valid.add(Sort.Order.desc("id"));
+		return Sort.by(valid);
 	}
 
 	private <E> long count(Class<E> entityClass, Specification<E> spec) {
@@ -103,8 +125,7 @@ public class ProjectionQueryExecutor {
 	private <E> List<Order> toOrders(Sort sort, Root<E> root, CriteriaBuilder cb) {
 		List<Order> orders = new ArrayList<>();
 		for (Sort.Order order : sort) {
-			Path<?> path = root;
-			for (String part : order.getProperty().split("\\.")) path = path.get(part);
+			Path<?> path = root.get(order.getProperty());
 			orders.add(order.isAscending() ? cb.asc(path) : cb.desc(path));
 		}
 		return orders;

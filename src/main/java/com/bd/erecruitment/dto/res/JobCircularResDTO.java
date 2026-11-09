@@ -20,6 +20,7 @@ public class JobCircularResDTO extends BaseResponseDTO<JobCircular>{
 		ModelMapperUtils.MAPPER.map(jobCircular, this);
 	}
 
+	private String uuid;
 	private String jobTitle;
 	private String organizationName;
 	private String organizationAddress;

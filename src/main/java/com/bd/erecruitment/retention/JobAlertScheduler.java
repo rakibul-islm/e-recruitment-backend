@@ -88,7 +88,7 @@ public class JobAlertScheduler {
 			? new SimpleDateFormat("dd MMM yyyy").format(job.getApplicationDeadLine())
 			: null;
 		return new JobAlertItemDto(job.getJobTitle(), job.getOrganizationName(), job.getJobLocation(), employmentType,
-			deadline, frontendBaseUrl + "/jobs/" + job.getId());
+			deadline, frontendBaseUrl + "/jobs/" + job.getUuid());
 	}
 
 	private boolean matches(JobCircular job, JobAlert alert) {

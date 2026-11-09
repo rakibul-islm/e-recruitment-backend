@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CandidateProfileReqDto extends BaseRequestDTO<CandidateProfile> {
+public class CandidateCvReqDto extends BaseRequestDTO<CandidateCv> {
 
 	private String headline;
 	private String summary;
@@ -32,8 +32,8 @@ public class CandidateProfileReqDto extends BaseRequestDTO<CandidateProfile> {
 
 	@JsonIgnore
 	@Override
-	public CandidateProfile getBean() {
-		CandidateProfile p = new CandidateProfile();
+	public CandidateCv getBean() {
+		CandidateCv p = new CandidateCv();
 		ModelMapperUtils.MAPPER.map(this, p);
 		return p;
 	}

@@ -27,18 +27,32 @@ public class JobCircularServiceImpl extends AbstractBaseService<JobCircular> imp
 	private static final String STATUS_PUBLISHED = "PUBLISHED";
 
 	private final OrganizationRepo organizationRepo;
+	private final JobCircularRepo jobCircularRepo;
 
 	public JobCircularServiceImpl(JobCircularRepo jobCircularRepo, OrganizationRepo organizationRepo) {
 		super(jobCircularRepo);
 		this.organizationRepo = organizationRepo;
+		this.jobCircularRepo = jobCircularRepo;
 	}
 
 	@Override
 	public Response<JobCircularResDTO> find(Long id) {
 		if (id == null) returnErrorException("Id required");
 		JobCircular jobCircular = findByIdOrThrow(id, "Job circular not found");
+		return viewResponse(jobCircular);
+	}
+
+	public Response<JobCircularResDTO> findByUuid(String uuid) {
+		if (StringUtils.isBlank(uuid)) returnErrorException("Uuid required");
+		JobCircular jobCircular = jobCircularRepo.findByUuidAndDeleted(uuid, false)
+				.orElseThrow(() -> new com.bd.erecruitment.exception.NotFoundException("Job circular not found"));
+		captureSnapshot(jobCircular);
+		return viewResponse(jobCircular);
+	}
+
+	private Response<JobCircularResDTO> viewResponse(JobCircular jobCircular) {
 		if (isScopedRecruiter() && !organizationMatchesCaller(jobCircular.getOrganizationId())) returnNotFoundException("Job circular not found");
-		auditActivity(AuditAction.VIEW, "JobCircular", id, null);
+		auditActivity(AuditAction.VIEW, "JobCircular", jobCircular.getId(), null);
 		return getSuccessResponse("Job circular found", new JobCircularResDTO(jobCircular));
 	}
 

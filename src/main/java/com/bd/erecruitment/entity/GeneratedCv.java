@@ -22,8 +22,8 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class GeneratedCv extends SequenceIdGenerator {
 
-	@Column(name = "candidate_profile_id", nullable = false)
-	private Long candidateProfileId;
+	@Column(name = "candidate_cv_id", nullable = false)
+	private Long candidateCvId;
 
 	@Column(name = "template_key", nullable = false, length = 50)
 	private String templateKey;

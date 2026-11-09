@@ -2,7 +2,7 @@ package com.bd.erecruitment.service.impl;
 
 import com.bd.erecruitment.dto.res.CvMatchResDTO;
 import com.bd.erecruitment.dto.res.CvMatchResDTO.Component;
-import com.bd.erecruitment.entity.CandidateProfile;
+import com.bd.erecruitment.entity.CandidateCv;
 import com.bd.erecruitment.entity.JobCircular;
 import com.bd.erecruitment.entity.User;
 import org.apache.commons.lang3.StringUtils;
@@ -52,9 +52,9 @@ public final class CvJobMatchCalculator {
 
 	private CvJobMatchCalculator() {}
 
-	public static CvMatchResDTO calculate(JobCircular job, CandidateProfile profile, User account) {
+	public static CvMatchResDTO calculate(JobCircular job, CandidateCv profile, User account) {
 		CvMatchResDTO result = new CvMatchResDTO();
-		result.setProfileCompletenessPercent(ProfileCompletenessCalculator.calculate(profile, account).getPercent());
+		result.setCvCompletenessPercent(CvCompletenessCalculator.calculate(profile, account).getPercent());
 
 		String corpus = corpus(profile).toLowerCase(Locale.ROOT);
 		Set<String> corpusTokens = tokens(corpus);
@@ -152,7 +152,7 @@ public final class CvJobMatchCalculator {
 		return matcher.find() ? Double.valueOf(matcher.group(1)) : null;
 	}
 
-	private static double candidateYears(CandidateProfile profile) {
+	private static double candidateYears(CandidateCv profile) {
 		if (profile.getWorkExperience() == null) return 0;
 		long now = System.currentTimeMillis();
 		List<long[]> ranges = new ArrayList<>();
@@ -192,7 +192,7 @@ public final class CvJobMatchCalculator {
 		return found.isEmpty() ? 0 : found.iterator().next();
 	}
 
-	private static int candidateEducationLevel(CandidateProfile profile) {
+	private static int candidateEducationLevel(CandidateCv profile) {
 		if (profile.getEducation() == null) return 0;
 		int best = 0;
 		for (var education : profile.getEducation()) {
@@ -229,7 +229,7 @@ public final class CvJobMatchCalculator {
 		return StringUtils.stripEnd(word, ".");
 	}
 
-	private static String corpus(CandidateProfile profile) {
+	private static String corpus(CandidateCv profile) {
 		StringBuilder text = new StringBuilder();
 		append(text, profile.getHeadline(), profile.getSummary());
 		if (profile.getSkills() != null) profile.getSkills().forEach(s -> append(text, s.getName()));

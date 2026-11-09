@@ -40,7 +40,9 @@ import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -132,21 +134,22 @@ public abstract class AbstractBaseService<E extends BaseEntity> extends CommonFu
 	protected <R> Response<R> genericFilter(Specification<E> spec, Pageable pageable, Boolean isPageable, Class<R> responseClass,
 			Consumer<List<R>> enricher) {
 		ProjectionQueryExecutor.Plan plan = projectionQueryExecutor.plan(entityClass(), responseClass);
+		Sort sort = projectionQueryExecutor.sanitizeSort(entityClass(), pageable == null ? null : pageable.getSort());
 		if (plan.fullyCovered() || enricher != null) {
 			if (Boolean.TRUE.equals(isPageable)) {
 				Page<R> page = projectionQueryExecutor.page(entityClass(), spec, pageable, responseClass);
 				if (enricher != null) enricher.accept(page.getContent());
 				return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page);
 			}
-			List<R> result = projectionQueryExecutor.list(entityClass(), spec, responseClass);
+			List<R> result = projectionQueryExecutor.list(entityClass(), spec, sort, responseClass);
 			if (enricher != null) enricher.accept(result);
 			return getSuccessResponse(result.isEmpty() ? "No data found" : "Found", result);
 		}
 		if (Boolean.TRUE.equals(isPageable)) {
-			Page<E> page = repository.findAll(spec, pageable);
+			Page<E> page = repository.findAll(spec, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort));
 			return getSuccessResponse(page.hasContent() ? "Found" : "No data found", page.map(e -> modelMapper.map(e, responseClass)));
 		}
-		List<E> list = repository.findAll(spec);
+		List<E> list = sort.isSorted() ? repository.findAll(spec, sort) : repository.findAll(spec);
 		List<R> result = list.stream().map(e -> modelMapper.map(e, responseClass)).toList();
 		return getSuccessResponse(result.isEmpty() ? "No data found" : "Found", result);
 	}

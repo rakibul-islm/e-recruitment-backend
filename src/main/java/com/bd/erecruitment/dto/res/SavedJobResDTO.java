@@ -19,6 +19,7 @@ public class SavedJobResDTO extends BaseResponseDTO<SavedJob> {
 	}
 
 	private Long jobCircularId;
+	private String jobUuid;
 	private Date savedOn;
 
 	private String jobTitle;

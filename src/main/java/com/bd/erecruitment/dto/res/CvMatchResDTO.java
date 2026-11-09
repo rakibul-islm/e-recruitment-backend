@@ -27,7 +27,7 @@ public class CvMatchResDTO {
 	private int keywordsMatched;
 	private int keywordsTotal;
 
-	private int profileCompletenessPercent;
+	private int cvCompletenessPercent;
 	private List<Component> components = new ArrayList<>();
 
 	@Data
