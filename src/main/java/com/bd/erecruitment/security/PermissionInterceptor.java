@@ -33,7 +33,7 @@ public class PermissionInterceptor implements HandlerInterceptor {
 	// Self-service and public-browse authorities; ownership is enforced per user id in each service.
 	private static final Set<String> ALWAYS_ALLOWED = Set.of(
 		PERMISSION_READ, "profile:read", "profile:write", "password-policy:read",
-		"candidate-profile:read", "candidate-profile:write",
+		"candidate-cv:read", "candidate-cv:write",
 		"saved-job:read", "saved-job:write",
 		"job-alert:read", "job-alert:write", "job-alert:delete",
 		"notification:read", "notification:write", "notification:delete",

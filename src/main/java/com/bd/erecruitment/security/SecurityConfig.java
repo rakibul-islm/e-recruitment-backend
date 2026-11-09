@@ -55,7 +55,7 @@ public class SecurityConfig {
 								"/h2-console/**"
 						).permitAll()
 						.requestMatchers("/actuator/**").permitAll()
-						.requestMatchers(HttpMethod.GET, "/job-circular/*", "/organization/*").permitAll()
+						.requestMatchers(HttpMethod.GET, "/job-circular/uuid/*", "/organization/*").permitAll()
 					.requestMatchers(HttpMethod.GET, "/public/**").permitAll()
 						.requestMatchers(HttpMethod.POST, "/recruiter-application").permitAll()
 						.requestMatchers(HttpMethod.POST, "/organization-type").permitAll()

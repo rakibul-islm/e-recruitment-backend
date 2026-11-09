@@ -16,9 +16,9 @@ import java.util.List;
 @SuperBuilder
 @NoArgsConstructor
 @Accessors(chain = true)
-@Table(name = "CANDIDATE_PROFILE")
+@Table(name = "CANDIDATE_CV")
 @EqualsAndHashCode(callSuper = true)
-public class CandidateProfile extends SequenceIdGenerator {
+public class CandidateCv extends SequenceIdGenerator {
 
 	@Column(name = "user_id", nullable = false, unique = true)
 	private Long userId;
@@ -35,31 +35,31 @@ public class CandidateProfile extends SequenceIdGenerator {
 
 	@Builder.Default
 	@ElementCollection
-	@CollectionTable(name = "CANDIDATE_WORK_EXPERIENCE", joinColumns = @JoinColumn(name = "candidate_profile_id"))
+	@CollectionTable(name = "CANDIDATE_WORK_EXPERIENCE", joinColumns = @JoinColumn(name = "candidate_cv_id"))
 	private List<WorkExperienceItem> workExperience = new ArrayList<>();
 
 	@Builder.Default
 	@ElementCollection
-	@CollectionTable(name = "CANDIDATE_EDUCATION", joinColumns = @JoinColumn(name = "candidate_profile_id"))
+	@CollectionTable(name = "CANDIDATE_EDUCATION", joinColumns = @JoinColumn(name = "candidate_cv_id"))
 	private List<EducationItem> education = new ArrayList<>();
 
 	@Builder.Default
 	@ElementCollection
-	@CollectionTable(name = "CANDIDATE_SKILL", joinColumns = @JoinColumn(name = "candidate_profile_id"))
+	@CollectionTable(name = "CANDIDATE_SKILL", joinColumns = @JoinColumn(name = "candidate_cv_id"))
 	private List<SkillItem> skills = new ArrayList<>();
 
 	@Builder.Default
 	@ElementCollection
-	@CollectionTable(name = "CANDIDATE_CERTIFICATION", joinColumns = @JoinColumn(name = "candidate_profile_id"))
+	@CollectionTable(name = "CANDIDATE_CERTIFICATION", joinColumns = @JoinColumn(name = "candidate_cv_id"))
 	private List<CertificationItem> certifications = new ArrayList<>();
 
 	@Builder.Default
 	@ElementCollection
-	@CollectionTable(name = "CANDIDATE_LANGUAGE", joinColumns = @JoinColumn(name = "candidate_profile_id"))
+	@CollectionTable(name = "CANDIDATE_LANGUAGE", joinColumns = @JoinColumn(name = "candidate_cv_id"))
 	private List<LanguageItem> languages = new ArrayList<>();
 
 	@Builder.Default
 	@ElementCollection
-	@CollectionTable(name = "CANDIDATE_PROJECT", joinColumns = @JoinColumn(name = "candidate_profile_id"))
+	@CollectionTable(name = "CANDIDATE_PROJECT", joinColumns = @JoinColumn(name = "candidate_cv_id"))
 	private List<ProjectItem> projects = new ArrayList<>();
 }

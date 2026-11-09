@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileCompletenessResDTO {
+public class CvCompletenessResDTO {
 
 	private int percent;
 	private String level;

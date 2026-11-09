@@ -41,8 +41,8 @@ public class PermissionData {
 			new PermissionDef("Manage Organizations",       "organization:write",        "JOB_MANAGEMENT",   "organization-manage"),
 			new PermissionDef("Delete Organizations",       "organization:delete",       "JOB_MANAGEMENT",   null),
 
-			new PermissionDef("View My Candidate Profile",   "candidate-profile:read",  "PROFILE", null),
-			new PermissionDef("Update My Candidate Profile", "candidate-profile:write", "PROFILE", null),
+			new PermissionDef("View My CV",   "candidate-cv:read",  "PROFILE", null),
+			new PermissionDef("Update My CV", "candidate-cv:write", "PROFILE", null),
 
 			new PermissionDef("View Applications",      "application:read",     "JOB_MANAGEMENT",   "application-list"),
 			new PermissionDef("Manage Applications",    "application:write",    "JOB_MANAGEMENT",   null),

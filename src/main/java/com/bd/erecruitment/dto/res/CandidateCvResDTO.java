@@ -13,9 +13,9 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CandidateProfileResDTO extends BaseResponseDTO<CandidateProfile> {
+public class CandidateCvResDTO extends BaseResponseDTO<CandidateCv> {
 
-	public CandidateProfileResDTO(CandidateProfile profile) {
+	public CandidateCvResDTO(CandidateCv profile) {
 		ModelMapperUtils.MAPPER.map(profile, this);
 	}
 
@@ -34,5 +34,5 @@ public class CandidateProfileResDTO extends BaseResponseDTO<CandidateProfile> {
 	private List<LanguageItem> languages = new ArrayList<>();
 	private List<ProjectItem> projects = new ArrayList<>();
 
-	private ProfileCompletenessResDTO completeness;
+	private CvCompletenessResDTO completeness;
 }

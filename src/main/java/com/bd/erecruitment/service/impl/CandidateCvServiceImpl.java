@@ -3,16 +3,16 @@ package com.bd.erecruitment.service.impl;
 import com.bd.erecruitment.enums.AuditOutcome;
 import com.bd.erecruitment.audit.AuditAction;
 import com.bd.erecruitment.audit.AuditLogWriter;
-import com.bd.erecruitment.dto.req.CandidateProfileReqDto;
-import com.bd.erecruitment.dto.res.CandidateProfileResDTO;
+import com.bd.erecruitment.dto.req.CandidateCvReqDto;
+import com.bd.erecruitment.dto.res.CandidateCvResDTO;
 import com.bd.erecruitment.dto.res.GeneratedCvResDTO;
-import com.bd.erecruitment.entity.CandidateProfile;
+import com.bd.erecruitment.entity.CandidateCv;
 import com.bd.erecruitment.entity.GeneratedCv;
 import com.bd.erecruitment.entity.StoredFile;
 import com.bd.erecruitment.entity.User;
 import com.bd.erecruitment.exception.NotFoundException;
 import com.bd.erecruitment.model.MyUserDetail;
-import com.bd.erecruitment.repository.CandidateProfileRepo;
+import com.bd.erecruitment.repository.CandidateCvRepo;
 import com.bd.erecruitment.repository.GeneratedCvRepo;
 import com.bd.erecruitment.repository.UserRepo;
 import com.bd.erecruitment.service.CvGenerationService;
@@ -29,9 +29,9 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CandidateProfileServiceImpl {
+public class CandidateCvServiceImpl {
 
-	private final CandidateProfileRepo candidateProfileRepo;
+	private final CandidateCvRepo candidateCvRepo;
 	private final GeneratedCvRepo generatedCvRepo;
 	private final UserRepo userRepo;
 	private final CvGenerationService cvGenerationService;
@@ -41,18 +41,18 @@ public class CandidateProfileServiceImpl {
 	// Self-proxy so createProfile()'s REQUIRES_NEW applies; a plain this.createProfile() bypasses the transactional proxy.
 	@Lazy
 	@Autowired
-	private CandidateProfileServiceImpl self;
+	private CandidateCvServiceImpl self;
 
 	@Transactional
-	public Response<CandidateProfileResDTO> getMyProfile() {
-		CandidateProfile profile = getOrCreateProfile(currentUserId());
+	public Response<CandidateCvResDTO> getMyProfile() {
+		CandidateCv profile = getOrCreateProfile(currentUserId());
 		return getSuccess("Profile found", toDto(profile));
 	}
 
 	@Transactional
-	public Response<CandidateProfileResDTO> updateMyProfile(CandidateProfileReqDto reqDto) {
+	public Response<CandidateCvResDTO> updateMyProfile(CandidateCvReqDto reqDto) {
 		Long userId = currentUserId();
-		CandidateProfile profile = getOrCreateProfile(userId);
+		CandidateCv profile = getOrCreateProfile(userId);
 
 		profile.setHeadline(reqDto.getHeadline())
 			.setSummary(reqDto.getSummary())
@@ -74,14 +74,14 @@ public class CandidateProfileServiceImpl {
 		if (reqDto.getProjects() != null) profile.getProjects().addAll(reqDto.getProjects());
 
 		profile = saveProfile(profile);
-		auditLogWriter.logEntity(AuditAction.UPDATE, "CandidateProfile", profile.getId(), AuditOutcome.SUCCESS, null);
+		auditLogWriter.logEntity(AuditAction.UPDATE, "CandidateCv", profile.getId(), AuditOutcome.SUCCESS, null);
 		return getSuccess("Profile updated successfully", toDto(profile));
 	}
 
 	@Transactional
 	public Response<GeneratedCvResDTO> generateCv() {
 		Long userId = currentUserId();
-		CandidateProfile profile = getOrCreateProfile(userId);
+		CandidateCv profile = getOrCreateProfile(userId);
 		User user = userRepo.findByIdAndDeleted(userId, false)
 			.orElseThrow(() -> new NotFoundException("User not found"));
 
@@ -91,59 +91,59 @@ public class CandidateProfileServiceImpl {
 	}
 
 	public Response<GeneratedCvResDTO> listMyCvGenerations() {
-		CandidateProfile profile = getOrCreateProfile(currentUserId());
+		CandidateCv profile = getOrCreateProfile(currentUserId());
 		List<GeneratedCvResDTO> list = generatedCvRepo
-			.findAllByCandidateProfileIdAndDeletedOrderByGeneratedOnDesc(profile.getId(), false)
+			.findAllByCandidateCvIdAndDeletedOrderByGeneratedOnDesc(profile.getId(), false)
 			.stream().map(GeneratedCvResDTO::new).toList();
 		return getSuccess(list.isEmpty() ? "No data found" : "Found", list);
 	}
 
 	public StoredFile downloadMyCv(Long generatedCvId) {
 		Long userId = currentUserId();
-		CandidateProfile profile = getOrCreateProfile(userId);
+		CandidateCv profile = getOrCreateProfile(userId);
 		GeneratedCv cv = generatedCvRepo.findByIdAndDeleted(generatedCvId, false)
 			.orElseThrow(() -> new NotFoundException("CV not found"));
-		if (!cv.getCandidateProfileId().equals(profile.getId())) {
+		if (!cv.getCandidateCvId().equals(profile.getId())) {
 			throw new NotFoundException("CV not found");
 		}
 		auditLogWriter.logActivity(AuditAction.DOWNLOAD, "GeneratedCv", cv.getId(), null);
 		return storageService.retrieve(cv.getStoredFileId());
 	}
 
-	private CandidateProfileResDTO toDto(CandidateProfile profile) {
-		CandidateProfileResDTO dto = new CandidateProfileResDTO(profile);
-		dto.setCompleteness(ProfileCompletenessCalculator.calculate(profile, userRepo.findByIdAndDeleted(profile.getUserId(), false).orElse(null)));
+	private CandidateCvResDTO toDto(CandidateCv profile) {
+		CandidateCvResDTO dto = new CandidateCvResDTO(profile);
+		dto.setCompleteness(CvCompletenessCalculator.calculate(profile, userRepo.findByIdAndDeleted(profile.getUserId(), false).orElse(null)));
 		return dto;
 	}
 
-	private CandidateProfile getOrCreateProfile(Long userId) {
-		return candidateProfileRepo.findByUserIdAndDeleted(userId, false).orElseGet(() -> {
+	private CandidateCv getOrCreateProfile(Long userId) {
+		return candidateCvRepo.findByUserIdAndDeleted(userId, false).orElseGet(() -> {
 			try {
 				return self.createProfile(userId);
 			// Lost a concurrent insert race on user_id: re-read the winner's row here, outside createProfile's transaction.
 			} catch (DataIntegrityViolationException e) {
-				return candidateProfileRepo.findByUserIdAndDeleted(userId, false).orElseThrow(() -> e);
+				return candidateCvRepo.findByUserIdAndDeleted(userId, false).orElseThrow(() -> e);
 			}
 		});
 	}
 
 	@Transactional(Transactional.TxType.REQUIRES_NEW)
-	public CandidateProfile createProfile(Long userId) {
-		CandidateProfile profile = new CandidateProfile().setUserId(userId);
+	public CandidateCv createProfile(Long userId) {
+		CandidateCv profile = new CandidateCv().setUserId(userId);
 		String actor = currentUsername();
 		java.util.Date now = new java.util.Date();
 		profile.setCreatedBy(actor).setCreatedOn(now).setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
-		return candidateProfileRepo.saveAndFlush(profile);
+		return candidateCvRepo.saveAndFlush(profile);
 	}
 
-	private CandidateProfile saveProfile(CandidateProfile profile) {
+	private CandidateCv saveProfile(CandidateCv profile) {
 		String actor = currentUsername();
 		java.util.Date now = new java.util.Date();
 		if (profile.getId() == null) {
 			profile.setCreatedBy(actor).setCreatedOn(now);
 		}
 		profile.setUpdatedBy(actor).setUpdatedOn(now).setDeleted(false);
-		return candidateProfileRepo.save(profile);
+		return candidateCvRepo.save(profile);
 	}
 
 	private Long currentUserId() {

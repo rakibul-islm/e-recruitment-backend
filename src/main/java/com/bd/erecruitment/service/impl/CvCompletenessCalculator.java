@@ -1,8 +1,8 @@
 package com.bd.erecruitment.service.impl;
 
-import com.bd.erecruitment.dto.res.ProfileCompletenessResDTO;
-import com.bd.erecruitment.dto.res.ProfileCompletenessResDTO.Section;
-import com.bd.erecruitment.entity.CandidateProfile;
+import com.bd.erecruitment.dto.res.CvCompletenessResDTO;
+import com.bd.erecruitment.dto.res.CvCompletenessResDTO.Section;
+import com.bd.erecruitment.entity.CandidateCv;
 import com.bd.erecruitment.entity.User;
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,15 +11,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-public final class ProfileCompletenessCalculator {
+public final class CvCompletenessCalculator {
 
 	public static final int READY_THRESHOLD = 80;
 	private static final int GOOD_THRESHOLD = 50;
 
-	private ProfileCompletenessCalculator() {}
+	private CvCompletenessCalculator() {}
 
 	// phone and address live on the user account (the CV prints them from there), so the account is passed in; it may be null
-	public static ProfileCompletenessResDTO calculate(CandidateProfile profile, User account) {
+	public static CvCompletenessResDTO calculate(CandidateCv profile, User account) {
 		List<Section> sections = new ArrayList<>();
 
 		boolean hasPhone = account != null ? has(account.getMobile()) || has(account.getSecondaryMobile()) : has(profile.getPhone());
@@ -43,7 +43,7 @@ public final class ProfileCompletenessCalculator {
 
 		int percent = sections.stream().mapToInt(Section::getEarned).sum();
 		String level = percent >= READY_THRESHOLD ? "COMPLETE" : percent >= GOOD_THRESHOLD ? "GOOD" : "INCOMPLETE";
-		return new ProfileCompletenessResDTO(percent, level, percent >= READY_THRESHOLD, sections);
+		return new CvCompletenessResDTO(percent, level, percent >= READY_THRESHOLD, sections);
 	}
 
 	private static boolean has(String value) {

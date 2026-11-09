@@ -30,7 +30,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 	private String frontendBaseUrl;
 
 	@Override
-	public GeneratedCv generate(User user, CandidateProfile profile) {
+	public GeneratedCv generate(User user, CandidateCv profile) {
 		String html = buildHtml(user, profile);
 		byte[] pdf = pdfRenderer.render(html);
 
@@ -38,7 +38,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 
 		// One CV per profile: regenerating overwrites the existing file and row instead of inserting new ones.
 		GeneratedCv existing = generatedCvRepo
-			.findAllByCandidateProfileIdAndDeletedOrderByGeneratedOnDesc(profile.getId(), false)
+			.findAllByCandidateCvIdAndDeletedOrderByGeneratedOnDesc(profile.getId(), false)
 			.stream().findFirst().orElse(null);
 		if (existing != null) {
 			storageService.replace(existing.getStoredFileId(), filename, "application/pdf", pdf);
@@ -49,7 +49,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 
 		StoredFile stored = storageService.store(filename, "application/pdf", pdf);
 		GeneratedCv generatedCv = new GeneratedCv()
-			.setCandidateProfileId(profile.getId())
+			.setCandidateCvId(profile.getId())
 			.setTemplateKey(TEMPLATE_KEY)
 			.setStoredFileId(stored.getId())
 			.setGeneratedOn(new Date());
@@ -64,7 +64,7 @@ public class CvGenerationServiceImpl implements CvGenerationService {
 		return cv;
 	}
 
-	private String buildHtml(User user, CandidateProfile profile) {
+	private String buildHtml(User user, CandidateCv profile) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><head><meta charset='UTF-8'/><style>")
 			.append("@page{margin:30px 30px 55px 30px;@bottom-center{content:element(footer);}}")

@@ -21,6 +21,15 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class JobCircular extends SequenceIdGenerator{
 
+	// Public, unguessable identifier used in URLs instead of the numeric id.
+	@Column(name = "uuid", unique = true, updatable = false, length = 36)
+	private String uuid;
+
+	@PrePersist
+	void assignUuid() {
+		if (uuid == null) uuid = java.util.UUID.randomUUID().toString();
+	}
+
 	private String jobTitle;
 	@Column(name = "company_name")
 	private String organizationName;

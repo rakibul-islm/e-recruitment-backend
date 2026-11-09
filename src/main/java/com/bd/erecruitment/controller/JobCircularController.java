@@ -10,6 +10,10 @@ import com.bd.erecruitment.service.impl.JobPostingAiServiceImpl;
 import com.bd.erecruitment.util.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.bd.erecruitment.service.impl.JobCircularServiceImpl;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,10 +24,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class JobCircularController extends AbstractBaseController<JobCircularResDTO, JobCircularReqDto> {
 
 	private final JobPostingAiServiceImpl jobPostingAiService;
+	private final JobCircularServiceImpl jobCircularService;
 
-	public JobCircularController(BaseService<JobCircularResDTO, JobCircularReqDto> service, JobPostingAiServiceImpl jobPostingAiService) {
+	public JobCircularController(BaseService<JobCircularResDTO, JobCircularReqDto> service, JobPostingAiServiceImpl jobPostingAiService,
+			JobCircularServiceImpl jobCircularService) {
 		super(service);
 		this.jobPostingAiService = jobPostingAiService;
+		this.jobCircularService = jobCircularService;
+	}
+
+	@Operation(summary = "Find by uuid")
+	@GetMapping("/uuid/{uuid}")
+	public ResponseEntity<Response<JobCircularResDTO>> findByUuid(@PathVariable String uuid) {
+		return respond(jobCircularService.findByUuid(uuid));
 	}
 
 	@Operation(summary = "Generate AI-suggested job posting content from a job title and context")

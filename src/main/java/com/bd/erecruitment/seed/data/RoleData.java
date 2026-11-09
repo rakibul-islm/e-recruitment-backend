@@ -21,8 +21,8 @@ public class RoleData {
 				List.of(
 					"profile:read",
 					"profile:write",
-					"candidate-profile:read",
-					"candidate-profile:write",
+					"candidate-cv:read",
+					"candidate-cv:write",
 					"application:read",
 					"application:write",
 					"interview:read",

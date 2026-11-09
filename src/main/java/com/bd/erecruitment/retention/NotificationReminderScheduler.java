@@ -105,7 +105,7 @@ public class NotificationReminderScheduler {
 		String key = "JOB_DEADLINE_SOON:" + job.getId() + ":" + day(job.getApplicationDeadLine());
 		forEachSafely(savedJobRepo.findAllByJobCircularIdAndDeleted(job.getId(), false), saved -> {
 			if (applicationRepo.findByJobCircularIdAndCandidateUserIdAndDeleted(job.getId(), saved.getUserId(), false).isPresent()) return;
-			remind(saved.getUserId(), NotificationType.JOB_DEADLINE_SOON, "/jobs/" + job.getId(), key,
+			remind(saved.getUserId(), NotificationType.JOB_DEADLINE_SOON, "/jobs/" + job.getUuid(), key,
 				"jobTitle", job.getJobTitle(), "deadlineDate", utcDate(job.getApplicationDeadLine()));
 		});
 	}

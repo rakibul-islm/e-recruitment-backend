@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface GeneratedCvRepo extends ServiceRepository<GeneratedCv> {
 
-	List<GeneratedCv> findAllByCandidateProfileIdAndDeletedOrderByGeneratedOnDesc(Long candidateProfileId, boolean deleted);
+	List<GeneratedCv> findAllByCandidateCvIdAndDeletedOrderByGeneratedOnDesc(Long candidateCvId, boolean deleted);
 }
