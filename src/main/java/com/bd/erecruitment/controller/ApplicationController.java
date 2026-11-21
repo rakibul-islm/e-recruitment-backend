@@ -50,8 +50,8 @@ public class ApplicationController {
 
 	@Operation(summary = "My applications")
 	@GetMapping("/my")
-	public Response<ApplicationResDTO> myApplications() {
-		return applicationService.getMyApplications();
+	public Response<ApplicationResDTO> myApplications(@Nullable Pageable pageable, @RequestParam(required = false) Boolean isPageable) {
+		return applicationService.getMyApplications(pageable, isPageable);
 	}
 
 	@Operation(summary = "Filter applications (recruiter/admin)")

@@ -124,8 +124,13 @@ public class ApplicationServiceImpl extends AbstractBaseService<Application> {
 		return getSuccessResponse("Application submitted successfully", toDto(application, job, null));
 	}
 
-	public Response<ApplicationResDTO> getMyApplications() {
+	public Response<ApplicationResDTO> getMyApplications(Pageable pageable, Boolean isPageable) {
 		Long userId = getLoggedInUserDetails().getId();
+		if (Boolean.TRUE.equals(isPageable)) {
+			Specification<Application> own = (root, query, cb) ->
+				cb.and(cb.equal(root.get("candidateUserId"), userId), cb.equal(root.get("deleted"), false));
+			return genericFilter(own, pageable, isPageable, ApplicationResDTO.class, this::fillNames);
+		}
 		List<ApplicationResDTO> list = toDtos(applicationRepo.findAllByCandidateUserIdAndDeletedOrderByAppliedOnDesc(userId, false));
 		return getSuccessResponse(list.isEmpty() ? "No data found" : "Found", list);
 	}
